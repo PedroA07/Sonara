@@ -47,7 +47,8 @@ pub fn search_library(db: State<Db>, query: String) -> AppResult<Vec<Track>> {
         );
         let fts: rusqlite::Result<Vec<Track>> = (|| {
             let mut stmt = conn.prepare(&sql)?;
-            stmt.query_map([match_expr.as_str()], map_track)?.collect()
+            let rows = stmt.query_map([match_expr.as_str()], map_track)?.collect::<Result<Vec<_>, _>>()?;
+            Ok(rows)
         })();
         if let Ok(rows) = fts {
             if !rows.is_empty() {

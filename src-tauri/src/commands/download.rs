@@ -33,12 +33,11 @@ fn parse_percent(line: &str) -> Option<f64> {
 
 fn set_job_status(app: &AppHandle, job_id: i64, status: &str, progress: f64) {
     let db = app.state::<Db>();
-    if let Ok(conn) = db.0.lock() {
-        let _ = conn.execute(
-            "UPDATE download_job SET status = ?2, progress = ?3 WHERE id = ?1",
-            rusqlite::params![job_id, status, progress],
-        );
-    }
+    let conn = match db.0.lock() { Ok(c) => c, Err(_) => return };
+    let _ = conn.execute(
+        "UPDATE download_job SET status = ?2, progress = ?3 WHERE id = ?1",
+        rusqlite::params![job_id, status, progress],
+    );
 }
 
 /// Import each downloaded file and route it to the chosen destination (RF-09/10).
