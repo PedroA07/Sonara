@@ -1,5 +1,7 @@
 node_modules
 dist
 src-tauri/target
+# yt-dlp/ffmpeg sidecars: fetched at release time, stubbed in CI — never committed
+src-tauri/binaries/
 *.log
 .DS_Store

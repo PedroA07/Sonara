@@ -45,6 +45,25 @@ jobs:
       - name: Build frontend
         run: npm run build
 
+      # Tauri's build script validates that every `externalBin` in
+      # tauri.conf.json exists (with the host target-triple suffix) before it
+      # will compile the crate. CI only compiles the core and runs pure-function
+      # unit tests — it never executes the sidecars — so empty stub files are
+      # enough to satisfy the check. Real yt-dlp/ffmpeg binaries are provisioned
+      # in release.yml for actual bundles.
+      - name: Stub sidecar binaries (satisfy Tauri externalBin)
+        shell: bash
+        run: |
+          mkdir -p src-tauri/binaries
+          TRIPLE=$(rustc -vV | sed -n 's/^host: //p')
+          EXT=""
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then EXT=".exe"; fi
+          for bin in yt-dlp ffmpeg; do
+            touch "src-tauri/binaries/${bin}-${TRIPLE}${EXT}"
+            chmod +x "src-tauri/binaries/${bin}-${TRIPLE}${EXT}" || true
+          done
+          ls -l src-tauri/binaries
+
       - name: Cargo test (core)
         run: cargo test --manifest-path src-tauri/Cargo.toml
 
