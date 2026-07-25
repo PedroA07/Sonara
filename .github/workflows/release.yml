@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            triple: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            triple: aarch64-apple-darwin
+          - os: windows-latest
+            triple: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux dependencies (Tauri)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev \
+            patchelf build-essential curl wget file libssl-dev libgtk-3-dev
+
+      - name: Install JS dependencies
+        run: npm install
+
+      # yt-dlp/ffmpeg sidecars must exist for the app to run. Fetch yt-dlp with
+      # the correct target-triple suffix. ffmpeg should be provided similarly
+      # (see BUILD.md) — this step is a starting point for Linux/macOS/Windows.
+      - name: Fetch yt-dlp sidecar
+        shell: bash
+        run: |
+          mkdir -p src-tauri/binaries
+          TRIPLE="${{ matrix.triple }}"
+          case "${{ matrix.os }}" in
+            windows-latest) URL="https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"; EXT=".exe";;
+            macos-latest)   URL="https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos"; EXT="";;
+            *)              URL="https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp";       EXT="";;
+          esac
+          curl -L "$URL" -o "src-tauri/binaries/yt-dlp-${TRIPLE}${EXT}"
+          chmod +x "src-tauri/binaries/yt-dlp-${TRIPLE}${EXT}" || true
+
+      - name: Build & release (Tauri)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Required for signing the auto-update artifacts (latest.json + .sig).
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "Sonara ${{ github.ref_name }}"
+          releaseDraft: true
+          # Emits latest.json used by the in-app updater endpoint.
+          includeUpdaterJson: true
