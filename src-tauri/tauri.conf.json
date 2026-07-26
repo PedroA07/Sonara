@@ -42,15 +42,14 @@
     "active": true,
     "targets": "all",
     "icon": [
-      "icons/icon.png"
-    ],
-    "resources": [
-      "binaries/*"
+      "icons/icon.png",
+      "icons/icon.ico",
+      "icons/icon.icns"
     ],
     "externalBin": [
       "binaries/yt-dlp",
       "binaries/ffmpeg"
     ],
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": false
   }
 }
