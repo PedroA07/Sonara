@@ -3,6 +3,7 @@ import type { PlaylistCard, Track, PlaylistSort } from "../types";
 import { api } from "../lib/ipc";
 import { usePlayerStore } from "../store/usePlayerStore";
 import CoverArt from "../components/CoverArt";
+import { IconPlay, IconChevronUp, IconChevronDown, IconClose } from "../components/icons";
 
 const SORTS: { key: PlaylistSort; label: string }[] = [
   { key: "custom", label: "Personalizada" },
@@ -92,7 +93,7 @@ function PlaylistDetail({ card, onBack }: { card: PlaylistCard; onBack: () => vo
           <h1 className="text-3xl font-bold">{card.name}</h1>
           <div className="text-sm text-muted">{tracks.length} faixas</div>
         </div>
-        <button onClick={() => tracks.length && setQueue(tracks, 0)} className="ml-auto px-5 py-2 rounded-lg bg-brand text-content">▶ Tocar</button>
+        <button onClick={() => tracks.length && setQueue(tracks, 0)} className="ml-auto px-5 py-2 rounded-lg bg-brand text-content inline-flex items-center gap-2"><IconPlay size={14} /> Tocar</button>
       </div>
 
       <div className="flex items-center gap-2 mb-4">
@@ -106,7 +107,7 @@ function PlaylistDetail({ card, onBack }: { card: PlaylistCard; onBack: () => vo
       </div>
 
       {tracks.length === 0 ? (
-        <p className="text-muted">Playlist vazia. Adicione faixas pela Biblioteca (botão ＋).</p>
+        <p className="text-muted">Playlist vazia. Adicione faixas pela Biblioteca (botão +).</p>
       ) : (
         <table className="w-full text-sm">
           <tbody>
@@ -118,11 +119,11 @@ function PlaylistDetail({ card, onBack }: { card: PlaylistCard; onBack: () => vo
                 <td className="text-right w-28">
                   {sort === "custom" && (
                     <>
-                      <button onClick={() => move(i, -1)} className="text-muted hover:text-content px-1">↑</button>
-                      <button onClick={() => move(i, 1)} className="text-muted hover:text-content px-1">↓</button>
+                      <button title="Subir" onClick={() => move(i, -1)} className="text-muted hover:text-content px-1.5 inline-flex align-middle"><IconChevronUp size={15} /></button>
+                      <button title="Descer" onClick={() => move(i, 1)} className="text-muted hover:text-content px-1.5 inline-flex align-middle"><IconChevronDown size={15} /></button>
                     </>
                   )}
-                  <button onClick={() => remove(t.id)} className="text-muted hover:text-red-300 px-1">✕</button>
+                  <button title="Remover" onClick={() => remove(t.id)} className="text-muted hover:text-red-300 px-1.5 inline-flex align-middle"><IconClose size={15} /></button>
                 </td>
               </tr>
             ))}

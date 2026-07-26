@@ -1,11 +1,13 @@
+import type { ComponentType } from "react";
 import type { Screen } from "../types";
+import { IconLibrary, IconPlaylists, IconSearch, IconDownload, IconSettings } from "./icons";
 
-const ITEMS: { key: Screen; label: string; icon: string }[] = [
-  { key: "library", label: "Biblioteca", icon: "♫" },
-  { key: "playlists", label: "Playlists", icon: "≡" },
-  { key: "search", label: "Buscar & Baixar", icon: "⤓" },
-  { key: "downloads", label: "Downloads", icon: "↧" },
-  { key: "settings", label: "Configurações", icon: "⚙" },
+const ITEMS: { key: Screen; label: string; Icon: ComponentType<{ size?: number }> }[] = [
+  { key: "library", label: "Biblioteca", Icon: IconLibrary },
+  { key: "playlists", label: "Playlists", Icon: IconPlaylists },
+  { key: "search", label: "Buscar & Baixar", Icon: IconSearch },
+  { key: "downloads", label: "Downloads", Icon: IconDownload },
+  { key: "settings", label: "Configurações", Icon: IconSettings },
 ];
 
 export default function Sidebar({
@@ -26,12 +28,12 @@ export default function Sidebar({
             className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 transition
               ${active === it.key ? "bg-panel2 text-content" : "text-muted hover:text-content hover:bg-white/5"}`}
           >
-            <span className="w-5 text-center">{it.icon}</span>
+            <span className="w-5 flex justify-center"><it.Icon size={18} /></span>
             {it.label}
           </button>
         ))}
       </nav>
-      <div className="px-5 py-4 text-xs text-muted">v0.1.0 · F0</div>
+      <div className="px-5 py-4 text-xs text-muted">v0.1.1 · F0</div>
     </aside>
   );
 }

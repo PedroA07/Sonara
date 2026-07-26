@@ -6,6 +6,7 @@ import ImportWizard from "../components/ImportWizard";
 import TrackEditor from "../components/TrackEditor";
 import AddToPlaylist from "../components/AddToPlaylist";
 import CoverArt from "../components/CoverArt";
+import { IconEdit, IconPlus, IconPlay } from "../components/icons";
 
 type View = "tracks" | "albums" | "artists";
 
@@ -72,8 +73,8 @@ export default function LibraryScreen() {
                   <td className="text-muted">{t.genre ?? "—"}</td>
                   <td className="text-right text-muted">{t.duration ? Math.round(t.duration) + "s" : "—"}</td>
                   <td className="text-right opacity-0 group-hover:opacity-100">
-                    <button title="Editar" onClick={() => setEditTrack(t)} className="text-muted hover:text-content px-1">✎</button>
-                    <button title="Adicionar à playlist" onClick={() => setAddTrack(t)} className="text-muted hover:text-content px-1">＋</button>
+                    <button title="Editar" onClick={() => setEditTrack(t)} className="text-muted hover:text-content px-1.5 inline-flex align-middle"><IconEdit size={15} /></button>
+                    <button title="Adicionar à playlist" onClick={() => setAddTrack(t)} className="text-muted hover:text-content px-1.5 inline-flex align-middle"><IconPlus size={15} /></button>
                   </td>
                 </tr>
               ))}
@@ -142,7 +143,7 @@ function AlbumModal({ album, onClose, onPlay }: {
             <h2 className="text-xl font-bold text-content">{album.title}</h2>
             <div className="text-sm text-muted">{album.artist_name ?? "—"} {album.year ? `· ${album.year}` : ""}</div>
           </div>
-          <button onClick={() => onPlay(album)} className="ml-auto px-4 py-2 rounded-lg bg-brand text-content text-sm">▶ Tocar</button>
+          <button onClick={() => onPlay(album)} className="ml-auto px-4 py-2 rounded-lg bg-brand text-content text-sm inline-flex items-center gap-2"><IconPlay size={13} /> Tocar</button>
         </div>
         <ol className="text-sm">
           {tracks.map((t, i) => (

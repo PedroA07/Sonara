@@ -3,6 +3,9 @@ import { usePlayerStore } from "../store/usePlayerStore";
 import { useSettingsStore } from "../store/useSettingsStore";
 import { fileUrl } from "../lib/ipc";
 import CoverArt from "./CoverArt";
+import {
+  IconShuffle, IconPrev, IconNext, IconPlay, IconPause, IconRepeat, IconRepeatOne, IconVolume,
+} from "./icons";
 import type { Track } from "../types";
 
 function fmt(sec: number): string {
@@ -142,15 +145,15 @@ export default function PlayerBar() {
       </div>
 
       <div className="flex-1 flex flex-col items-center gap-1">
-        <div className="flex items-center gap-4 text-lg">
-          <button title="Aleatório (S)" onClick={s.toggleShuffle} className={s.shuffle ? "text-brand" : "text-muted hover:text-content"}>⇄</button>
-          <button title="Anterior" onClick={s.prev} className="text-muted hover:text-content">⏮</button>
-          <button title="Play/Pause (Espaço)" onClick={s.toggle} className="w-9 h-9 rounded-full bg-content text-ink flex items-center justify-center">
-            {s.isPlaying ? "⏸" : "▶"}
+        <div className="flex items-center gap-5">
+          <button title="Aleatório (S)" onClick={s.toggleShuffle} className={s.shuffle ? "text-brand" : "text-muted hover:text-content"}><IconShuffle size={18} /></button>
+          <button title="Anterior" onClick={s.prev} className="text-muted hover:text-content"><IconPrev size={22} /></button>
+          <button title="Play/Pause (Espaço)" onClick={s.toggle} className="w-9 h-9 rounded-full bg-content text-ink flex items-center justify-center hover:scale-105 transition">
+            {s.isPlaying ? <IconPause size={16} /> : <IconPlay size={16} />}
           </button>
-          <button title="Próxima (Shift+→)" onClick={s.next} className="text-muted hover:text-content">⏭</button>
+          <button title="Próxima (Shift+→)" onClick={s.next} className="text-muted hover:text-content"><IconNext size={22} /></button>
           <button title="Repetir (R)" onClick={s.cycleRepeat} className={s.repeat !== "off" ? "text-brand" : "text-muted hover:text-content"}>
-            {s.repeat === "one" ? "🔂" : "🔁"}
+            {s.repeat === "one" ? <IconRepeatOne size={18} /> : <IconRepeat size={18} />}
           </button>
         </div>
         <div className="w-full max-w-xl flex items-center gap-2 text-[11px] text-muted">
@@ -165,7 +168,7 @@ export default function PlayerBar() {
         <button title="Alternar layout (L)" onClick={s.toggleLayout} className="text-muted hover:text-content text-sm">
           {s.layout === "album" ? "Navegação" : "Álbum"}
         </button>
-        <span className="text-muted">🔊</span>
+        <span className="text-muted"><IconVolume size={17} /></span>
         <input type="range" min={0} max={1} step={0.01} value={s.volume}
           onChange={(e) => s.setVolume(Number(e.target.value))} className="w-20 accent-brand h-1" />
       </div>
