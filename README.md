@@ -1,5 +1,13 @@
 # Sonara — Music Player Desktop (F5 · Enriquecimento + CI)
 
+<p align="center">
+  <a href="https://pedroa07.github.io/Sonara/">
+    <img src="https://img.shields.io/badge/%E2%AC%87_Baixar_o_Sonara-2E6BE6?style=for-the-badge" alt="Baixar o Sonara" height="42">
+  </a>
+</p>
+
+**📥 Baixe o app pronto (Windows · macOS · Linux):** [pedroa07.github.io/Sonara](https://pedroa07.github.io/Sonara/)
+
 Scaffold inicial do player de música descrito no PRD (`Sonara_PRD_Arquitetura.docx`).
 Stack: **Tauri 2 + React 18 + TypeScript + SQLite (rusqlite)**.
 
