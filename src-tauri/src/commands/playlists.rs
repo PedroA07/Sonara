@@ -120,7 +120,7 @@ pub fn playlist_tracks(db: State<Db>, playlist_id: i64) -> AppResult<Vec<Track>>
     };
 
     let sql = format!(
-        "SELECT t.id, t.title, t.file_path, t.duration, t.track_no, t.disc_no, t.year, t.genre, t.album_id, t.bitrate, t.format, t.gain
+        "SELECT t.id, t.title, t.file_path, t.duration, t.track_no, t.disc_no, t.year, t.genre, t.album_id, t.bitrate, t.format, t.gain, al.cover_path
          FROM playlist_item pi
          JOIN track t ON t.id = pi.track_id
          LEFT JOIN album al ON al.id = t.album_id
@@ -133,6 +133,7 @@ pub fn playlist_tracks(db: State<Db>, playlist_id: i64) -> AppResult<Vec<Track>>
             id: r.get(0)?, title: r.get(1)?, file_path: r.get(2)?, duration: r.get(3)?,
             track_no: r.get(4)?, disc_no: r.get(5)?, year: r.get(6)?, genre: r.get(7)?,
             album_id: r.get(8)?, bitrate: r.get(9)?, format: r.get(10)?, gain: r.get(11)?,
+            cover_path: r.get(12)?,
         }))?
         .collect::<Result<Vec<_>, _>>()?;
     Ok(rows)

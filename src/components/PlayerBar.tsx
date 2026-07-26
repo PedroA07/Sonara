@@ -4,7 +4,7 @@ import { useSettingsStore } from "../store/useSettingsStore";
 import { fileUrl } from "../lib/ipc";
 import CoverArt from "./CoverArt";
 import {
-  IconShuffle, IconPrev, IconNext, IconPlay, IconPause, IconRepeat, IconRepeatOne, IconVolume,
+  IconShuffle, IconPrev, IconNext, IconPlay, IconPause, IconRepeat, IconRepeatOne, IconVolume, IconQueue,
 } from "./icons";
 import type { Track } from "../types";
 
@@ -137,8 +137,10 @@ export default function PlayerBar() {
       <audio ref={slot1} onTimeUpdate={(e) => onTime(e, 1)} onLoadedMetadata={(e) => active.current === 1 && s.setDuration(e.currentTarget.duration)} onEnded={() => onEnded(1)} />
 
       <div className="w-56 min-w-0 flex items-center gap-3">
-        <div className="w-12 h-12 shrink-0"><CoverArt /></div>
-        <div className="min-w-0">
+        <button title="Abrir tela cheia" onClick={() => current && s.setExpanded(true)} className="w-12 h-12 shrink-0 rounded-lg overflow-hidden">
+          <CoverArt path={current?.cover_path} />
+        </button>
+        <div className="min-w-0 cursor-pointer" onClick={() => current && s.setExpanded(true)}>
           <div className="truncate text-sm text-content">{current?.title ?? "Nada tocando"}</div>
           <div className="truncate text-xs text-muted">{current?.format?.toUpperCase() ?? ""}</div>
         </div>
@@ -165,6 +167,9 @@ export default function PlayerBar() {
       </div>
 
       <div className="w-56 flex items-center justify-end gap-3">
+        <button title="Mostrar/ocultar fila" onClick={s.toggleQueue} className={s.showQueue ? "text-brand" : "text-muted hover:text-content"}>
+          <IconQueue size={17} />
+        </button>
         <button title="Alternar layout (L)" onClick={s.toggleLayout} className="text-muted hover:text-content text-sm">
           {s.layout === "album" ? "Navegação" : "Álbum"}
         </button>

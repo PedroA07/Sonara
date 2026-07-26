@@ -12,8 +12,12 @@ interface PlayerState {
   duration: number;
   volume: number;
   seekReq: number | null; // set to request the <audio> to seek
+  showQueue: boolean;     // right-hand queue panel visibility
+  expanded: boolean;      // full-screen "now playing" view
 
   setQueue: (tracks: Track[], startAt?: number) => void;
+  toggleQueue: () => void;
+  setExpanded: (v: boolean) => void;
   play: () => void;
   pause: () => void;
   toggle: () => void;
@@ -52,9 +56,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   duration: 0,
   volume: 1,
   seekReq: null,
+  showQueue: true,
+  expanded: false,
 
   setQueue: (tracks, startAt = 0) =>
     set({ queue: tracks, currentIndex: startAt, isPlaying: true, currentTime: 0 }),
+  toggleQueue: () => set((s) => ({ showQueue: !s.showQueue })),
+  setExpanded: (v) => set({ expanded: v }),
   play: () => set({ isPlaying: true }),
   pause: () => set({ isPlaying: false }),
   toggle: () => set((s) => ({ isPlaying: !s.isPlaying })),

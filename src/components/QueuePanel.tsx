@@ -3,11 +3,12 @@ import CoverArt from "./CoverArt";
 
 export default function QueuePanel({ showArt }: { showArt: boolean }) {
   const { queue, currentIndex } = usePlayerStore();
+  const current = queue[currentIndex];
   return (
     <aside className="w-72 shrink-0 bg-panel border-l border-black/40 flex flex-col">
       {showArt && (
         <div className="p-4">
-  <div className="aspect-square"><CoverArt size="lg" /></div>
+          <div className="aspect-square"><CoverArt size="lg" path={current?.cover_path} /></div>
         </div>
       )}
       <div className="px-4 py-3 text-sm font-semibold text-content">Fila</div>

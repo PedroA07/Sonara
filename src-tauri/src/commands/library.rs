@@ -8,11 +8,15 @@ pub(crate) fn map_track(r: &rusqlite::Row) -> rusqlite::Result<Track> {
         id: r.get(0)?, title: r.get(1)?, file_path: r.get(2)?, duration: r.get(3)?,
         track_no: r.get(4)?, disc_no: r.get(5)?, year: r.get(6)?, genre: r.get(7)?,
         album_id: r.get(8)?, bitrate: r.get(9)?, format: r.get(10)?, gain: r.get(11)?,
+        cover_path: r.get(12)?,
     })
 }
 
+// The track's cover comes from its album (tracks have no cover column of their
+// own). A correlated subquery keeps every `FROM track` query working unchanged.
 pub(crate) const TRACK_COLS: &str =
-    "id, title, file_path, duration, track_no, disc_no, year, genre, album_id, bitrate, format, gain";
+    "id, title, file_path, duration, track_no, disc_no, year, genre, album_id, bitrate, format, gain, \
+     (SELECT cover_path FROM album WHERE album.id = track.album_id) AS cover_path";
 
 /// RF-03: list all tracks.
 #[tauri::command]

@@ -11,6 +11,7 @@ export interface Track {
   bitrate: number | null;
   format: string | null;
   gain: number | null;
+  cover_path: string | null;
 }
 
 export interface AlbumCard {

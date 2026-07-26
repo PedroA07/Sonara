@@ -14,6 +14,7 @@ pub struct Track {
     pub bitrate: Option<i64>,
     pub format: Option<String>,
     pub gain: Option<f64>,
+    pub cover_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

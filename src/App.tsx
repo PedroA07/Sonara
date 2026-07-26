@@ -3,6 +3,7 @@ import type { Screen } from "./types";
 import Sidebar from "./components/Sidebar";
 import PlayerBar from "./components/PlayerBar";
 import QueuePanel from "./components/QueuePanel";
+import NowPlaying from "./components/NowPlaying";
 import LibraryScreen from "./screens/LibraryScreen";
 import PlaylistsScreen from "./screens/PlaylistsScreen";
 import SearchDownloadScreen from "./screens/SearchDownloadScreen";
@@ -16,6 +17,8 @@ import UpdateBanner from "./components/UpdateBanner";
 export default function App() {
   const [screen, setScreen] = useState<Screen>("library");
   const layout = usePlayerStore((s) => s.layout);
+  const showQueue = usePlayerStore((s) => s.showQueue);
+  const expanded = usePlayerStore((s) => s.expanded);
   const loadSettings = useSettingsStore((s) => s.load);
   useKeyboardShortcuts();
 
@@ -33,9 +36,10 @@ export default function App() {
           {screen === "downloads" && <DownloadsScreen />}
           {screen === "settings" && <SettingsScreen />}
         </main>
-        <QueuePanel showArt={layout === "album"} />
+        {showQueue && <QueuePanel showArt={layout === "album"} />}
       </div>
       <PlayerBar />
+      {expanded && <NowPlaying />}
     </div>
   );
 }

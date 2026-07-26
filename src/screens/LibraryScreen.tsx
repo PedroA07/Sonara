@@ -6,7 +6,7 @@ import ImportWizard from "../components/ImportWizard";
 import TrackEditor from "../components/TrackEditor";
 import AddToPlaylist from "../components/AddToPlaylist";
 import CoverArt from "../components/CoverArt";
-import { IconEdit, IconPlus, IconPlay } from "../components/icons";
+import { IconEdit, IconPlus, IconPlay, IconTrash } from "../components/icons";
 
 type View = "tracks" | "albums" | "artists";
 
@@ -35,6 +35,11 @@ export default function LibraryScreen() {
   const playAlbum = async (a: AlbumCard) => {
     const t = await api.albumTracks(a.id);
     if (t.length) setQueue(t, 0);
+  };
+
+  const del = async (t: Track) => {
+    if (!window.confirm(`Remover "${t.title}" da biblioteca? (o arquivo não é apagado do disco)`)) return;
+    try { await api.deleteTracks([t.id]); load(); } catch { /* ignore */ }
   };
 
   return (
@@ -69,12 +74,13 @@ export default function LibraryScreen() {
               {tracks.map((t, i) => (
                 <tr key={t.id} className="group border-b border-white/5 hover:bg-white/5">
                   <td className="py-2 text-muted">{i + 1}</td>
-                  <td className="text-content cursor-pointer" onDoubleClick={() => setQueue(tracks, i)}>{t.title}</td>
+                  <td className="text-content cursor-pointer" title="Tocar" onClick={() => setQueue(tracks, i)}>{t.title}</td>
                   <td className="text-muted">{t.genre ?? "—"}</td>
                   <td className="text-right text-muted">{t.duration ? Math.round(t.duration) + "s" : "—"}</td>
-                  <td className="text-right opacity-0 group-hover:opacity-100">
+                  <td className="text-right whitespace-nowrap opacity-0 group-hover:opacity-100">
                     <button title="Editar" onClick={() => setEditTrack(t)} className="text-muted hover:text-content px-1.5 inline-flex align-middle"><IconEdit size={15} /></button>
                     <button title="Adicionar à playlist" onClick={() => setAddTrack(t)} className="text-muted hover:text-content px-1.5 inline-flex align-middle"><IconPlus size={15} /></button>
+                    <button title="Remover da biblioteca" onClick={() => del(t)} className="text-muted hover:text-red-300 px-1.5 inline-flex align-middle"><IconTrash size={15} /></button>
                   </td>
                 </tr>
               ))}
@@ -147,7 +153,7 @@ function AlbumModal({ album, onClose, onPlay }: {
         </div>
         <ol className="text-sm">
           {tracks.map((t, i) => (
-            <li key={t.id} onDoubleClick={() => setQueue(tracks, i)}
+            <li key={t.id} onClick={() => setQueue(tracks, i)} title="Tocar"
                 className="flex justify-between py-2 border-b border-white/5 hover:bg-white/5 px-2 rounded cursor-pointer">
               <span className="text-content/90"><span className="text-muted mr-3">{t.track_no ?? i + 1}</span>{t.title}</span>
               <span className="text-muted">{t.duration ? Math.round(t.duration) + "s" : ""}</span>

@@ -84,3 +84,9 @@ export const IconChevronUp = (p: IconProps) => (
 export const IconChevronDown = (p: IconProps) => (
   <Svg {...p}><path d="m6 9 6 6 6-6" /></Svg>
 );
+export const IconTrash = (p: IconProps) => (
+  <Svg {...p}><path d="M3 6h18" /><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" /><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></Svg>
+);
+export const IconQueue = (p: IconProps) => (
+  <Svg {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><line x1="14" y1="4" x2="14" y2="20" /></Svg>
+);

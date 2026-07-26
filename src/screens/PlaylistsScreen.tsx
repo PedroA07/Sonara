@@ -114,7 +114,7 @@ function PlaylistDetail({ card, onBack }: { card: PlaylistCard; onBack: () => vo
             {tracks.map((t, i) => (
               <tr key={t.id} className="border-b border-white/5 hover:bg-white/5">
                 <td className="py-2 w-8 text-muted">{i + 1}</td>
-                <td className="text-content cursor-pointer" onDoubleClick={() => setQueue(tracks, i)}>{t.title}</td>
+                <td className="text-content cursor-pointer" title="Tocar" onClick={() => setQueue(tracks, i)}>{t.title}</td>
                 <td className="text-muted">{t.genre ?? ""}</td>
                 <td className="text-right w-28">
                   {sort === "custom" && (
