@@ -4,6 +4,11 @@ on:
   push:
     tags: ["v*"]
 
+# Required so tauri-action can create the GitHub Release with the built
+# installers using the automatic GITHUB_TOKEN.
+permissions:
+  contents: write
+
 jobs:
   release:
     strategy:
