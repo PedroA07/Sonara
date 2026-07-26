@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sonara — Baixar</title>
+<meta name="description" content="Baixe o Sonara — player de música desktop com download de músicas integrado (Windows, macOS, Linux).">
+<meta property="og:title" content="Sonara — Baixar">
+<meta property="og:description" content="Player de música desktop com download integrado. Windows, macOS e Linux.">
+<meta property="og:image" content="icon.png">
+<link rel="icon" href="icon.png">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 50% -10%, #1e1b4b, #0f172a 60%);
+    color:#e2e8f0;min-height:100vh;line-height:1.55;padding:56px 20px 80px}
+  main{max-width:840px;margin:0 auto;text-align:center}
+  .logo{width:112px;height:112px;border-radius:26px;box-shadow:0 20px 60px rgba(139,92,246,.35)}
+  h1{font-size:46px;margin:20px 0 6px;letter-spacing:-.02em}
+  .tagline{color:#94a3b8;font-size:18px;margin-bottom:32px}
+  .btn{display:inline-block;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;text-decoration:none;
+    font-weight:600;font-size:18px;padding:16px 34px;border-radius:14px;box-shadow:0 10px 30px rgba(139,92,246,.4);
+    transition:transform .12s ease, box-shadow .12s ease}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(139,92,246,.55)}
+  .sub{color:#94a3b8;font-size:13px;margin-top:10px}
+  .ver{color:#64748b;font-size:14px;margin-top:18px}
+  .note{color:#cbd5e1;background:#1e293b;border:1px solid #334155;padding:16px 20px;border-radius:12px;display:inline-block}
+  section{margin-top:60px;text-align:left}
+  h2{font-size:22px;margin-bottom:20px;text-align:center}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+  .card{background:rgba(17,24,39,.8);border:1px solid #1f2937;border-radius:16px;padding:20px}
+  .card.current{border-color:#8b5cf6;box-shadow:0 0 0 1px #8b5cf6 inset}
+  .card h3{font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .tag{font-size:11px;background:#8b5cf6;color:#fff;padding:2px 9px;border-radius:999px;font-weight:600}
+  .card ul{list-style:none}
+  .card li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #1f2937;font-size:14px}
+  .card li:first-child{border-top:none}
+  .card a{color:#c4b5fd;text-decoration:none;word-break:break-all}
+  .card a:hover{text-decoration:underline}
+  .sz{color:#64748b;font-size:12px;white-space:nowrap}
+  .how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+  .how-grid>div{background:rgba(17,24,39,.8);border:1px solid #1f2937;border-radius:16px;padding:20px}
+  .how-grid h3{font-size:15px;margin-bottom:8px;color:#a78bfa}
+  .how-grid p{font-size:14px;color:#cbd5e1}
+  code{background:#0b1220;border:1px solid #1f2937;border-radius:6px;padding:1px 6px;font-size:13px}
+  footer{margin-top:60px;text-align:center;color:#64748b;font-size:14px}
+  footer a{color:#94a3b8}
+  .loading{color:#64748b}
+</style>
+</head>
+<body>
+<main>
+  <img class="logo" src="icon.png" alt="Sonara">
+  <h1>Sonara</h1>
+  <p class="tagline">Seu player de música desktop, com download integrado.</p>
+
+  <div id="primary"><span class="loading">Carregando…</span></div>
+  <p class="ver" id="ver"></p>
+
+  <section>
+    <h2>Todos os downloads</h2>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section>
+    <h2>Como instalar</h2>
+    <div class="how-grid">
+      <div>
+        <h3>Windows</h3>
+        <p>Baixe o <code>.exe</code> e execute. Se o SmartScreen avisar, clique em
+        <b>“Mais informações” → “Executar assim mesmo”</b> (o instalador não tem certificado de assinatura pago).</p>
+      </div>
+      <div>
+        <h3>macOS</h3>
+        <p>Abra o <code>.dmg</code> e arraste o Sonara para <b>Aplicativos</b>. Na primeira vez,
+        clique com o botão direito no app → <b>Abrir</b> (não notarizado).</p>
+      </div>
+      <div>
+        <h3>Linux</h3>
+        <p>AppImage: <code>chmod +x Sonara*.AppImage</code> e execute.
+        Ou instale o <code>.deb</code>: <code>sudo dpkg -i Sonara*.deb</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    yt-dlp e ffmpeg já vêm embutidos no app.<br>
+    <a href="https://github.com/PedroA07/Sonara">Código no GitHub</a> ·
+    <a href="https://github.com/PedroA07/Sonara/releases">Todas as versões</a>
+  </footer>
+</main>
+
+<script>
+  const REPO = 'PedroA07/Sonara';
+  const RELEASES = 'https://github.com/' + REPO + '/releases';
+  const OS_LABEL = { windows: 'Windows', macos: 'macOS', linux: 'Linux' };
+
+  function detectOS() {
+    const uaData = navigator.userAgentData;
+    let p = ((uaData && uaData.platform) || navigator.platform || '').toLowerCase();
+    const ua = navigator.userAgent || '';
+    if (/android/i.test(ua)) return 'android';
+    if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
+    if (p.includes('win') || /windows/i.test(ua)) return 'windows';
+    if (p.includes('mac') || /mac os/i.test(ua)) return 'macos';
+    if (p.includes('linux') || /linux|x11/i.test(ua)) return 'linux';
+    return 'unknown';
+  }
+
+  function pickAsset(assets, os) {
+    const by = (re) => assets.find(a => re.test(a.name));
+    if (os === 'windows') return by(/-setup\.exe$/i) || by(/\.exe$/i) || by(/\.msi$/i);
+    if (os === 'macos')   return by(/\.dmg$/i);
+    if (os === 'linux')   return by(/\.appimage$/i) || by(/\.deb$/i) || by(/\.rpm$/i);
+    return null;
+  }
+
+  const GROUPS = [
+    { os: 'windows', label: 'Windows', exts: [/-setup\.exe$/i, /\.msi$/i] },
+    { os: 'macos',   label: 'macOS',   exts: [/\.dmg$/i] },
+    { os: 'linux',   label: 'Linux',   exts: [/\.appimage$/i, /\.deb$/i, /\.rpm$/i] },
+  ];
+
+  function fmtSize(b) {
+    if (!b) return '';
+    const mb = b / 1048576;
+    return mb >= 1 ? mb.toFixed(1) + ' MB' : (b / 1024).toFixed(0) + ' KB';
+  }
+
+  function fallback() {
+    document.getElementById('primary').innerHTML =
+      '<a class="btn" href="' + RELEASES + '/latest">Ver downloads no GitHub</a>';
+    document.getElementById('ver').textContent = '';
+    document.getElementById('grid').innerHTML =
+      '<div class="card"><h3>Downloads</h3><ul><li><a href="' + RELEASES + '">Abrir a página de releases</a></li></ul></div>';
+  }
+
+  async function main() {
+    const os = detectOS();
+    let rel = null;
+    try {
+      const r = await fetch('https://api.github.com/repos/' + REPO + '/releases/latest',
+        { headers: { 'Accept': 'application/vnd.github+json' } });
+      if (r.ok) rel = await r.json();
+    } catch (e) { /* offline / rate-limited */ }
+
+    if (!rel || !rel.assets || !rel.assets.length) { fallback(); return; }
+
+    const assets = rel.assets;
+    document.getElementById('ver').textContent = 'Versão ' + rel.tag_name;
+
+    const primary = document.getElementById('primary');
+    if (os === 'android' || os === 'ios') {
+      primary.innerHTML =
+        '<div class="note">O Sonara é um app para <b>computador</b> (Windows, macOS, Linux).<br>Abra esta página no seu desktop para baixar.</div>';
+    } else {
+      const a = pickAsset(assets, os);
+      if (a) {
+        primary.innerHTML =
+          '<a class="btn" href="' + a.browser_download_url + '" download>⬇&nbsp; Baixar para ' +
+          (OS_LABEL[os] || 'seu sistema') + '</a>' +
+          '<div class="sub">' + a.name + ' · ' + fmtSize(a.size) + '</div>';
+      } else {
+        primary.innerHTML = '<a class="btn" href="' + RELEASES + '/latest">Ver downloads</a>';
+      }
+    }
+
+    let html = '';
+    for (const g of GROUPS) {
+      const items = assets.filter(a => g.exts.some(re => re.test(a.name)));
+      if (!items.length) continue;
+      const isCur = g.os === os;
+      html += '<div class="card' + (isCur ? ' current' : '') + '"><h3>' + g.label +
+        (isCur ? ' <span class="tag">seu sistema</span>' : '') + '</h3><ul>';
+      for (const a of items) {
+        html += '<li><a href="' + a.browser_download_url + '" download>' + a.name +
+          '</a> <span class="sz">' + fmtSize(a.size) + '</span></li>';
+      }
+      html += '</ul></div>';
+    }
+    document.getElementById('grid').innerHTML = html;
+  }
+
+  main();
+</script>
+</body>
+</html>
