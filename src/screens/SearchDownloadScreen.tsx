@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import type { DestKind } from "../types";
 import { useDownloadsStore } from "../store/useDownloadsStore";
+import { IconDownload, IconPlay } from "../components/icons";
+
+// Extract an 11-char YouTube video id from the common URL shapes.
+function youtubeId(s: string): string | null {
+  const m = s.match(
+    /(?:youtube\.com\/(?:watch\?(?:\S*&)?v=|embed\/|shorts\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/
+  );
+  return m ? m[1] : null;
+}
 
 // RF-09 (por link) + RF-10 (busca integrada + download direto para destino).
 export default function SearchDownloadScreen() {
@@ -9,6 +18,8 @@ export default function SearchDownloadScreen() {
   const { jobs, init, start } = useDownloadsStore();
 
   useEffect(() => { init(); }, [init]);
+
+  const videoId = youtubeId(input);
 
   const submit = async () => {
     if (!input.trim()) return;
@@ -23,7 +34,7 @@ export default function SearchDownloadScreen() {
       <h1 className="text-3xl font-bold mb-2">Buscar &amp; Baixar</h1>
       <p className="text-muted mb-6">
         Cole um link do YouTube (vídeo ou playlist) ou digite o nome de uma música.
-        Escolha o destino e a faixa é baixada e já entra organizada.
+        Assista a prévia e baixe direto para o destino escolhido.
       </p>
 
       <div className="bg-panel rounded-xl p-4 space-y-4">
@@ -31,9 +42,38 @@ export default function SearchDownloadScreen() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
-          placeholder="Link ou termo de busca…"
+          placeholder="Link do YouTube ou termo de busca…"
           className="w-full bg-panel2 rounded-lg px-4 py-3 outline-none focus:ring-1 ring-brand"
         />
+
+        {/* Native preview: watch the clip before downloading */}
+        {videoId ? (
+          <div className="rounded-xl overflow-hidden border border-white/10">
+            <div className="relative w-full bg-black" style={{ paddingTop: "56.25%" }}>
+              <iframe
+                key={videoId}
+                className="absolute inset-0 w-full h-full"
+                src={`https://www.youtube.com/embed/${videoId}`}
+                title="Prévia do clipe"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+            <div className="flex items-center gap-3 bg-panel2 px-4 py-3">
+              <IconPlay size={16} />
+              <span className="text-sm text-muted">Gostou? Baixe esta música direto no app.</span>
+              <button onClick={submit}
+                className="ml-auto inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium">
+                <IconDownload size={16} /> Baixar esta música
+              </button>
+            </div>
+          </div>
+        ) : input.trim() && !/^https?:\/\//i.test(input) ? (
+          <p className="text-xs text-muted">
+            Dica: cole o <b>link</b> de um vídeo do YouTube para assistir à prévia aqui antes de baixar.
+          </p>
+        ) : null}
+
         <div className="flex items-center gap-3 flex-wrap">
           <span className="text-sm text-muted">Baixar direto para:</span>
           {(["library", "playlist", "album", "queue"] as DestKind[]).map((d) => (
