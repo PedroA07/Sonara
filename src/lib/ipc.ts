@@ -34,6 +34,9 @@ export const api = {
     invoke<number>("update_track_metadata", { trackIds, edit, writeFile }),
   setTrackCover: (trackId: number, imagePath: string, writeFile: boolean) =>
     invoke<void>("set_track_cover", { trackId, imagePath, writeFile }),
+  readImageBase64: (path: string) => invoke<string>("read_image_base64", { path }),
+  setCoverFromBytes: (trackId: number, pngBase64: string, writeFile: boolean) =>
+    invoke<string>("set_cover_from_bytes", { trackId, pngBase64, writeFile }),
   // Playlists (RF-04)
   listPlaylists: () => invoke<PlaylistCard[]>("list_playlists"),
   createPlaylist: (name: string) => invoke<number>("create_playlist", { name }),

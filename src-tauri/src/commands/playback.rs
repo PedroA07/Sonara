@@ -24,7 +24,7 @@ pub fn set_queue(db: State<Db>, track_ids: Vec<i64>) -> AppResult<()> {
 pub fn get_queue(db: State<Db>) -> AppResult<Vec<Track>> {
     let conn = db.0.lock().unwrap();
     let mut stmt = conn.prepare(
-        "SELECT t.id, t.title, t.file_path, t.duration, t.track_no, t.disc_no, t.year, t.genre, t.album_id, t.bitrate, t.format, t.gain, al.cover_path
+        "SELECT t.id, t.title, t.file_path, t.duration, t.track_no, t.disc_no, t.year, t.genre, t.album_id, t.bitrate, t.format, t.gain, COALESCE(t.cover_path, al.cover_path)
          FROM queue_item q JOIN track t ON t.id = q.track_id
          LEFT JOIN album al ON al.id = t.album_id ORDER BY q.position",
     )?;

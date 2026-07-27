@@ -41,6 +41,8 @@ fn main() {
             commands::download::list_download_jobs,
             commands::edit::update_track_metadata,
             commands::edit::set_track_cover,
+            commands::edit::read_image_base64,
+            commands::edit::set_cover_from_bytes,
             commands::playlists::list_playlists,
             commands::playlists::create_playlist,
             commands::playlists::update_playlist,

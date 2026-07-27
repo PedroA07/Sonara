@@ -120,7 +120,7 @@ pub fn playlist_tracks(db: State<Db>, playlist_id: i64) -> AppResult<Vec<Track>>
     };
 
     let sql = format!(
-        "SELECT t.id, t.title, t.file_path, t.duration, t.track_no, t.disc_no, t.year, t.genre, t.album_id, t.bitrate, t.format, t.gain, al.cover_path
+        "SELECT t.id, t.title, t.file_path, t.duration, t.track_no, t.disc_no, t.year, t.genre, t.album_id, t.bitrate, t.format, t.gain, COALESCE(t.cover_path, al.cover_path)
          FROM playlist_item pi
          JOIN track t ON t.id = pi.track_id
          LEFT JOIN album al ON al.id = t.album_id

@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Sonara",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "identifier": "com.sonara.app",
   "build": {
     "frontendDist": "../dist",
@@ -35,7 +35,7 @@
       "endpoints": [
         "https://github.com/PedroA07/Sonara/releases/latest/download/latest.json"
       ],
-      "pubkey": "REPLACE_WITH_YOUR_TAURI_PUBLIC_KEY"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEMzMjY0MUZFRUU2RDZGNTgKUldSWWIyM3Uva0VtdzJxbzlNa0hTY1dGZitqTDB6Zkx4K0tkdHFPRFErZllVVk96d1d1bTU0RjYK"
     }
   },
   "bundle": {
@@ -50,7 +50,7 @@
       "binaries/yt-dlp",
       "binaries/ffmpeg"
     ],
-    "createUpdaterArtifacts": false,
+    "createUpdaterArtifacts": true,
     "windows": {
       "nsis": {
         "installMode": "perMachine",

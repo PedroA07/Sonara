@@ -16,7 +16,7 @@ pub(crate) fn map_track(r: &rusqlite::Row) -> rusqlite::Result<Track> {
 // own). A correlated subquery keeps every `FROM track` query working unchanged.
 pub(crate) const TRACK_COLS: &str =
     "id, title, file_path, duration, track_no, disc_no, year, genre, album_id, bitrate, format, gain, \
-     (SELECT cover_path FROM album WHERE album.id = track.album_id) AS cover_path";
+     COALESCE(track.cover_path, (SELECT cover_path FROM album WHERE album.id = track.album_id)) AS cover_path";
 
 /// RF-03: list all tracks.
 #[tauri::command]

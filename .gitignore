@@ -5,3 +5,4 @@ src-tauri/target
 src-tauri/binaries/
 *.log
 .DS_Store
+.secrets/
