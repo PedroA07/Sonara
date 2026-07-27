@@ -104,6 +104,16 @@ pub struct PlaylistCard {
     pub track_count: i64,
 }
 
+/// One YouTube search result (RF-10), shown so the user can preview and pick.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SearchResult {
+    pub id: String,
+    pub title: String,
+    pub uploader: Option<String>,
+    pub duration: Option<f64>,
+    pub thumbnail: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DownloadJob {
     pub id: i64,

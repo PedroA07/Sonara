@@ -1,7 +1,7 @@
 import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import type {
   Track, AlbumCard, Artist, ParsedTrack, ImportSuggestion, ImportStrategy, DestKind,
-  PlaylistCard, TrackEdit, DownloadJob,
+  PlaylistCard, TrackEdit, DownloadJob, SearchResult,
 } from "../types";
 
 export const api = {
@@ -24,6 +24,7 @@ export const api = {
   startDownload: (input: string, destKind?: DestKind, destId?: number) =>
     invoke<number>("start_download", { input, destKind, destId }),
   listDownloadJobs: () => invoke<DownloadJob[]>("list_download_jobs"),
+  youtubeSearch: (query: string, limit?: number) => invoke<SearchResult[]>("youtube_search", { query, limit }),
   // Maintenance / enrichment (F5)
   rebuildSearchIndex: () => invoke<void>("rebuild_search_index"),
   findDuplicates: () => invoke<Track[]>("find_duplicates"),

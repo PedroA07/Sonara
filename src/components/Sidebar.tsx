@@ -33,7 +33,7 @@ export default function Sidebar({
           </button>
         ))}
       </nav>
-      <div className="px-5 py-4 text-xs text-muted">v0.1.2 · F0</div>
+      <div className="px-5 py-4 text-xs text-muted">v0.1.3 · F0</div>
     </aside>
   );
 }

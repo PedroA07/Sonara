@@ -39,6 +39,7 @@ fn main() {
             commands::download::start_download,
             commands::download::preview_download_args,
             commands::download::list_download_jobs,
+            commands::download::youtube_search,
             commands::edit::update_track_metadata,
             commands::edit::set_track_cover,
             commands::edit::read_image_base64,

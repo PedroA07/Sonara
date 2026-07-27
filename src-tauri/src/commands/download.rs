@@ -1,6 +1,6 @@
 use crate::db::Db;
 use crate::error::{AppError, AppResult};
-use crate::models::DownloadJob;
+use crate::models::{DownloadJob, SearchResult};
 use crate::services::downloader::{build_ytdlp_args, classify_input, JobKind};
 use crate::services::metadata;
 use serde::Serialize;
@@ -134,6 +134,7 @@ pub async fn start_download(
     let dk = dest_kind.clone();
     tauri::async_runtime::spawn(async move {
         let mut files: Vec<String> = Vec::new();
+        let mut last_err = String::new(); // remember the most useful stderr line
         while let Some(event) = rx.recv().await {
             match event {
                 CommandEvent::Stdout(bytes) => {
@@ -148,16 +149,32 @@ pub async fn start_download(
                 }
                 CommandEvent::Stderr(bytes) => {
                     let line = String::from_utf8_lossy(&bytes);
-                    emit(&app2, Progress { job_id, status: "running".into(), progress: -1.0, message: line.trim().to_string() });
+                    let t = line.trim();
+                    // yt-dlp prints real errors on lines starting with "ERROR:".
+                    if t.starts_with("ERROR") || t.contains("Unable to") || t.contains("not available") {
+                        last_err = t.to_string();
+                    }
+                    emit(&app2, Progress { job_id, status: "running".into(), progress: -1.0, message: t.to_string() });
+                }
+                CommandEvent::Error(e) => {
+                    last_err = format!("falha ao iniciar o yt-dlp: {e}");
                 }
                 CommandEvent::Terminated(payload) => {
-                    if payload.code.unwrap_or(1) == 0 {
+                    let code = payload.code.unwrap_or(-1);
+                    if code == 0 && !files.is_empty() {
                         let n = finalize(&app2, &files, dk.as_deref(), dest_id);
                         set_job_status(&app2, job_id, "done", 100.0);
                         emit(&app2, Progress { job_id, status: "done".into(), progress: 100.0, message: format!("{n} faixa(s) importada(s)") });
                     } else {
                         set_job_status(&app2, job_id, "error", 0.0);
-                        emit(&app2, Progress { job_id, status: "error".into(), progress: 0.0, message: "yt-dlp retornou erro".into() });
+                        let msg = if !last_err.is_empty() {
+                            last_err.clone()
+                        } else if code == 0 {
+                            "nenhum arquivo foi baixado (verifique o link)".into()
+                        } else {
+                            format!("yt-dlp falhou (código {code})")
+                        };
+                        emit(&app2, Progress { job_id, status: "error".into(), progress: 0.0, message: msg });
                     }
                 }
                 _ => {}
@@ -189,6 +206,56 @@ pub fn list_download_jobs(db: State<Db>) -> AppResult<Vec<DownloadJob>> {
         }))?
         .collect::<Result<Vec<_>, _>>()?;
     Ok(rows)
+}
+
+/// RF-10: search YouTube and return pickable results (no download). Uses
+/// `yt-dlp --dump-json --flat-playlist ytsearchN:` and parses each JSON line.
+#[tauri::command]
+pub async fn youtube_search(app: AppHandle, query: String, limit: Option<u32>) -> AppResult<Vec<SearchResult>> {
+    let q = query.trim();
+    if q.is_empty() {
+        return Ok(vec![]);
+    }
+    let n = limit.unwrap_or(8).clamp(1, 20);
+    let sidecar = app.shell().sidecar("yt-dlp").map_err(|e| AppError::Download(e.to_string()))?;
+    let out = sidecar
+        .args(["--dump-json", "--flat-playlist", "--no-warnings", &format!("ytsearch{n}:{q}")])
+        .output()
+        .await
+        .map_err(|e| AppError::Download(e.to_string()))?;
+
+    if !out.status.success() {
+        let err = String::from_utf8_lossy(&out.stderr);
+        let msg = err.lines().rev().find(|l| !l.trim().is_empty()).unwrap_or("busca falhou").to_string();
+        return Err(AppError::Download(msg));
+    }
+
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    let mut results = Vec::new();
+    for line in stdout.lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        if let Ok(v) = serde_json::from_str::<serde_json::Value>(line) {
+            let id = v.get("id").and_then(|x| x.as_str()).unwrap_or("").to_string();
+            if id.is_empty() {
+                continue;
+            }
+            results.push(SearchResult {
+                title: v.get("title").and_then(|x| x.as_str()).unwrap_or("(sem título)").to_string(),
+                uploader: v
+                    .get("uploader")
+                    .or_else(|| v.get("channel"))
+                    .and_then(|x| x.as_str())
+                    .map(|s| s.to_string()),
+                duration: v.get("duration").and_then(|x| x.as_f64()),
+                thumbnail: format!("https://i.ytimg.com/vi/{id}/mqdefault.jpg"),
+                id,
+            });
+        }
+    }
+    Ok(results)
 }
 
 #[cfg(test)]

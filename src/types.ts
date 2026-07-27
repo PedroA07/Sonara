@@ -86,6 +86,14 @@ export interface Settings {
   replaygain: boolean;
 }
 
+export interface SearchResult {
+  id: string;
+  title: string;
+  uploader: string | null;
+  duration: number | null;
+  thumbnail: string;
+}
+
 export interface DownloadJob {
   id: number;
   url: string | null;
