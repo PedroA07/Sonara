@@ -90,3 +90,40 @@ export const IconTrash = (p: IconProps) => (
 export const IconQueue = (p: IconProps) => (
   <Svg {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><line x1="14" y1="4" x2="14" y2="20" /></Svg>
 );
+export const IconFolder = (p: IconProps) => (
+  <Svg {...p}><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></Svg>
+);
+/** Export = a file leaving the app towards another folder/device. */
+export const IconExport = (p: IconProps) => (
+  <Svg {...p}><path d="M12 15V3" /><path d="m8 7 4-4 4 4" /><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5" /></Svg>
+);
+export const IconUsb = (p: IconProps) => (
+  <Svg {...p}><circle cx="12" cy="20" r="2" /><path d="M12 18V6" /><path d="m9 9 3-6 3 6" /><path d="M12 14l4.5-3v-2" /><circle cx="16.5" cy="8" r="1.2" fill="currentColor" stroke="none" /><path d="M12 12 7.5 9V7" /><rect x="6" y="4.6" width="3" height="2.6" rx=".6" /></Svg>
+);
+export const IconRefresh = (p: IconProps) => (
+  <Svg {...p}><path d="M21 12a9 9 0 1 1-2.6-6.4" /><path d="M21 4v5h-5" /></Svg>
+);
+export const IconCheck = (p: IconProps) => (
+  <Svg {...p}><path d="m4 12 5.5 5.5L20 7" /></Svg>
+);
+export const IconAlert = (p: IconProps) => (
+  <Svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.5" /><path d="M12 16.2v.1" /></Svg>
+);
+export const IconLink = (p: IconProps) => (
+  <Svg {...p}><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5" /><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7L12 19" /></Svg>
+);
+export const IconMusic = (p: IconProps) => (
+  <Svg {...p}><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></Svg>
+);
+export const IconSparkle = (p: IconProps) => (
+  <Svg {...p}><path d="M12 3v4M12 17v4M3 12h4M17 12h4" /><path d="M12 8.5 13.4 11 16 12l-2.6 1L12 15.5 10.6 13 8 12l2.6-1z" fill="currentColor" stroke="none" /></Svg>
+);
+export const IconGrid = (p: IconProps) => (
+  <Svg {...p}><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></Svg>
+);
+export const IconList = (p: IconProps) => (
+  <Svg {...p}><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3.5" y1="6" x2="3.6" y2="6" /><line x1="3.5" y1="12" x2="3.6" y2="12" /><line x1="3.5" y1="18" x2="3.6" y2="18" /></Svg>
+);
+export const IconStop = (p: IconProps) => (
+  <Svg {...p} fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="2" /></Svg>
+);

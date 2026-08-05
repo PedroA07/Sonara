@@ -11,11 +11,13 @@ interface PlayerState {
   currentTime: number;
   duration: number;
   volume: number;
+  muted: boolean;
   seekReq: number | null; // set to request the <audio> to seek
   showQueue: boolean;     // right-hand queue panel visibility
   expanded: boolean;      // full-screen "now playing" view
 
   setQueue: (tracks: Track[], startAt?: number) => void;
+  jumpTo: (index: number) => void;
   toggleQueue: () => void;
   setExpanded: (v: boolean) => void;
   play: () => void;
@@ -30,6 +32,7 @@ interface PlayerState {
   setTime: (t: number) => void;
   setDuration: (d: number) => void;
   setVolume: (v: number) => void;
+  toggleMute: () => void;
   requestSeek: (t: number) => void;
   clearSeek: () => void;
 }
@@ -55,12 +58,20 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   currentTime: 0,
   duration: 0,
   volume: 1,
+  muted: false,
   seekReq: null,
   showQueue: true,
   expanded: false,
 
   setQueue: (tracks, startAt = 0) =>
     set({ queue: tracks, currentIndex: startAt, isPlaying: true, currentTime: 0 }),
+  // Clicking a row in the queue plays it, rather than only highlighting it.
+  jumpTo: (index) =>
+    set((s) =>
+      index >= 0 && index < s.queue.length
+        ? { currentIndex: index, currentTime: 0, isPlaying: true }
+        : s
+    ),
   toggleQueue: () => set((s) => ({ showQueue: !s.showQueue })),
   setExpanded: (v) => set({ expanded: v }),
   play: () => set({ isPlaying: true }),
@@ -92,7 +103,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   toggleLayout: () => set((s) => ({ layout: s.layout === "album" ? "browse" : "album" })),
   setTime: (t) => set({ currentTime: t }),
   setDuration: (d) => set({ duration: d }),
-  setVolume: (v) => set({ volume: v }),
+  // Dragging the volume up is also the natural way to unmute.
+  setVolume: (v) => set({ volume: v, muted: v === 0 ? true : false }),
+  toggleMute: () => set((s) => ({ muted: !s.muted })),
   requestSeek: (t) => set({ seekReq: t }),
   clearSeek: () => set({ seekReq: null }),
 }));

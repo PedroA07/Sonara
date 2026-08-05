@@ -3,7 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
     <title>Sonara</title>
+    <style>
+      /* Painted before React mounts so the window never flashes white. */
+      html { background: #0b0d16; }
+      html[data-theme="light"] { background: #f5f6fb; }
+    </style>
   </head>
   <body>
     <div id="root"></div>

@@ -1,7 +1,7 @@
 import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import type {
   Track, AlbumCard, Artist, ParsedTrack, ImportSuggestion, ImportStrategy, DestKind,
-  PlaylistCard, TrackEdit, DownloadJob, SearchResult,
+  PlaylistCard, TrackEdit, DownloadJob, SearchResult, ToolStatus, ExportOptions, ExportResult,
 } from "../types";
 
 export const api = {
@@ -23,8 +23,15 @@ export const api = {
   // Download (RF-09 / RF-10)
   startDownload: (input: string, destKind?: DestKind, destId?: number) =>
     invoke<number>("start_download", { input, destKind, destId }),
+  cancelDownload: (jobId: number) => invoke<void>("cancel_download", { jobId }),
   listDownloadJobs: () => invoke<DownloadJob[]>("list_download_jobs"),
+  clearDownloadHistory: () => invoke<number>("clear_download_history"),
+  checkDownloadTools: () => invoke<ToolStatus>("check_download_tools"),
   youtubeSearch: (query: string, limit?: number) => invoke<SearchResult[]>("youtube_search", { query, limit }),
+  // Export to another folder / USB stick / phone
+  exportTracks: (trackIds: number[], options: ExportOptions) =>
+    invoke<ExportResult>("export_tracks", { trackIds, options }),
+  openPath: (path: string) => invoke<void>("open_path", { path }),
   // Maintenance / enrichment (F5)
   rebuildSearchIndex: () => invoke<void>("rebuild_search_index"),
   findDuplicates: () => invoke<Track[]>("find_duplicates"),
@@ -54,7 +61,12 @@ export const api = {
   // Settings (F3)
   getSettings: () => invoke<Record<string, string>>("get_settings"),
   setSetting: (key: string, value: string) => invoke<void>("set_setting", { key, value }),
+  defaultPaths: () => invoke<Record<string, string>>("default_paths"),
 };
+
+/** True when running inside the Tauri shell (as opposed to `npm run dev` in a
+ *  plain browser, where none of the commands above exist). */
+export const isDesktop = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
 /** Resolve a local file path into a URL the webview can play/display. */
 export function fileUrl(path: string): string {

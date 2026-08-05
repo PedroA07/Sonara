@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Button } from "./ui";
 
 // Square cover cropper. Receives an image as a data URL (so the canvas export
 // is never tainted), lets the user drag/resize a square selection, and returns
@@ -65,13 +66,13 @@ export default function CropModal({
   const maxSize = Math.max(40, Math.min(disp.w || 40, disp.h || 40));
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60]" onClick={onCancel}>
-      <div className="bg-panel rounded-2xl p-5 max-w-[92vw]" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-lg font-bold mb-1">Cortar capa</h3>
-        <p className="text-xs text-muted mb-3">Arraste o quadrado e ajuste o tamanho.</p>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-[3px] flex items-center justify-center z-[60] animate-fade-in" onClick={onCancel}>
+      <div className="bg-elev border border-line/[.12] rounded-2xl shadow-lift p-5 max-w-[92vw] animate-scale-in" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-lg font-semibold mb-1">Cortar a capa</h3>
+        <p className="text-xs text-muted mb-3">Arraste o quadrado para escolher a parte da imagem e ajuste o tamanho abaixo.</p>
         <div className="relative inline-block select-none" style={{ lineHeight: 0 }}>
           <img ref={imgRef} src={dataUrl} onLoad={onImgLoad} alt="" draggable={false}
-            className="max-w-[420px] max-h-[50vh] rounded-lg" />
+            className="max-w-[420px] max-h-[50vh] rounded-xl" />
           {sel.s > 0 && (
             <div onMouseDown={startDrag} className="absolute border-2 border-brand cursor-move"
               style={{ left: sel.x, top: sel.y, width: sel.s, height: sel.s, boxShadow: "0 0 0 9999px rgba(0,0,0,.55)" }} />
@@ -79,14 +80,17 @@ export default function CropModal({
         </div>
         <div className="flex items-center gap-3 mt-4 text-sm">
           <span className="text-muted whitespace-nowrap">Tamanho</span>
-          <input type="range" min={40} max={maxSize} value={sel.s}
-            onChange={(e) => resize(Number(e.target.value))} className="flex-1 accent-brand" />
+          <input
+            type="range" min={40} max={maxSize} value={sel.s}
+            onChange={(e) => resize(Number(e.target.value))}
+            aria-label="Tamanho do recorte"
+            className="flex-1 track-range"
+            style={{ ["--pct" as string]: `${maxSize > 40 ? ((sel.s - 40) / (maxSize - 40)) * 100 : 0}%` }}
+          />
         </div>
         <div className="flex justify-end gap-2 mt-4">
-          <button onClick={onCancel} className="px-4 py-2 rounded-lg bg-panel2 text-content text-sm">Cancelar</button>
-          <button onClick={confirm} disabled={busy} className="px-4 py-2 rounded-lg bg-brand text-content text-sm disabled:opacity-50">
-            {busy ? "Salvando…" : "Usar recorte"}
-          </button>
+          <Button variant="ghost" onClick={onCancel}>Cancelar</Button>
+          <Button variant="primary" onClick={confirm} loading={busy}>Usar este recorte</Button>
         </div>
       </div>
     </div>

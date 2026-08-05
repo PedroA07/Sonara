@@ -8,21 +8,36 @@ pub(crate) fn map_track(r: &rusqlite::Row) -> rusqlite::Result<Track> {
         id: r.get(0)?, title: r.get(1)?, file_path: r.get(2)?, duration: r.get(3)?,
         track_no: r.get(4)?, disc_no: r.get(5)?, year: r.get(6)?, genre: r.get(7)?,
         album_id: r.get(8)?, bitrate: r.get(9)?, format: r.get(10)?, gain: r.get(11)?,
-        cover_path: r.get(12)?,
+        cover_path: r.get(12)?, artist_name: r.get(13)?, album_title: r.get(14)?,
     })
 }
 
-// The track's cover comes from its album (tracks have no cover column of their
-// own). A correlated subquery keeps every `FROM track` query working unchanged.
-pub(crate) const TRACK_COLS: &str =
-    "id, title, file_path, duration, track_no, disc_no, year, genre, album_id, bitrate, format, gain, \
-     COALESCE(track.cover_path, (SELECT cover_path FROM album WHERE album.id = track.album_id)) AS cover_path";
+/// Column list for [`map_track`], parameterised by the table alias so the queue
+/// and playlist joins produce exactly the same shape as a plain `FROM track`.
+///
+/// Correlated subqueries resolve the cover, the artist name and the album title:
+/// a track's own cover wins over its album's, and its own artist link wins over
+/// the album artist.
+pub(crate) fn track_cols(t: &str) -> String {
+    format!(
+        "{t}.id, {t}.title, {t}.file_path, {t}.duration, {t}.track_no, {t}.disc_no, {t}.year, \
+         {t}.genre, {t}.album_id, {t}.bitrate, {t}.format, {t}.gain, \
+         COALESCE({t}.cover_path, (SELECT cover_path FROM album WHERE album.id = {t}.album_id)) AS cover_path, \
+         COALESCE( \
+           (SELECT ar.name FROM track_artist ta JOIN artist ar ON ar.id = ta.artist_id \
+             WHERE ta.track_id = {t}.id ORDER BY ar.name LIMIT 1), \
+           (SELECT ar2.name FROM album al2 JOIN artist ar2 ON ar2.id = al2.artist_id \
+             WHERE al2.id = {t}.album_id) \
+         ) AS artist_name, \
+         (SELECT title FROM album WHERE album.id = {t}.album_id) AS album_title"
+    )
+}
 
 /// RF-03: list all tracks.
 #[tauri::command]
 pub fn list_tracks(db: State<Db>) -> AppResult<Vec<Track>> {
     let conn = db.0.lock().unwrap();
-    let sql = format!("SELECT {TRACK_COLS} FROM track ORDER BY date_added DESC");
+    let sql = format!("SELECT {} FROM track ORDER BY date_added DESC", track_cols("track"));
     let mut stmt = conn.prepare(&sql)?;
     let rows = stmt.query_map([], map_track)?.collect::<Result<Vec<_>, _>>()?;
     Ok(rows)
@@ -47,7 +62,8 @@ pub fn search_library(db: State<Db>, query: String) -> AppResult<Vec<Track>> {
 
     if !match_expr.is_empty() {
         let sql = format!(
-            "SELECT {TRACK_COLS} FROM track              WHERE id IN (SELECT rowid FROM track_fts WHERE track_fts MATCH ?1) ORDER BY title"
+            "SELECT {} FROM track WHERE id IN (SELECT rowid FROM track_fts WHERE track_fts MATCH ?1) ORDER BY title",
+            track_cols("track")
         );
         let fts: rusqlite::Result<Vec<Track>> = (|| {
             let mut stmt = conn.prepare(&sql)?;
@@ -63,7 +79,10 @@ pub fn search_library(db: State<Db>, query: String) -> AppResult<Vec<Track>> {
 
     // Fallback: LIKE (also covers punctuation-only queries and empty FTS index).
     let like = format!("%{q}%");
-    let sql = format!("SELECT {TRACK_COLS} FROM track WHERE title LIKE ?1 OR genre LIKE ?1 ORDER BY title");
+    let sql = format!(
+        "SELECT {} FROM track WHERE title LIKE ?1 OR genre LIKE ?1 ORDER BY title",
+        track_cols("track")
+    );
     let mut stmt = conn.prepare(&sql)?;
     let rows = stmt.query_map([like], map_track)?.collect::<Result<Vec<_>, _>>()?;
     Ok(rows)
@@ -94,8 +113,9 @@ pub fn list_albums(db: State<Db>) -> AppResult<Vec<AlbumCard>> {
 pub fn album_tracks(db: State<Db>, album_id: i64) -> AppResult<Vec<Track>> {
     let conn = db.0.lock().unwrap();
     let sql = format!(
-        "SELECT {TRACK_COLS} FROM track WHERE album_id = ?1
-         ORDER BY IFNULL(disc_no,1), IFNULL(track_no,9999), title"
+        "SELECT {} FROM track WHERE album_id = ?1
+         ORDER BY IFNULL(disc_no,1), IFNULL(track_no,9999), title",
+        track_cols("track")
     );
     let mut stmt = conn.prepare(&sql)?;
     let rows = stmt.query_map([album_id], map_track)?.collect::<Result<Vec<_>, _>>()?;

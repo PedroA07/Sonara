@@ -1,4 +1,4 @@
-use crate::commands::library::{map_track, TRACK_COLS};
+use crate::commands::library::{map_track, track_cols};
 use crate::commands::search::reindex;
 use crate::db::Db;
 use crate::error::AppResult;
@@ -11,9 +11,10 @@ pub fn find_duplicates(db: State<Db>) -> AppResult<Vec<Track>> {
     let conn = db.0.lock().unwrap();
     let key = "LOWER(title) || '|' || CAST(IFNULL(ROUND(duration),0) AS INT)";
     let sql = format!(
-        "SELECT {TRACK_COLS} FROM track WHERE {key} IN \
+        "SELECT {cols} FROM track WHERE {key} IN \
          (SELECT {key} FROM track GROUP BY 1 HAVING COUNT(*) > 1) \
-         ORDER BY LOWER(title), duration"
+         ORDER BY LOWER(title), duration",
+        cols = track_cols("track")
     );
     let mut stmt = conn.prepare(&sql)?;
     let rows = stmt.query_map([], map_track)?.collect::<Result<Vec<_>, _>>()?;

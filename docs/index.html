@@ -3,240 +3,507 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sonara — Baixar</title>
-<meta name="description" content="Baixe o Sonara — player de música desktop com download de músicas integrado (Windows, macOS, Linux).">
-<meta property="og:title" content="Sonara — Baixar">
-<meta property="og:description" content="Player de música desktop com download integrado. Windows, macOS e Linux.">
+<title>Sonara — baixe suas músicas e leve para onde quiser</title>
+<meta name="description" content="Sonara é um player de música para computador com download integrado. Baixe do YouTube, organize sua biblioteca e exporte para o pendrive, o celular ou o som do carro. Windows, macOS e Linux.">
+<meta property="og:title" content="Sonara — baixe suas músicas e leve para onde quiser">
+<meta property="og:description" content="Player de música para computador com download integrado e exportação para qualquer pasta ou dispositivo.">
+<meta property="og:type" content="website">
 <meta property="og:image" content="icon.png">
+<meta name="theme-color" content="#0b0d16">
 <link rel="icon" href="icon.png">
 <style>
   :root{
-    --ink:#0e1117; --panel:#161a22; --panel2:#1e2430; --muted:#8a90a2; --content:#e7e9ee; --app-brand:#2e6be6;
-    --violet:#8b5cf6; --violet2:#6d28d9;
+    --brand:#7c5cff; --brand2:#22d3ee;
+    --ink:#0b0d16; --panel:#141724; --panel2:#1c2030; --elev:#262b3c;
+    --text:#eceef6; --muted:#949bb2; --line:255 255 255;
+    --success:#34d399; --radius:16px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:radial-gradient(1200px 600px at 50% -10%, #1e1b4b, #0f172a 60%);
-    color:#e2e8f0;min-height:100vh;line-height:1.55;padding:56px 20px 80px}
-  main{max-width:900px;margin:0 auto;text-align:center}
-  .logo{width:112px;height:112px;border-radius:26px;box-shadow:0 20px 60px rgba(139,92,246,.35)}
-  h1{font-size:46px;margin:20px 0 6px;letter-spacing:-.02em}
-  .tagline{color:#94a3b8;font-size:18px;margin-bottom:32px}
-  .btn{display:inline-block;background:linear-gradient(135deg,var(--violet),var(--violet2));color:#fff;text-decoration:none;
-    font-weight:600;font-size:18px;padding:16px 34px;border-radius:14px;box-shadow:0 10px 30px rgba(139,92,246,.4);
-    transition:transform .12s ease, box-shadow .12s ease}
-  .btn:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(139,92,246,.55)}
-  .sub{color:#94a3b8;font-size:13px;margin-top:10px}
-  .ver{color:#64748b;font-size:14px;margin-top:18px}
-  .note{color:#cbd5e1;background:#1e293b;border:1px solid #334155;padding:16px 20px;border-radius:12px;display:inline-block}
-  section{margin-top:64px;text-align:left}
-  h2{font-size:24px;margin-bottom:8px;text-align:center}
-  .h2sub{color:#94a3b8;text-align:center;font-size:15px;margin-bottom:26px}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--ink);color:var(--text);line-height:1.6;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden
+  }
+  a{color:inherit}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px}
 
-  /* ---------- App preview (fiel à interface real) ---------- */
-  .shot-wrap{overflow-x:auto;padding-bottom:6px}
-  .shot{min-width:660px;max-width:820px;margin:0 auto;border-radius:16px;overflow:hidden;
-    border:1px solid #263042;box-shadow:0 30px 80px rgba(0,0,0,.5);background:var(--ink)}
-  .shot-bar{height:34px;background:#0b0e14;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid #1f2937}
+  /* ── Header ─────────────────────────────────────────── */
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgb(11 13 22 / .8);border-bottom:1px solid rgb(var(--line) / .07)}
+  .nav{display:flex;align-items:center;gap:14px;height:62px}
+  .brandmark{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.02em;text-decoration:none}
+  .brandmark .grad{background:linear-gradient(120deg,var(--brand),var(--brand2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .nav-links{margin-left:auto;display:flex;gap:22px;font-size:14px;color:var(--muted)}
+  .nav-links a{text-decoration:none;transition:color .15s}
+  .nav-links a:hover{color:var(--text)}
+  @media(max-width:720px){.nav-links{display:none}}
+
+  /* ── Hero ───────────────────────────────────────────── */
+  .hero{position:relative;text-align:center;padding:76px 0 60px;overflow:hidden}
+  .hero::before{content:"";position:absolute;inset:-30% -20% auto -20%;height:640px;pointer-events:none;
+    background:radial-gradient(620px 300px at 30% 0%,rgb(124 92 255 / .28),transparent 70%),
+               radial-gradient(520px 260px at 72% 12%,rgb(34 211 238 / .18),transparent 70%)}
+  .hero>*{position:relative}
+  .logo{width:88px;height:88px;border-radius:24px;box-shadow:0 22px 60px rgb(124 92 255 / .38)}
+  h1{font-size:clamp(34px,5.4vw,52px);line-height:1.1;letter-spacing:-.03em;margin:22px 0 14px;font-weight:800}
+  h1 .grad{background:linear-gradient(120deg,var(--brand),var(--brand2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .tagline{color:var(--muted);font-size:clamp(16px,2.2vw,19px);max-width:640px;margin:0 auto 30px}
+  .btn{display:inline-flex;align-items:center;gap:10px;
+    background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;text-decoration:none;
+    font-weight:600;font-size:17px;padding:15px 30px;border-radius:14px;
+    box-shadow:0 14px 40px rgb(124 92 255 / .42);transition:transform .15s cubic-bezier(.2,.9,.3,1.2),box-shadow .15s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 18px 48px rgb(124 92 255 / .55)}
+  .btn.secondary{background:var(--panel2);box-shadow:none;border:1px solid rgb(var(--line) / .1);font-size:15px;padding:13px 22px}
+  .btn.secondary:hover{background:var(--elev);box-shadow:none}
+  .sub{color:var(--muted);font-size:13px;margin-top:12px}
+  .ver{color:#6b7490;font-size:13px;margin-top:8px}
+  .loading{color:var(--muted);font-size:15px}
+  .note{color:#cbd5e1;background:var(--panel);border:1px solid rgb(var(--line) / .1);
+    padding:16px 22px;border-radius:14px;display:inline-block;max-width:520px;text-align:left}
+  .os-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:22px;
+    color:var(--muted);font-size:13px;align-items:center}
+  .os-row span{display:inline-flex;align-items:center;gap:6px}
+
+  /* ── Sections ───────────────────────────────────────── */
+  section{padding:64px 0;border-top:1px solid rgb(var(--line) / .06)}
+  h2{font-size:clamp(24px,3.4vw,32px);letter-spacing:-.02em;text-align:center;font-weight:750}
+  .h2sub{color:var(--muted);text-align:center;font-size:15px;margin:10px auto 36px;max-width:600px}
+
+  .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+  .feature{background:var(--panel);border:1px solid rgb(var(--line) / .08);border-radius:var(--radius);padding:22px;
+    transition:transform .18s cubic-bezier(.2,.9,.3,1),border-color .18s}
+  .feature:hover{transform:translateY(-3px);border-color:rgb(124 92 255 / .35)}
+  .feature .ico{width:40px;height:40px;border-radius:11px;background:rgb(124 92 255 / .14);color:var(--brand);
+    display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+  .feature h3{font-size:16px;margin-bottom:6px;font-weight:650}
+  .feature p{color:var(--muted);font-size:14px}
+
+  /* ── Steps ──────────────────────────────────────────── */
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;counter-reset:s}
+  .step{background:var(--panel);border:1px solid rgb(var(--line) / .08);border-radius:var(--radius);padding:22px;position:relative}
+  .step .n{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;margin-bottom:13px}
+  .step h3{font-size:15px;margin-bottom:5px;font-weight:650}
+  .step p{color:var(--muted);font-size:14px}
+
+  /* ── App preview (faithful to the real interface) ───── */
+  .shot-wrap{overflow-x:auto;padding-bottom:8px}
+  .shot{min-width:680px;max-width:880px;margin:0 auto;border-radius:16px;overflow:hidden;
+    border:1px solid rgb(var(--line) / .1);box-shadow:0 36px 90px rgb(0 0 0 / .55);background:var(--ink)}
+  .shot-bar{height:34px;background:#080a11;display:flex;align-items:center;gap:8px;padding:0 14px;
+    border-bottom:1px solid rgb(var(--line) / .06)}
   .dot{width:11px;height:11px;border-radius:50%}
   .dot.r{background:#ff5f57}.dot.y{background:#febc2e}.dot.g{background:#28c840}
-  .shot-title{color:#64748b;font-size:12px;margin-left:8px}
-  .app{display:flex;height:340px;color:var(--content)}
-  .app-side{width:172px;flex:none;background:var(--panel);border-right:1px solid rgba(0,0,0,.4);display:flex;flex-direction:column;padding:14px 8px}
-  .app-brand{color:var(--app-brand);font-weight:800;font-size:20px;padding:4px 10px 12px}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:9px;color:var(--muted);font-size:13px;margin-bottom:2px}
-  .nav-item .g{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center}
-  .nav-item .g svg{width:16px;height:16px}
-  .nav-item .g svg,.tr svg,.vol svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  .tr svg{width:17px;height:17px}
-  .tr .filled svg{width:19px;height:19px;fill:currentColor;stroke:none}
-  .tr .play svg{width:13px;height:13px;fill:currentColor;stroke:none}
-  .vol svg{width:16px;height:16px}
-  .nav-item.active{background:var(--panel2);color:var(--content)}
-  .app-ver{margin-top:auto;color:var(--muted);font-size:11px;padding:8px 12px}
-  .app-main{flex:1;min-width:0;background:var(--ink);padding:18px 20px;overflow:hidden}
-  .app-h1{font-size:22px;font-weight:800;margin-bottom:14px}
-  .pills{display:flex;gap:8px;margin-bottom:16px}
-  .pill{font-size:12px;padding:5px 14px;border-radius:999px;background:var(--panel2);color:var(--muted)}
-  .pill.on{background:#fff;color:var(--ink);font-weight:600}
-  .albums{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-  .alb .cover{aspect-ratio:1;border-radius:10px;box-shadow:0 6px 16px rgba(0,0,0,.35)}
-  .alb .alt{font-size:12px;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .alb .asub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .c1{background:linear-gradient(135deg,#f472b6,#7c3aed)}
-  .c2{background:linear-gradient(135deg,#22d3ee,#2563eb)}
-  .c3{background:linear-gradient(135deg,#f59e0b,#ef4444)}
-  .c4{background:linear-gradient(135deg,#34d399,#0ea5e9)}
-  .app-player{height:64px;background:var(--panel2);border-top:1px solid rgba(0,0,0,.4);display:flex;align-items:center;gap:18px;padding:0 18px}
-  .np{display:flex;align-items:center;gap:10px;width:190px;min-width:0}
-  .np-cov{width:40px;height:40px;border-radius:7px;background:linear-gradient(135deg,#22d3ee,#2563eb);flex:none}
-  .np-t{font-size:13px;color:var(--content);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .np-s{font-size:11px;color:var(--muted)}
-  .controls{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
-  .tr{display:flex;align-items:center;gap:16px;font-size:15px;color:var(--muted)}
-  .tr .play{width:28px;height:28px;border-radius:50%;background:var(--content);color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:13px}
-  .tr .accent{color:var(--app-brand)}
-  .prog{display:flex;align-items:center;gap:8px;width:100%;max-width:340px;font-size:10px;color:var(--muted)}
-  .prog .bar{flex:1;height:3px;border-radius:3px;background:#334155;position:relative}
-  .prog .bar i{position:absolute;left:0;top:0;bottom:0;width:38%;background:var(--app-brand);border-radius:3px}
-  .vol{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
-  .vol .vbar{width:64px;height:3px;border-radius:3px;background:#334155;position:relative}
-  .vol .vbar i{position:absolute;left:0;top:0;bottom:0;width:70%;background:var(--app-brand);border-radius:3px}
-  .caption{text-align:center;color:#64748b;font-size:12px;margin-top:12px}
+  .shot-title{color:#6b7490;font-size:12px;margin-left:8px}
+  .app{display:flex;height:376px;color:var(--text);font-size:13px}
+  .app-side{width:186px;flex:none;background:var(--panel);border-right:1px solid rgb(var(--line) / .07);
+    display:flex;flex-direction:column;padding:14px 8px}
+  .app-brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;padding:4px 10px 16px;letter-spacing:-.02em}
+  .app-brand .grad{background:linear-gradient(120deg,var(--brand),var(--brand2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .nav-group{color:#6b7490;font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;padding:0 12px 5px;margin-top:10px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:9px;color:var(--muted);
+    font-size:12.5px;margin-bottom:1px;position:relative}
+  .nav-item .g{width:17px;height:17px;display:inline-flex;align-items:center;justify-content:center}
+  .nav-item .g svg{width:15px;height:15px}
+  .nav-item .g svg,.tr svg,.vol svg,.act svg{stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .nav-item.active{background:rgb(124 92 255 / .12);color:var(--text)}
+  .nav-item.active .g{color:var(--brand)}
+  .nav-item.active::before{content:"";position:absolute;left:-8px;top:50%;transform:translateY(-50%);
+    width:3px;height:18px;border-radius:0 3px 3px 0;background:linear-gradient(180deg,var(--brand),var(--brand2))}
+  .badge{margin-left:auto;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;
+    font-size:10px;font-weight:700;border-radius:999px;padding:1px 6px}
+  .app-ver{margin-top:auto;color:#6b7490;font-size:10.5px;padding:8px 12px}
+  .app-main{flex:1;min-width:0;background:var(--ink);padding:18px 20px;overflow:hidden;position:relative}
+  .app-main::before{content:"";position:absolute;inset:0 0 auto 0;height:170px;pointer-events:none;
+    background:radial-gradient(300px 130px at 25% 0%,rgb(124 92 255 / .16),transparent 70%)}
+  .app-h1{font-size:20px;font-weight:800;letter-spacing:-.02em;position:relative}
+  .app-sub{color:var(--muted);font-size:11.5px;margin:3px 0 14px;position:relative}
+  .pills{display:inline-flex;gap:4px;background:var(--panel2);border:1px solid rgb(var(--line) / .07);
+    border-radius:11px;padding:3px;margin-bottom:14px;position:relative}
+  .pill{font-size:11.5px;padding:4px 12px;border-radius:8px;color:var(--muted)}
+  .pill.on{background:var(--elev);color:var(--text)}
+  .tbl{background:var(--panel);border:1px solid rgb(var(--line) / .08);border-radius:13px;overflow:hidden;position:relative}
+  .th,.tr{display:grid;grid-template-columns:22px 1fr 96px 46px;gap:10px;align-items:center;padding:7px 12px}
+  .th{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7490;
+    border-bottom:1px solid rgb(var(--line) / .07)}
+  .tr{border-bottom:1px solid rgb(var(--line) / .05);font-size:12px}
+  .tr:last-child{border-bottom:0}
+  .tr.on{background:rgb(124 92 255 / .09)}
+  .cov{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,#2a3145,#1a2030);flex:none}
+  .tcell{display:flex;align-items:center;gap:9px;min-width:0}
+  .tname{min-width:0}
+  .tname b{display:block;font-weight:500;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tr.on .tname b{color:var(--brand)}
+  .tname i{display:block;font-style:normal;color:var(--muted);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tdim{color:var(--muted);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tdur{color:var(--muted);font-size:10.5px;text-align:right}
+  .eqb{display:inline-flex;align-items:flex-end;gap:1.5px;height:11px;color:var(--brand)}
+  .eqb i{width:2.5px;border-radius:2px;background:currentColor;animation:eq .9s ease-in-out infinite}
+  .eqb i:nth-child(1){height:40%;animation-delay:-.2s}
+  .eqb i:nth-child(2){height:90%;animation-delay:-.5s}
+  .eqb i:nth-child(3){height:60%;animation-delay:-.8s}
+  @keyframes eq{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+  .num{color:#6b7490;font-size:10.5px;text-align:center}
+  .app-bar{height:58px;background:var(--panel);border-top:1px solid rgb(var(--line) / .07);
+    display:flex;align-items:center;padding:0 14px;gap:14px}
+  .np{display:flex;align-items:center;gap:9px;width:170px;min-width:0}
+  .np .cov{width:34px;height:34px;border-radius:8px}
+  .np b{display:block;font-size:11.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .np i{display:block;font-style:normal;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tr-c{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
+  .tr-btns{display:flex;align-items:center;gap:13px;color:var(--muted)}
+  .tr-btns .filled svg{width:17px;height:17px;fill:currentColor;stroke:none}
+  .tr-btns svg{width:15px;height:15px}
+  .playbtn{width:31px;height:31px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgb(124 92 255 / .5)}
+  .playbtn svg{width:11px;height:11px;fill:currentColor;stroke:none;margin-left:1px}
+  .seek{width:230px;display:flex;align-items:center;gap:7px;font-size:9.5px;color:#6b7490}
+  .seekbar{flex:1;height:3.5px;border-radius:999px;background:rgb(var(--line) / .15);overflow:hidden}
+  .seekbar i{display:block;height:100%;width:38%;border-radius:999px;background:linear-gradient(90deg,var(--brand),var(--brand2))}
+  .rgt{width:170px;display:flex;align-items:center;justify-content:flex-end;gap:8px;color:var(--muted)}
+  .rgt svg{width:14px;height:14px}
+  .volbar{width:58px;height:3.5px;border-radius:999px;background:rgb(var(--line) / .15);overflow:hidden}
+  .volbar i{display:block;height:100%;width:66%;background:linear-gradient(90deg,var(--brand),var(--brand2))}
 
-  /* ---------- Como funciona ---------- */
-  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px}
-  .step{background:rgba(17,24,39,.75);border:1px solid #1f2937;border-radius:16px;padding:22px}
-  .step .ic{width:44px;height:44px;border-radius:12px;background:rgba(139,92,246,.15);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
-  .step .ic svg{width:24px;height:24px;stroke:#c4b5fd;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  .step .n{font-size:12px;color:var(--violet);font-weight:700;letter-spacing:.04em}
-  .step h3{font-size:16px;margin:4px 0 6px}
-  .step p{font-size:14px;color:#cbd5e1}
-
-  /* ---------- Downloads ---------- */
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-  .card{background:rgba(17,24,39,.8);border:1px solid #1f2937;border-radius:16px;padding:20px}
-  .card.current{border-color:var(--violet);box-shadow:0 0 0 1px var(--violet) inset}
-  .card h3{font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
-  .card h3 svg{flex:none}
-  .tag{font-size:11px;background:var(--violet);color:#fff;padding:2px 9px;border-radius:999px;font-weight:600}
-  .card ul{list-style:none}
-  .card li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #1f2937;font-size:14px}
-  .card li:first-child{border-top:none}
-  .card a{color:#c4b5fd;text-decoration:none;word-break:break-all}
+  /* ── Download grid ──────────────────────────────────── */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid rgb(var(--line) / .08);border-radius:var(--radius);padding:18px}
+  .card.current{border-color:rgb(124 92 255 / .45);box-shadow:0 0 0 1px rgb(124 92 255 / .18)}
+  .card h3{display:flex;align-items:center;gap:9px;font-size:15px;margin-bottom:12px;font-weight:650}
+  .card ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+  .card li{font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card a{color:#a5b4fc;text-decoration:none;word-break:break-all}
   .card a:hover{text-decoration:underline}
-  .sz{color:#64748b;font-size:12px;white-space:nowrap}
+  .sz{color:#6b7490;font-size:11.5px}
+  .tag{background:rgb(124 92 255 / .18);color:#c4b5fd;font-size:10.5px;padding:2px 8px;border-radius:999px;font-weight:600}
 
-  /* ---------- Como instalar ---------- */
-  .how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
-  .how-grid>div{background:rgba(17,24,39,.8);border:1px solid #1f2937;border-radius:16px;padding:20px}
-  .how-grid h3{font-size:15px;margin-bottom:8px;color:#a78bfa;display:flex;align-items:center;gap:8px}
-  .how-grid p{font-size:14px;color:#cbd5e1}
-  code{background:#0b1220;border:1px solid #1f2937;border-radius:6px;padding:1px 6px;font-size:13px}
-  footer{margin-top:64px;text-align:center;color:#64748b;font-size:14px}
-  footer a{color:#94a3b8}
-  .loading{color:#64748b}
+  /* ── FAQ ────────────────────────────────────────────── */
+  .faq{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+  details{background:var(--panel);border:1px solid rgb(var(--line) / .08);border-radius:13px;padding:15px 18px}
+  details[open]{border-color:rgb(124 92 255 / .3)}
+  summary{cursor:pointer;font-weight:600;font-size:15px;list-style:none;display:flex;align-items:center;gap:10px}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"+";color:var(--brand);font-weight:700;font-size:18px;width:14px;flex:none}
+  details[open] summary::before{content:"−"}
+  details p{color:var(--muted);font-size:14px;margin-top:10px;padding-left:24px}
+
+  .install{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+  .install .row{background:var(--panel);border:1px solid rgb(var(--line) / .08);border-radius:13px;padding:15px 18px;font-size:14px}
+  .install .row b{display:block;margin-bottom:4px;font-size:15px}
+  .install .row span{color:var(--muted)}
+  code{background:var(--panel2);border:1px solid rgb(var(--line) / .08);border-radius:6px;
+    padding:2px 7px;font-size:12.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
+
+  footer{padding:40px 0 56px;text-align:center;color:#6b7490;font-size:13px;border-top:1px solid rgb(var(--line) / .06)}
+  footer a{color:#a5b4fc;text-decoration:none}
+  footer a:hover{text-decoration:underline}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+    html{scroll-behavior:auto}
+  }
 </style>
 </head>
 <body>
-<main>
-  <img class="logo" src="icon.png" alt="Sonara">
-  <h1>Sonara</h1>
-  <p class="tagline">Seu player de música desktop, com download integrado.</p>
 
-  <div id="primary"><span class="loading">Carregando…</span></div>
-  <p class="ver" id="ver"></p>
+<header>
+  <div class="wrap nav">
+    <a class="brandmark" href="#top">
+      <svg width="26" height="26" viewBox="0 0 48 48" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#7c5cff"/><stop offset="100%" stop-color="#22d3ee"/>
+        </linearGradient></defs>
+        <rect width="48" height="48" rx="13" fill="url(#hg)"/>
+        <g stroke="#fff" stroke-width="3.4" stroke-linecap="round" opacity=".96">
+          <path d="M13 24v0"/><path d="M18.5 18.5v11"/><path d="M24 13.5v21"/><path d="M29.5 17v14"/><path d="M35 21v6"/>
+        </g>
+      </svg>
+      <span class="grad">Sonara</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#recursos">Recursos</a>
+      <a href="#preview">Como é</a>
+      <a href="#passos">Como usar</a>
+      <a href="#baixar">Baixar</a>
+      <a href="#duvidas">Dúvidas</a>
+    </nav>
+  </div>
+</header>
 
-  <!-- ===== Prévia da interface ===== -->
-  <section>
-    <h2>Veja o Sonara</h2>
-    <p class="h2sub">Biblioteca, playlists e player — tudo num app leve e nativo.</p>
-    <div class="shot-wrap">
-      <div class="shot">
-        <div class="shot-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="shot-title">Sonara</span></div>
-        <div class="app">
-          <div class="app-side">
-            <div class="app-brand">Sonara</div>
-            <div class="nav-item active"><span class="g"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span> Biblioteca</div>
-            <div class="nav-item"><span class="g"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="3.5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="3.5" cy="18" r="1" fill="currentColor" stroke="none"/></svg></span> Playlists</div>
-            <div class="nav-item"><span class="g"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span> Buscar &amp; Baixar</div>
-            <div class="nav-item"><span class="g"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 12 5 5 5-5"/><path d="M5 21h14"/></svg></span> Downloads</div>
-            <div class="nav-item"><span class="g"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span> Configurações</div>
-            <div class="app-ver">v0.1.1 · F0</div>
+<main id="top">
+
+  <!-- ── Hero ─────────────────────────────────────────── -->
+  <div class="hero">
+    <div class="wrap">
+      <img src="icon.png" alt="Ícone do Sonara" class="logo" width="88" height="88">
+      <h1>Baixe suas músicas.<br><span class="grad">Leve para onde quiser.</span></h1>
+      <p class="tagline">
+        Player de música para computador com download integrado. Pesquise pelo nome, baixe com capa e
+        informações, e exporte para o pendrive, o celular ou o som do carro — em dois cliques.
+      </p>
+      <div id="primary"><span class="loading">Carregando…</span></div>
+      <p class="ver" id="ver"></p>
+      <div class="os-row">
+        <span>Windows 10+</span><span>·</span><span>macOS 11+</span><span>·</span><span>Linux</span>
+        <span>·</span><span>Grátis e de código aberto</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Features ─────────────────────────────────────── -->
+  <section id="recursos">
+    <div class="wrap">
+      <h2>O que o Sonara faz</h2>
+      <p class="h2sub">Tudo em um só app: procurar, baixar, organizar, ouvir e transferir.</p>
+      <div class="features">
+
+        <div class="feature">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <h3>Busca dentro do app</h3>
+          <p>Digite o nome da música e veja os resultados com miniatura e duração. Assista à prévia antes de baixar.</p>
+        </div>
+
+        <div class="feature">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 12 5 5 5-5"/><path d="M5 21h14"/></svg></div>
+          <h3>Download com tudo pronto</h3>
+          <p>A música chega com capa, artista e álbum já preenchidos, e entra direto na biblioteca ou na playlist que você escolher.</p>
+        </div>
+
+        <div class="feature">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m8 7 4-4 4 4"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg></div>
+          <h3>Exportar para qualquer pasta</h3>
+          <p>Copie as músicas para um pendrive, cartão SD ou celular. Organize por artista e álbum, e converta para MP3 se o aparelho pedir.</p>
+        </div>
+
+        <div class="feature">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>
+          <h3>Editor de informações</h3>
+          <p>Corrija título, artista, álbum e capa — de uma faixa ou de várias ao mesmo tempo. As mudanças podem ir junto no arquivo.</p>
+        </div>
+
+        <div class="feature">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+          <h3>Player completo</h3>
+          <p>Fila, playlists, aleatório, repetir, transição entre faixas e equalização de volume. Atalhos de teclado para tudo.</p>
+        </div>
+
+        <div class="feature">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 4v3"/><path d="M16 4v3"/></svg></div>
+          <h3>Funciona sem internet</h3>
+          <p>Depois de baixadas, suas músicas ficam no seu computador. Nada de assinatura, anúncio ou conta para criar.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── App preview ──────────────────────────────────── -->
+  <section id="preview">
+    <div class="wrap">
+      <h2>Como é por dentro</h2>
+      <p class="h2sub">Uma reprodução fiel da interface — clara, sem menus escondidos.</p>
+      <div class="shot-wrap">
+        <div class="shot">
+          <div class="shot-bar">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="shot-title">Sonara</span>
           </div>
-          <div class="app-main">
-            <div class="app-h1">Biblioteca</div>
-            <div class="pills"><span class="pill on">Álbuns</span><span class="pill">Músicas</span><span class="pill">Artistas</span></div>
-            <div class="albums">
-              <div class="alb"><div class="cover c1"></div><div class="alt">Midnight Drive</div><div class="asub">Aria Nova · 12 faixas</div></div>
-              <div class="alb"><div class="cover c2"></div><div class="alt">Neon Skyline</div><div class="asub">Kair · 9 faixas</div></div>
-              <div class="alb"><div class="cover c3"></div><div class="alt">Ember Days</div><div class="asub">Löw · 11 faixas</div></div>
-              <div class="alb"><div class="cover c4"></div><div class="alt">Tide Pools</div><div class="asub">Mira Sol · 8 faixas</div></div>
+          <div class="app">
+            <aside class="app-side">
+              <div class="app-brand">
+                <svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true">
+                  <defs><linearGradient id="sg" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#7c5cff"/><stop offset="100%" stop-color="#22d3ee"/>
+                  </linearGradient></defs>
+                  <rect width="48" height="48" rx="13" fill="url(#sg)"/>
+                  <g stroke="#fff" stroke-width="3.4" stroke-linecap="round" opacity=".96">
+                    <path d="M13 24v0"/><path d="M18.5 18.5v11"/><path d="M24 13.5v21"/><path d="M29.5 17v14"/><path d="M35 21v6"/>
+                  </g>
+                </svg>
+                <span class="grad">Sonara</span>
+              </div>
+
+              <div class="nav-group">Minha música</div>
+              <div class="nav-item active"><span class="g"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>Biblioteca</div>
+              <div class="nav-item"><span class="g"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg></span>Playlists</div>
+
+              <div class="nav-group">Descobrir</div>
+              <div class="nav-item"><span class="g"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>Buscar &amp; Baixar</div>
+              <div class="nav-item"><span class="g"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 12 5 5 5-5"/><path d="M5 21h14"/></svg></span>Downloads<span class="badge">1</span></div>
+
+              <div class="app-ver">Sonara 0.2.0</div>
+            </aside>
+
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+              <div class="app-main">
+                <div class="app-h1">Biblioteca</div>
+                <div class="app-sub">Tudo o que você já baixou ou importou.</div>
+                <div class="pills">
+                  <span class="pill on">Músicas</span><span class="pill">Álbuns</span>
+                  <span class="pill">Artistas</span><span class="pill">Gêneros</span>
+                </div>
+                <div class="tbl">
+                  <div class="th"><span></span><span>Título</span><span>Álbum</span><span style="text-align:right">Duração</span></div>
+                  <div class="tr on">
+                    <span class="eqb"><i></i><i></i><i></i></span>
+                    <span class="tcell"><span class="cov"></span><span class="tname"><b>Noite de verão</b><i>Marina Costa</i></span></span>
+                    <span class="tdim">Horizonte</span><span class="tdur">3:42</span>
+                  </div>
+                  <div class="tr">
+                    <span class="num">2</span>
+                    <span class="tcell"><span class="cov"></span><span class="tname"><b>Estrada aberta</b><i>Trio Norte</i></span></span>
+                    <span class="tdim">Caminhos</span><span class="tdur">4:07</span>
+                  </div>
+                  <div class="tr">
+                    <span class="num">3</span>
+                    <span class="tcell"><span class="cov"></span><span class="tname"><b>Chuva na cidade</b><i>Ana Ribeiro</i></span></span>
+                    <span class="tdim">Singles</span><span class="tdur">2:58</span>
+                  </div>
+                  <div class="tr">
+                    <span class="num">4</span>
+                    <span class="tcell"><span class="cov"></span><span class="tname"><b>Manhã cedo</b><i>Grupo Alvorada</i></span></span>
+                    <span class="tdim">Primeiro dia</span><span class="tdur">3:21</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="app-bar">
+                <div class="np">
+                  <span class="cov"></span>
+                  <span style="min-width:0"><b>Noite de verão</b><i>Marina Costa</i></span>
+                </div>
+                <div class="tr-c">
+                  <div class="tr-btns">
+                    <span><svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="m4 4 5 5"/></svg></span>
+                    <span class="filled"><svg viewBox="0 0 24 24"><path d="M7 5a1 1 0 0 0-1 1v12a1 1 0 0 0 2 0v-4.6l8.4 5.4A1 1 0 0 0 18 18V6a1 1 0 0 0-1.6-.8L8 10.6V6a1 1 0 0 0-1-1z"/></svg></span>
+                    <span class="playbtn"><svg viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.52.85l12-7.5a1 1 0 0 0 0-1.7l-12-7.5A1 1 0 0 0 7 4.5z"/></svg></span>
+                    <span class="filled"><svg viewBox="0 0 24 24"><path d="M17 5a1 1 0 0 1 1 1v12a1 1 0 0 1-2 0v-4.6l-8.4 5.4A1 1 0 0 1 6 18V6a1 1 0 0 1 1.6-.8L16 10.6V6a1 1 0 0 1 1-1z"/></svg></span>
+                    <span><svg viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></span>
+                  </div>
+                  <div class="seek"><span>1:24</span><span class="seekbar"><i></i></span><span>3:42</span></div>
+                </div>
+                <div class="rgt">
+                  <span class="act"><svg viewBox="0 0 24 24"><path d="M12 15V3"/><path d="m8 7 4-4 4 4"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg></span>
+                  <span class="vol"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></span>
+                  <span class="volbar"><i></i></span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="app-player">
-          <div class="np"><div class="np-cov"></div><div><div class="np-t">Neon Skyline</div><div class="np-s">FLAC</div></div></div>
-          <div class="controls">
-            <div class="tr">
-              <span class="accent"><svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="m4 4 5 5"/></svg></span>
-              <span class="filled"><svg viewBox="0 0 24 24"><path d="M7 5a1 1 0 0 0-1 1v12a1 1 0 0 0 2 0v-4.6l8.4 5.4A1 1 0 0 0 18 18V6a1 1 0 0 0-1.6-.8L8 10.6V6a1 1 0 0 0-1-1z"/></svg></span>
-              <span class="play"><svg viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.52.85l12-7.5a1 1 0 0 0 0-1.7l-12-7.5A1 1 0 0 0 7 4.5z"/></svg></span>
-              <span class="filled"><svg viewBox="0 0 24 24"><path d="M17 5a1 1 0 0 1 1 1v12a1 1 0 0 1-2 0v-4.6l-8.4 5.4A1 1 0 0 1 6 18V6a1 1 0 0 1 1.6-.8L16 10.6V6a1 1 0 0 1 1-1z"/></svg></span>
-              <span class="accent"><svg viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></span>
-            </div>
-            <div class="prog"><span>1:24</span><div class="bar"><i></i></div><span>3:47</span></div>
-          </div>
-          <div class="vol"><span><svg viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg></span><div class="vbar"><i></i></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Steps ────────────────────────────────────────── -->
+  <section id="passos">
+    <div class="wrap">
+      <h2>Como usar</h2>
+      <p class="h2sub">Do zero à música no pendrive.</p>
+      <div class="steps">
+        <div class="step"><div class="n">1</div><h3>Instale</h3><p>Baixe o instalador do seu sistema e abra. O yt-dlp e o ffmpeg já vêm junto — não precisa instalar mais nada.</p></div>
+        <div class="step"><div class="n">2</div><h3>Pesquise</h3><p>Em “Buscar &amp; Baixar”, digite o nome da música. Clique na miniatura para ouvir a prévia.</p></div>
+        <div class="step"><div class="n">3</div><h3>Baixe</h3><p>Escolha se ela vai para a biblioteca, uma playlist ou a fila, e clique em Baixar. O progresso aparece na hora.</p></div>
+        <div class="step"><div class="n">4</div><h3>Leve com você</h3><p>Selecione as músicas, clique em <b>Exportar</b>, escolha a pasta do pendrive e pronto.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Downloads ────────────────────────────────────── -->
+  <section id="baixar">
+    <div class="wrap">
+      <h2>Baixar o Sonara</h2>
+      <p class="h2sub">Escolha o arquivo do seu sistema. Todos os instaladores da versão mais recente.</p>
+      <div class="grid" id="grid"></div>
+    </div>
+  </section>
+
+  <!-- ── Install help ─────────────────────────────────── -->
+  <section>
+    <div class="wrap">
+      <h2>Como instalar</h2>
+      <p class="h2sub">O app ainda não tem assinatura digital paga, então o sistema pode pedir uma confirmação na primeira vez.</p>
+      <div class="install">
+        <div class="row">
+          <b>Windows</b>
+          <span>Abra o arquivo <code>.exe</code>. Se o Windows mostrar “O Windows protegeu o computador”, clique em
+          <b>Mais informações</b> e depois em <b>Executar assim mesmo</b>. A instalação pede permissão de administrador.</span>
+        </div>
+        <div class="row">
+          <b>macOS</b>
+          <span>Abra o <code>.dmg</code> e arraste o Sonara para a pasta Aplicativos. Na primeira vez, clique com o
+          botão direito no app e escolha <b>Abrir</b> → <b>Abrir</b>.</span>
+        </div>
+        <div class="row">
+          <b>Linux</b>
+          <span>Com o <code>.AppImage</code>: dê permissão de execução (<code>chmod +x Sonara*.AppImage</code>) e execute.
+          Com o <code>.deb</code>: <code>sudo apt install ./Sonara*.deb</code>.</span>
         </div>
       </div>
     </div>
-    <p class="caption">Prévia da interface (tema escuro; um tema claro também está incluído).</p>
   </section>
 
-  <!-- ===== Como funciona ===== -->
-  <section>
-    <h2>Como funciona</h2>
-    <p class="h2sub">Do arquivo solto ao link do YouTube — tudo organizado.</p>
-    <div class="steps">
-      <div class="step">
-        <div class="ic"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
-        <div class="n">1</div><h3>Importe suas músicas</h3>
-        <p>Aponte para uma pasta e o Sonara lê tags, capas e organiza por álbum e artista.</p>
-      </div>
-      <div class="step">
-        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v10m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></div>
-        <div class="n">2</div><h3>Baixe do YouTube</h3>
-        <p>Cole um link e a faixa é baixada e convertida (yt-dlp + ffmpeg já embutidos).</p>
-      </div>
-      <div class="step">
-        <div class="ic"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
-        <div class="n">3</div><h3>Organize em playlists</h3>
-        <p>Crie playlists, reordene faixas e mande downloads direto para o destino certo.</p>
-      </div>
-      <div class="step">
-        <div class="ic"><svg viewBox="0 0 24 24"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></div>
-        <div class="n">4</div><h3>Ouça sem pausas</h3>
-        <p>Fila, atalhos de teclado, crossfade e ReplayGain para uma reprodução contínua.</p>
+  <!-- ── FAQ ──────────────────────────────────────────── -->
+  <section id="duvidas">
+    <div class="wrap">
+      <h2>Dúvidas frequentes</h2>
+      <p class="h2sub">O que as pessoas mais perguntam antes de instalar.</p>
+      <div class="faq">
+        <details open>
+          <summary>Preciso instalar mais alguma coisa?</summary>
+          <p>Não. O yt-dlp e o ffmpeg — as ferramentas que baixam e convertem o áudio — vêm dentro do
+          instalador. Se algum download falhar, a tela de Configurações tem um diagnóstico que mostra
+          exatamente qual peça está com problema.</p>
+        </details>
+        <details>
+          <summary>Como levo as músicas para o celular ou para o carro?</summary>
+          <p>Selecione as músicas na Biblioteca (ou abra uma playlist) e clique em <b>Exportar</b>. Escolha a
+          pasta do pendrive, do cartão SD ou do celular conectado, decida como organizar as pastas e,
+          se o aparelho for antigo, marque <b>Converter para MP3</b>. Os arquivos originais continuam
+          intactos na sua biblioteca.</p>
+        </details>
+        <details>
+          <summary>Onde ficam salvas as músicas que eu baixo?</summary>
+          <p>Por padrão, numa pasta <b>Sonara</b> dentro da sua pasta de Músicas. Você pode trocar a pasta
+          em Configurações → Downloads, e abrir a pasta a qualquer momento pelo próprio app.</p>
+        </details>
+        <details>
+          <summary>Em que formato as músicas são baixadas?</summary>
+          <p>Em M4A por padrão, que mantém o áudio original sem reconverter — a melhor qualidade. Em
+          Configurações você pode trocar para MP3 (compatível com qualquer aparelho), OPUS (arquivos
+          menores) ou FLAC.</p>
+        </details>
+        <details>
+          <summary>O Sonara custa alguma coisa?</summary>
+          <p>Não. É gratuito e de código aberto, sem anúncios, sem assinatura e sem conta para criar.</p>
+        </details>
+        <details>
+          <summary>É seguro? Posso baixar qualquer música?</summary>
+          <p>O código é aberto e pode ser auditado no GitHub. Sobre o conteúdo: use o app para material que
+          você tem o direito de baixar — suas próprias gravações, obras de domínio público, conteúdo com
+          licença livre ou material que o titular autorizou. Respeite os direitos autorais e os termos de
+          uso dos serviços de onde o conteúdo vem.</p>
+        </details>
       </div>
     </div>
   </section>
 
-  <!-- ===== Downloads ===== -->
-  <section>
-    <h2>Todos os downloads</h2>
-    <p class="h2sub">Escolha o instalador do seu sistema.</p>
-    <div class="grid" id="grid"></div>
-  </section>
-
-  <!-- ===== Como instalar ===== -->
-  <section>
-    <h2>Como instalar</h2>
-    <div class="how-grid">
-      <div>
-        <h3><svg viewBox="0 0 24 24" width="18" height="18"><g fill="#4aa3ff"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></g></svg> Windows</h3>
-        <p>Baixe o <code>.exe</code> e execute. Se o SmartScreen avisar, clique em
-        <b>“Mais informações” → “Executar assim mesmo”</b> (o instalador não tem certificado de assinatura pago).</p>
-      </div>
-      <div>
-        <h3><svg viewBox="0 0 24 24" width="18" height="18"><path fill="#e2e8f0" d="M16.37 1.43c0 1.14-.42 2.2-1.11 2.99-.83.95-2.19 1.68-3.32 1.59-.14-1.11.42-2.28 1.06-3.02.72-.83 2.02-1.46 3.14-1.56.02.13.13.13.13 0zM20.66 17.02c-.53 1.22-.79 1.77-1.47 2.85-.95 1.5-2.29 3.37-3.95 3.38-1.47.01-1.85-.96-3.85-.95-2 .01-2.42.97-3.9.96-1.66-.01-2.93-1.7-3.88-3.2C.1 15.86-.18 10.93 1.46 8.31c1.17-1.86 3.01-2.95 4.74-2.95 1.76 0 2.87.97 4.33.97 1.41 0 2.27-.97 4.31-.97 1.54 0 3.17.84 4.33 2.29-3.81 2.09-3.19 7.53.44 9.32z"/></svg> macOS</h3>
-        <p>Abra o <code>.dmg</code> e arraste o Sonara para <b>Aplicativos</b>. Na primeira vez,
-        clique com o botão direito no app → <b>Abrir</b> (não notarizado).</p>
-      </div>
-      <div>
-        <h3><svg viewBox="0 0 48 48" width="18" height="18"><path fill="#111" d="M24 6c-5 0-8 4-8 9 0 3 1 5 1 8 0 3-4 6-4 11 0 4 4 6 11 6s11-2 11-6c0-5-4-8-4-11 0-3 1-5 1-8 0-5-3-9-8-9z"/><ellipse fill="#fff" cx="24" cy="31" rx="6" ry="8"/><ellipse fill="#fff" cx="21" cy="14" rx="2.2" ry="3"/><ellipse fill="#fff" cx="27" cy="14" rx="2.2" ry="3"/><circle fill="#111" cx="21.6" cy="15" r="1.1"/><circle fill="#111" cx="26.4" cy="15" r="1.1"/><path fill="#f5a623" d="M22 17h4l-2 3z"/><ellipse fill="#f5a623" cx="19" cy="41" rx="4" ry="2"/><ellipse fill="#f5a623" cx="29" cy="41" rx="4" ry="2"/></svg> Linux</h3>
-        <p>AppImage: <code>chmod +x Sonara*.AppImage</code> e execute.
-        Ou instale o <code>.deb</code>: <code>sudo dpkg -i Sonara*.deb</code>.</p>
-      </div>
-    </div>
-  </section>
-
-  <footer>
-    yt-dlp e ffmpeg já vêm embutidos no app.<br>
-    <a href="https://github.com/PedroA07/Sonara">Código no GitHub</a> ·
-    <a href="https://github.com/PedroA07/Sonara/releases">Todas as versões</a>
-  </footer>
 </main>
+
+<footer>
+  <div class="wrap">
+    <p>Sonara — player de música de código aberto.</p>
+    <p style="margin-top:6px">
+      <a href="https://github.com/PedroA07/Sonara">Código no GitHub</a> ·
+      <a href="https://github.com/PedroA07/Sonara/releases">Todas as versões</a> ·
+      <a href="https://github.com/PedroA07/Sonara/issues">Relatar um problema</a>
+    </p>
+  </div>
+</footer>
 
 <script>
   const REPO = 'PedroA07/Sonara';
@@ -244,9 +511,9 @@
   const OS_LABEL = { windows: 'Windows', macos: 'macOS', linux: 'Linux' };
 
   const ICON = {
-    windows: '<svg viewBox="0 0 24 24" width="22" height="22"><g fill="#4aa3ff"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></g></svg>',
-    macos: '<svg viewBox="0 0 24 24" width="22" height="22"><path fill="#e2e8f0" d="M16.37 1.43c0 1.14-.42 2.2-1.11 2.99-.83.95-2.19 1.68-3.32 1.59-.14-1.11.42-2.28 1.06-3.02.72-.83 2.02-1.46 3.14-1.56.02.13.13.13.13 0zM20.66 17.02c-.53 1.22-.79 1.77-1.47 2.85-.95 1.5-2.29 3.37-3.95 3.38-1.47.01-1.85-.96-3.85-.95-2 .01-2.42.97-3.9.96-1.66-.01-2.93-1.7-3.88-3.2C.1 15.86-.18 10.93 1.46 8.31c1.17-1.86 3.01-2.95 4.74-2.95 1.76 0 2.87.97 4.33.97 1.41 0 2.27-.97 4.31-.97 1.54 0 3.17.84 4.33 2.29-3.81 2.09-3.19 7.53.44 9.32z"/></svg>',
-    linux: '<svg viewBox="0 0 48 48" width="22" height="22"><path fill="#111" d="M24 6c-5 0-8 4-8 9 0 3 1 5 1 8 0 3-4 6-4 11 0 4 4 6 11 6s11-2 11-6c0-5-4-8-4-11 0-3 1-5 1-8 0-5-3-9-8-9z"/><ellipse fill="#fff" cx="24" cy="31" rx="6" ry="8"/><ellipse fill="#fff" cx="21" cy="14" rx="2.2" ry="3"/><ellipse fill="#fff" cx="27" cy="14" rx="2.2" ry="3"/><circle fill="#111" cx="21.6" cy="15" r="1.1"/><circle fill="#111" cx="26.4" cy="15" r="1.1"/><path fill="#f5a623" d="M22 17h4l-2 3z"/><ellipse fill="#f5a623" cx="19" cy="41" rx="4" ry="2"/><ellipse fill="#f5a623" cx="29" cy="41" rx="4" ry="2"/></svg>',
+    windows: '<svg viewBox="0 0 24 24" width="20" height="20"><g fill="#4aa3ff"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></g></svg>',
+    macos: '<svg viewBox="0 0 24 24" width="20" height="20"><path fill="#e2e8f0" d="M16.37 1.43c0 1.14-.42 2.2-1.11 2.99-.83.95-2.19 1.68-3.32 1.59-.14-1.11.42-2.28 1.06-3.02.72-.83 2.02-1.46 3.14-1.56.02.13.13.13.13 0zM20.66 17.02c-.53 1.22-.79 1.77-1.47 2.85-.95 1.5-2.29 3.37-3.95 3.38-1.47.01-1.85-.96-3.85-.95-2 .01-2.42.97-3.9.96-1.66-.01-2.93-1.7-3.88-3.2C.1 15.86-.18 10.93 1.46 8.31c1.17-1.86 3.01-2.95 4.74-2.95 1.76 0 2.87.97 4.33.97 1.41 0 2.27-.97 4.31-.97 1.54 0 3.17.84 4.33 2.29-3.81 2.09-3.19 7.53.44 9.32z"/></svg>',
+    linux: '<svg viewBox="0 0 48 48" width="20" height="20"><path fill="#e9edf5" d="M24 6c-5 0-8 4-8 9 0 3 1 5 1 8 0 3-4 6-4 11 0 4 4 6 11 6s11-2 11-6c0-5-4-8-4-11 0-3 1-5 1-8 0-5-3-9-8-9z"/><ellipse fill="#fff" cx="24" cy="31" rx="6" ry="8"/><ellipse fill="#0b0d16" cx="21.6" cy="15" rx="1.6" ry="2.2"/><ellipse fill="#0b0d16" cx="26.4" cy="15" rx="1.6" ry="2.2"/><path fill="#f5a623" d="M22 17.5h4l-2 3z"/><ellipse fill="#f5a623" cx="19" cy="41" rx="4" ry="2"/><ellipse fill="#f5a623" cx="29" cy="41" rx="4" ry="2"/></svg>',
   };
 
   function detectOS() {
@@ -281,12 +548,13 @@
     return mb >= 1 ? mb.toFixed(1) + ' MB' : (b / 1024).toFixed(0) + ' KB';
   }
 
+  // GitHub's API is rate-limited per IP; never leave the page without a way out.
   function fallback() {
     document.getElementById('primary').innerHTML =
       '<a class="btn" href="' + RELEASES + '/latest">Ver downloads no GitHub</a>';
     document.getElementById('ver').textContent = '';
     document.getElementById('grid').innerHTML =
-      '<div class="card"><h3>Downloads</h3><ul><li><a href="' + RELEASES + '">Abrir a página de releases</a></li></ul></div>';
+      '<div class="card"><h3>Downloads</h3><ul><li><a href="' + RELEASES + '">Abrir a página de versões no GitHub</a></li></ul></div>';
   }
 
   async function main() {
@@ -306,15 +574,17 @@
     const primary = document.getElementById('primary');
     if (os === 'android' || os === 'ios') {
       primary.innerHTML =
-        '<div class="note">O Sonara é um app para <b>computador</b> (Windows, macOS, Linux).<br>Abra esta página no seu desktop para baixar.</div>';
+        '<div class="note">O Sonara é um app para <b>computador</b> (Windows, macOS e Linux).<br>' +
+        'Abra esta página no seu computador para baixar.</div>';
     } else {
       const a = pickAsset(assets, os);
       if (a) {
-        const ico = ICON[os] ? '<span style="vertical-align:middle;margin-right:8px;display:inline-flex">' + ICON[os] + '</span>' : '';
+        const ico = ICON[os] ? '<span style="display:inline-flex">' + ICON[os] + '</span>' : '';
         primary.innerHTML =
           '<a class="btn" href="' + a.browser_download_url + '" download>' + ico + 'Baixar para ' +
           (OS_LABEL[os] || 'seu sistema') + '</a>' +
-          '<div class="sub">' + a.name + ' · ' + fmtSize(a.size) + '</div>';
+          '<div class="sub">' + a.name + ' · ' + fmtSize(a.size) + '</div>' +
+          '<div class="sub"><a href="#baixar" style="color:#a5b4fc;text-decoration:none">Outros sistemas e formatos ↓</a></div>';
       } else {
         primary.innerHTML = '<a class="btn" href="' + RELEASES + '/latest">Ver downloads</a>';
       }
@@ -333,7 +603,7 @@
       }
       html += '</ul></div>';
     }
-    document.getElementById('grid').innerHTML = html;
+    document.getElementById('grid').innerHTML = html || '';
   }
 
   main();
