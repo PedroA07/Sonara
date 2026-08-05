@@ -15,6 +15,10 @@ pub struct Track {
     pub format: Option<String>,
     pub gain: Option<f64>,
     pub cover_path: Option<String>,
+    /// Resolved for display: the player and every list show the artist next to
+    /// the title instead of the file format.
+    pub artist_name: Option<String>,
+    pub album_title: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -124,4 +128,47 @@ pub struct DownloadJob {
     pub progress: f64,
     pub dest_kind: Option<String>,
     pub dest_id: Option<i64>,
+    /// Filled in from the video title as soon as yt-dlp reports it, so the
+    /// history reads like a track list instead of a list of URLs.
+    pub title: Option<String>,
+    pub file_path: Option<String>,
+    pub error: Option<String>,
+    pub track_id: Option<i64>,
+    pub created_at: Option<String>,
+}
+
+/// Health of the bundled download tools, surfaced in Settings so a failure is
+/// self-explanatory instead of "nothing happens".
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToolStatus {
+    pub ytdlp_version: Option<String>,
+    pub ffmpeg_path: Option<String>,
+    pub download_dir: String,
+    pub download_dir_writable: bool,
+    pub audio_format: String,
+}
+
+/// How to lay out an export (see `commands/export.rs`).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExportOptions {
+    pub dest_dir: String,
+    /// "flat" | "artist" | "artist_album"
+    pub organize: String,
+    /// "title" | "artist_title" | "track_title"
+    pub naming: String,
+    /// Re-encode to MP3 for players that don't read m4a/opus.
+    pub convert_mp3: bool,
+    pub overwrite: bool,
+    /// Also write an .m3u8 playlist next to the exported files.
+    pub playlist_file: bool,
+    pub playlist_name: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExportResult {
+    pub copied: usize,
+    pub skipped: usize,
+    pub failed: usize,
+    pub dest_dir: String,
+    pub errors: Vec<String>,
 }

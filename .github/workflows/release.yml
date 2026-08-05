@@ -99,6 +99,24 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Sonara ${{ github.ref_name }}"
-          releaseDraft: true
+          # Published, not draft: the download page and the in-app updater both
+          # read `releases/latest/download/latest.json`, which 404s while the
+          # release sits as a draft. Pre-releases are still marked as such.
+          releaseDraft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
           includeUpdaterJson: true
+          releaseBody: |
+            ## Sonara ${{ github.ref_name }}
+
+            Baixe o instalador do seu sistema abaixo, ou use a página de download:
+            **https://pedroa07.github.io/Sonara/**
+
+            | Sistema | Arquivo |
+            |---|---|
+            | Windows | `.exe` (instalador) |
+            | macOS | `.dmg` |
+            | Linux | `.AppImage` ou `.deb` |
+
+            O yt-dlp e o ffmpeg já vêm junto — não é preciso instalar mais nada.
+            Se um download falhar, abra **Configurações → Diagnóstico** no app.
           args: ${{ matrix.args }}

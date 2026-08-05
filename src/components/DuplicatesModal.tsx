@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
 import type { Track } from "../types";
 import { api } from "../lib/ipc";
+import { artistOf, fmtDuration } from "../lib/format";
+import { toast } from "../store/useToastStore";
+import { Button, Checkbox, EmptyState, Modal, Spinner } from "./ui";
+import { IconCheck, IconTrash } from "./icons";
 
-// F5: group likely duplicates and let the user delete extras.
+/** F5: group likely duplicates and let the user remove the extra copies.
+ *  Nothing is pre-selected — deleting is always an explicit choice. */
 export default function DuplicatesModal({ onClose }: { onClose: () => void }) {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,42 +27,82 @@ export default function DuplicatesModal({ onClose }: { onClose: () => void }) {
   }, {});
 
   const toggle = (id: number) =>
-    setSel((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setSel((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+
+  /** Convenience: keep the first copy of every group, tick all the rest. */
+  const selectExtras = () =>
+    setSel(new Set(Object.values(groups).flatMap((list) => list.slice(1).map((t) => t.id))));
 
   const remove = async () => {
     if (sel.size === 0) return;
-    await api.deleteTracks([...sel]);
-    setSel(new Set());
-    load();
+    try {
+      await api.deleteTracks([...sel]);
+      toast.success(`${sel.size} cópia(s) removida(s) da biblioteca`, "Os arquivos continuam no disco.");
+      setSel(new Set());
+      load();
+    } catch (e) {
+      toast.error("Não foi possível remover", String(e));
+    }
   };
 
+  const groupList = Object.entries(groups);
+
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-panel rounded-2xl p-6 w-[620px] max-w-[92vw] max-h-[82vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">Duplicatas</h2>
-          <button onClick={remove} disabled={sel.size === 0}
-            className="px-4 py-2 rounded-lg bg-brand text-white text-sm disabled:opacity-40">
-            Excluir selecionadas ({sel.size})
-          </button>
-        </div>
-        {loading ? <p className="text-muted">Procurando…</p> :
-          Object.keys(groups).length === 0 ? <p className="text-muted">Nenhuma duplicata encontrada.</p> :
-          Object.entries(groups).map(([k, list]) => (
+    <Modal
+      title="Músicas duplicadas"
+      subtitle="Faixas com o mesmo título e a mesma duração. Marque as cópias que quiser tirar da biblioteca."
+      onClose={onClose}
+      width="w-[640px]"
+      footer={
+        <>
+          {groupList.length > 0 && (
+            <Button variant="ghost" onClick={selectExtras}>
+              <IconCheck size={14} /> Marcar as cópias extras
+            </Button>
+          )}
+          <Button variant="ghost" onClick={onClose}>Fechar</Button>
+          <Button variant="danger" onClick={remove} disabled={sel.size === 0}>
+            <IconTrash size={14} /> Remover {sel.size > 0 ? `(${sel.size})` : ""}
+          </Button>
+        </>
+      }
+    >
+      <div className="pb-2">
+        {loading ? (
+          <p className="text-sm text-muted flex items-center gap-2 py-6"><Spinner /> Procurando duplicatas…</p>
+        ) : groupList.length === 0 ? (
+          <EmptyState
+            icon={<IconCheck size={22} />}
+            title="Nenhuma duplicata encontrada"
+            description="Sua biblioteca está limpa."
+          />
+        ) : (
+          groupList.map(([k, list]) => (
             <div key={k} className="mb-4">
-              <div className="text-sm text-content mb-1">{list[0].title} <span className="text-muted">· {Math.round(list[0].duration ?? 0)}s · {list.length} cópias</span></div>
+              <div className="text-sm text-content mb-1.5">
+                {list[0].title}
+                <span className="text-muted text-xs">
+                  {" "}· {artistOf(list[0])} · {fmtDuration(list[0].duration)} · {list.length} cópias
+                </span>
+              </div>
               <div className="space-y-1">
-                {list.map((t) => (
-                  <label key={t.id} className="flex items-center gap-2 text-xs text-muted bg-panel2 rounded px-3 py-2">
-                    <input type="checkbox" checked={sel.has(t.id)} onChange={() => toggle(t.id)} className="accent-brand" />
-                    <span className="truncate">{t.file_path}</span>
-                  </label>
+                {list.map((t, i) => (
+                  <div key={t.id} className="flex items-center gap-2.5 text-xs bg-panel2 rounded-lg px-3 py-2">
+                    <Checkbox checked={sel.has(t.id)} onChange={() => toggle(t.id)} label={`Remover ${t.file_path}`} />
+                    <span className="truncate text-muted flex-1" title={t.file_path}>{t.file_path}</span>
+                    {i === 0 && <span className="text-[10px] text-success shrink-0">original</span>}
+                  </div>
                 ))}
               </div>
             </div>
           ))
-        }
+        )}
       </div>
-    </div>
+    </Modal>
   );
 }

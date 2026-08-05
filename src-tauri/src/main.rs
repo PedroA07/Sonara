@@ -16,12 +16,14 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             let dir = app.path().app_data_dir().expect("no app data dir");
             std::fs::create_dir_all(&dir)?;
             let db = Db::open(&dir.join("sonara.db"))?;
             db.migrate()?;
             app.manage(db);
+            app.manage(commands::download::Downloads::default());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -37,9 +39,14 @@ fn main() {
             commands::playback::set_queue,
             commands::playback::get_queue,
             commands::download::start_download,
+            commands::download::cancel_download,
             commands::download::preview_download_args,
             commands::download::list_download_jobs,
+            commands::download::clear_download_history,
+            commands::download::check_download_tools,
             commands::download::youtube_search,
+            commands::export::export_tracks,
+            commands::export::open_path,
             commands::edit::update_track_metadata,
             commands::edit::set_track_cover,
             commands::edit::read_image_base64,
@@ -54,6 +61,7 @@ fn main() {
             commands::playlists::playlist_tracks,
             commands::settings::get_settings,
             commands::settings::set_setting,
+            commands::settings::default_paths,
             commands::search::rebuild_search_index,
             commands::maintenance::find_duplicates,
             commands::maintenance::delete_tracks,

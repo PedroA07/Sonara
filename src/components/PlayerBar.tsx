@@ -2,21 +2,18 @@ import { useEffect, useRef, type SyntheticEvent } from "react";
 import { usePlayerStore } from "../store/usePlayerStore";
 import { useSettingsStore } from "../store/useSettingsStore";
 import { fileUrl } from "../lib/ipc";
+import { artistOf, fmtClock } from "../lib/format";
 import CoverArt from "./CoverArt";
+import { IconButton } from "./ui";
 import {
-  IconShuffle, IconPrev, IconNext, IconPlay, IconPause, IconRepeat, IconRepeatOne, IconVolume, IconQueue,
+  IconShuffle, IconPrev, IconNext, IconPlay, IconPause, IconRepeat, IconRepeatOne,
+  IconVolume, IconQueue, IconChevronUp, IconGrid, IconList,
 } from "./icons";
 import type { Track } from "../types";
 
-function fmt(sec: number): string {
-  if (!isFinite(sec)) return "--:--";
-  const m = Math.floor(sec / 60);
-  const s = Math.floor(sec % 60);
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
 // ReplayGain: multiply base volume by the linear track gain (capped at 1 for <audio>).
-function effVolume(base: number, track: Track | undefined, replaygain: boolean): number {
+function effVolume(base: number, track: Track | undefined, replaygain: boolean, muted: boolean): number {
+  if (muted) return 0;
   const g = replaygain && track?.gain ? track.gain : 1;
   return Math.max(0, Math.min(1, base * g));
 }
@@ -53,7 +50,7 @@ export default function PlayerBar() {
     }
     const cur = getActive();
     if (cur) {
-      cur.volume = effVolume(s.volume, current, replaygain);
+      cur.volume = effVolume(s.volume, current, replaygain, s.muted);
       if (s.isPlaying) cur.play().catch(() => {});
     }
     // preload the next track into the (now) inactive slot for gapless/crossfade
@@ -76,12 +73,12 @@ export default function PlayerBar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.isPlaying]);
 
-  // Volume / ReplayGain changes.
+  // Volume / mute / ReplayGain changes.
   useEffect(() => {
     const a = getActive();
-    if (a && !fading.current) a.volume = effVolume(s.volume, current, replaygain);
+    if (a && !fading.current) a.volume = effVolume(s.volume, current, replaygain, s.muted);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [s.volume, replaygain]);
+  }, [s.volume, s.muted, replaygain]);
 
   // Honour seek requests.
   useEffect(() => {
@@ -99,7 +96,7 @@ export default function PlayerBar() {
     if (!b || !next) return;
     fading.current = true;
     advancing.current = true;
-    const targetB = effVolume(s.volume, next, replaygain);
+    const targetB = effVolume(s.volume, next, replaygain, s.muted);
     const dur = Math.max(0.1, crossfade);
     b.currentTime = 0;
     b.volume = 0;
@@ -131,51 +128,110 @@ export default function PlayerBar() {
     s.handleEnded();
   };
 
+  const pct = s.duration > 0 ? (s.currentTime / s.duration) * 100 : 0;
+  const volPct = (s.muted ? 0 : s.volume) * 100;
+  const hasTrack = !!current;
+
   return (
-    <footer className="h-20 shrink-0 bg-panel2 border-t border-black/40 flex items-center px-6 gap-6">
+    <footer className="h-[84px] shrink-0 bg-panel border-t divider flex items-center px-5 gap-5 relative z-20">
       <audio ref={slot0} onTimeUpdate={(e) => onTime(e, 0)} onLoadedMetadata={(e) => active.current === 0 && s.setDuration(e.currentTarget.duration)} onEnded={() => onEnded(0)} />
       <audio ref={slot1} onTimeUpdate={(e) => onTime(e, 1)} onLoadedMetadata={(e) => active.current === 1 && s.setDuration(e.currentTarget.duration)} onEnded={() => onEnded(1)} />
 
-      <div className="w-56 min-w-0 flex items-center gap-3">
-        <button title="Abrir tela cheia" onClick={() => current && s.setExpanded(true)} className="w-12 h-12 shrink-0 rounded-lg overflow-hidden">
+      {/* ── Now playing ───────────────────────────────────────────── */}
+      <div className="w-[260px] min-w-0 flex items-center gap-3">
+        <button
+          title={hasTrack ? "Abrir tela cheia (F)" : undefined}
+          onClick={() => hasTrack && s.setExpanded(true)}
+          disabled={!hasTrack}
+          className="group relative w-14 h-14 shrink-0 rounded-xl overflow-hidden shadow-soft disabled:cursor-default"
+        >
           <CoverArt path={current?.cover_path} />
+          {hasTrack && (
+            <span className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+              <IconChevronUp size={18} />
+            </span>
+          )}
         </button>
-        <div className="min-w-0 cursor-pointer" onClick={() => current && s.setExpanded(true)}>
-          <div className="truncate text-sm text-content">{current?.title ?? "Nada tocando"}</div>
-          <div className="truncate text-xs text-muted">{current?.format?.toUpperCase() ?? ""}</div>
+        <div
+          className={`min-w-0 ${hasTrack ? "cursor-pointer" : ""}`}
+          onClick={() => hasTrack && s.setExpanded(true)}
+        >
+          <div className="truncate text-sm font-medium text-content">
+            {current?.title ?? "Nada tocando"}
+          </div>
+          <div className="truncate text-xs text-muted mt-0.5">
+            {current ? artistOf(current) : "Escolha uma música na biblioteca"}
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col items-center gap-1">
-        <div className="flex items-center gap-5">
-          <button title="Aleatório (S)" onClick={s.toggleShuffle} className={s.shuffle ? "text-brand" : "text-muted hover:text-content"}><IconShuffle size={18} /></button>
-          <button title="Anterior" onClick={s.prev} className="text-muted hover:text-content"><IconPrev size={22} /></button>
-          <button title="Play/Pause (Espaço)" onClick={s.toggle} className="w-9 h-9 rounded-full bg-content text-ink flex items-center justify-center hover:scale-105 transition">
-            {s.isPlaying ? <IconPause size={16} /> : <IconPlay size={16} />}
+      {/* ── Transport ─────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col items-center gap-1.5 min-w-0">
+        <div className="flex items-center gap-2">
+          <IconButton label="Aleatório (S)" active={s.shuffle} onClick={s.toggleShuffle}>
+            <IconShuffle size={17} />
+          </IconButton>
+          <IconButton label="Faixa anterior (Shift + ←)" onClick={s.prev} disabled={!hasTrack}>
+            <IconPrev size={22} />
+          </IconButton>
+          <button
+            title="Tocar / pausar (Espaço)"
+            aria-label={s.isPlaying ? "Pausar" : "Tocar"}
+            onClick={s.toggle}
+            disabled={!hasTrack}
+            className="w-11 h-11 rounded-full brand-gradient text-white flex items-center justify-center
+              shadow-glow transition-transform duration-150 ease-pop hover:scale-105 active:scale-95
+              disabled:opacity-40 disabled:hover:scale-100"
+          >
+            {s.isPlaying ? <IconPause size={18} /> : <IconPlay size={18} className="ml-0.5" />}
           </button>
-          <button title="Próxima (Shift+→)" onClick={s.next} className="text-muted hover:text-content"><IconNext size={22} /></button>
-          <button title="Repetir (R)" onClick={s.cycleRepeat} className={s.repeat !== "off" ? "text-brand" : "text-muted hover:text-content"}>
-            {s.repeat === "one" ? <IconRepeatOne size={18} /> : <IconRepeat size={18} />}
-          </button>
+          <IconButton label="Próxima faixa (Shift + →)" onClick={s.next} disabled={!hasTrack}>
+            <IconNext size={22} />
+          </IconButton>
+          <IconButton
+            label={s.repeat === "one" ? "Repetir uma (R)" : s.repeat === "all" ? "Repetir tudo (R)" : "Repetir (R)"}
+            active={s.repeat !== "off"}
+            onClick={s.cycleRepeat}
+          >
+            {s.repeat === "one" ? <IconRepeatOne size={17} /> : <IconRepeat size={17} />}
+          </IconButton>
         </div>
-        <div className="w-full max-w-xl flex items-center gap-2 text-[11px] text-muted">
-          <span>{fmt(s.currentTime)}</span>
-          <input type="range" min={0} max={s.duration || 0} step={0.1} value={s.currentTime}
-            onChange={(e) => s.requestSeek(Number(e.target.value))} className="flex-1 accent-brand h-1" />
-          <span>{fmt(s.duration)}</span>
+
+        <div className="w-full max-w-xl flex items-center gap-2.5 text-[11px] text-muted tabular-nums">
+          <span className="w-9 text-right">{fmtClock(s.currentTime)}</span>
+          <input
+            type="range" min={0} max={s.duration || 0} step={0.1} value={s.currentTime}
+            onChange={(e) => s.requestSeek(Number(e.target.value))}
+            disabled={!hasTrack}
+            aria-label="Posição na música"
+            className="flex-1 track-range"
+            style={{ ["--pct" as string]: `${pct}%` }}
+          />
+          <span className="w-9">{fmtClock(s.duration)}</span>
         </div>
       </div>
 
-      <div className="w-56 flex items-center justify-end gap-3">
-        <button title="Mostrar/ocultar fila" onClick={s.toggleQueue} className={s.showQueue ? "text-brand" : "text-muted hover:text-content"}>
+      {/* ── Right-hand controls ───────────────────────────────────── */}
+      <div className="w-[260px] flex items-center justify-end gap-1">
+        <IconButton
+          label={s.layout === "album" ? "Ver a fila como lista" : "Ver a fila com capas"}
+          onClick={s.toggleLayout}
+        >
+          {s.layout === "album" ? <IconList size={17} /> : <IconGrid size={17} />}
+        </IconButton>
+        <IconButton label="Mostrar/ocultar a fila (Q)" active={s.showQueue} onClick={s.toggleQueue}>
           <IconQueue size={17} />
-        </button>
-        <button title="Alternar layout (L)" onClick={s.toggleLayout} className="text-muted hover:text-content text-sm">
-          {s.layout === "album" ? "Navegação" : "Álbum"}
-        </button>
-        <span className="text-muted"><IconVolume size={17} /></span>
-        <input type="range" min={0} max={1} step={0.01} value={s.volume}
-          onChange={(e) => s.setVolume(Number(e.target.value))} className="w-20 accent-brand h-1" />
+        </IconButton>
+        <IconButton label={s.muted ? "Reativar som (M)" : "Mudo (M)"} active={s.muted} onClick={s.toggleMute}>
+          <IconVolume size={17} />
+        </IconButton>
+        <input
+          type="range" min={0} max={1} step={0.01} value={s.muted ? 0 : s.volume}
+          onChange={(e) => s.setVolume(Number(e.target.value))}
+          aria-label="Volume"
+          className="w-24 track-range"
+          style={{ ["--pct" as string]: `${volPct}%` }}
+        />
       </div>
     </footer>
   );

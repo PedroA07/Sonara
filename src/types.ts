@@ -12,6 +12,9 @@ export interface Track {
   format: string | null;
   gain: number | null;
   cover_path: string | null;
+  /** Resolved by the backend for display (never edited through this shape). */
+  artist_name: string | null;
+  album_title: string | null;
 }
 
 export interface AlbumCard {
@@ -79,11 +82,54 @@ export interface TrackEdit {
 
 export type PlaylistSort = "custom" | "recent" | "alpha" | "artist" | "year";
 
-export type ThemeMode = "dark" | "light";
+export type ThemeMode = "dark" | "light" | "system";
+/** Container yt-dlp produces. m4a keeps the original stream; mp3 is the safest
+ *  bet for car stereos and older players. */
+export type AudioFormat = "m4a" | "mp3" | "opus" | "flac";
+
 export interface Settings {
   theme: ThemeMode;
   crossfade: number;   // seconds (0 = off)
   replaygain: boolean;
+  downloadDir: string;
+  audioFormat: AudioFormat;
+}
+
+/** Health of the bundled yt-dlp/ffmpeg, shown in Configurações. */
+export interface ToolStatus {
+  ytdlp_version: string | null;
+  ffmpeg_path: string | null;
+  download_dir: string;
+  download_dir_writable: boolean;
+  audio_format: string;
+}
+
+export type ExportOrganize = "flat" | "artist" | "artist_album";
+export type ExportNaming = "title" | "artist_title" | "track_title";
+
+export interface ExportOptions {
+  dest_dir: string;
+  organize: ExportOrganize;
+  naming: ExportNaming;
+  convert_mp3: boolean;
+  overwrite: boolean;
+  playlist_file: boolean;
+  playlist_name: string | null;
+}
+
+export interface ExportResult {
+  copied: number;
+  skipped: number;
+  failed: number;
+  dest_dir: string;
+  errors: string[];
+}
+
+export interface ExportProgress {
+  index: number;
+  total: number;
+  name: string;
+  status: "copying" | "converting" | "ok" | "skipped" | "error";
 }
 
 export interface SearchResult {
@@ -94,19 +140,31 @@ export interface SearchResult {
   thumbnail: string;
 }
 
+export type JobStatus = "running" | "done" | "error" | "pending" | "canceled";
+
 export interface DownloadJob {
   id: number;
   url: string | null;
   type: string;
-  status: "running" | "done" | "error" | "pending";
+  status: JobStatus;
   progress: number;
   dest_kind: string | null;
   dest_id: number | null;
+  title: string | null;
+  file_path: string | null;
+  error: string | null;
+  track_id: number | null;
+  created_at: string | null;
 }
 
 export interface DownloadProgress {
   job_id: number;
-  status: "running" | "done" | "error";
+  status: JobStatus;
   progress: number;
   message: string;
+  title: string;
+  speed: string;
+  eta: string;
+  trackId: number | null;
+  filePath: string | null;
 }

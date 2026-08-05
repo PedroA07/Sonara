@@ -34,6 +34,10 @@ impl Db {
             conn.execute_batch(include_str!("../migrations/0004_track_cover.sql"))?;
             conn.pragma_update(None, "user_version", 4)?;
         }
+        if version < 5 {
+            conn.execute_batch(include_str!("../migrations/0005_download_details.sql"))?;
+            conn.pragma_update(None, "user_version", 5)?;
+        }
         Ok(())
     }
 }

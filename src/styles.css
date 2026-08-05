@@ -2,31 +2,269 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Theme tokens as RGB channel triplets (consumed via rgb(var(--x) / alpha)). */
-:root, [data-theme="dark"] {
-  --c-brand: 46 107 230;
-  --c-ink: 14 17 23;
-  --c-panel: 22 26 34;
-  --c-panel2: 30 36 48;
-  --c-muted: 138 144 162;
-  --c-content: 231 233 238;
+/* ────────────────────────────────────────────────────────────────────────────
+   Sonara design tokens.
+   Colours are RGB channel triplets so Tailwind can apply alpha
+   (`rgb(var(--c-brand) / 0.15)`). Swapping [data-theme] re-skins everything.
+   ──────────────────────────────────────────────────────────────────────────── */
+:root,
+[data-theme="dark"] {
+  --c-brand: 124 92 255;      /* violet — the Sonara signature            */
+  --c-brand2: 34 211 238;     /* cyan — second stop of the brand gradient */
+  --c-ink: 11 13 22;          /* app background                           */
+  --c-panel: 20 23 36;        /* sidebar, cards                           */
+  --c-panel2: 29 33 50;       /* inputs, chips, hover                     */
+  --c-elev: 38 43 64;         /* modals, popovers                         */
+  --c-line: 255 255 255;      /* borders — always used with an alpha      */
+  --c-muted: 148 155 178;
+  --c-content: 236 238 246;
+  --c-success: 52 211 153;
+  --c-danger: 248 113 113;
+  --c-warn: 251 191 36;
+  --line-alpha: 0.09;
   color-scheme: dark;
 }
+
 [data-theme="light"] {
-  --c-brand: 37 99 235;
-  --c-ink: 247 248 250;
+  --c-brand: 106 62 235;
+  --c-brand2: 8 145 178;
+  --c-ink: 245 246 251;
   --c-panel: 255 255 255;
-  --c-panel2: 238 241 246;
-  --c-muted: 100 108 128;
-  --c-content: 20 24 33;
+  --c-panel2: 238 240 248;
+  --c-elev: 255 255 255;
+  --c-line: 15 18 40;
+  --c-muted: 94 102 128;
+  --c-content: 22 25 38;
+  --c-success: 5 150 105;
+  --c-danger: 220 38 38;
+  --c-warn: 217 119 6;
+  --line-alpha: 0.12;
   color-scheme: light;
 }
 
-html, body, #root { height: 100%; margin: 0; }
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
 body {
   background: rgb(var(--c-ink));
   color: rgb(var(--c-content));
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "tnum";
+  -webkit-font-smoothing: antialiased;
 }
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: rgb(var(--c-panel2)); border-radius: 6px; }
+
+/* The app chrome should feel like an app, not a web page. */
+#root {
+  user-select: none;
+}
+input,
+textarea,
+[contenteditable] {
+  user-select: text;
+}
+
+@layer base {
+  /* One visible, consistent focus ring everywhere — keyboard users can always
+     tell where they are, mouse users never see it. */
+  :focus-visible {
+    outline: 2px solid rgb(var(--c-brand));
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  ::selection {
+    background: rgb(var(--c-brand) / 0.35);
+  }
+}
+
+@layer components {
+  /* Hairline that adapts to the theme instead of a hard-coded white/black. */
+  .divider {
+    border-color: rgb(var(--c-line) / var(--line-alpha));
+  }
+
+  .brand-gradient {
+    background-image: linear-gradient(135deg, rgb(var(--c-brand)), rgb(var(--c-brand2)));
+  }
+  .brand-text {
+    background-image: linear-gradient(120deg, rgb(var(--c-brand)), rgb(var(--c-brand2)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Ambient light behind the main area — gives the dark theme depth. */
+  .aurora::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 340px;
+    background:
+      radial-gradient(520px 220px at 22% 0%, rgb(var(--c-brand) / 0.16), transparent 70%),
+      radial-gradient(420px 200px at 78% 6%, rgb(var(--c-brand2) / 0.1), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Rows and cards lift slightly on hover — the affordance that says
+     "this is clickable" without needing a hint. */
+  .hoverable {
+    transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1), background-color 0.16s ease,
+      box-shadow 0.16s ease;
+  }
+  .hoverable:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Loading placeholder for lists and covers. */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: rgb(var(--c-panel2));
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgb(var(--c-line) / 0.12), transparent);
+    animation: shimmer 1.4s infinite;
+  }
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Indeterminate stripe, shown while yt-dlp is post-processing and there is
+     no percentage to report. */
+  .bar-indeterminate {
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgb(var(--c-brand)) 35%,
+      rgb(var(--c-brand2)) 65%,
+      transparent 100%
+    );
+    background-size: 40% 100%;
+    background-repeat: no-repeat;
+    animation: sweep 1.1s ease-in-out infinite;
+  }
+  @keyframes sweep {
+    0% {
+      background-position: -40% 0;
+    }
+    100% {
+      background-position: 140% 0;
+    }
+  }
+
+  /* "This one is playing" indicator — three dancing bars. */
+  .eq {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 14px;
+  }
+  .eq i {
+    width: 3px;
+    border-radius: 2px;
+    background: currentColor;
+    animation: eq 0.9s ease-in-out infinite;
+  }
+  .eq i:nth-child(1) { height: 40%; animation-delay: -0.2s; }
+  .eq i:nth-child(2) { height: 90%; animation-delay: -0.5s; }
+  .eq i:nth-child(3) { height: 60%; animation-delay: -0.8s; }
+  .eq.paused i { animation-play-state: paused; }
+  @keyframes eq {
+    0%, 100% { transform: scaleY(0.4); }
+    50% { transform: scaleY(1); }
+  }
+
+  /* Range inputs: same look on every platform. The thumb only appears on
+     hover/focus so the bar stays clean while playing. */
+  .track-range {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 16px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .track-range::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(
+      to right,
+      rgb(var(--c-brand)) var(--pct, 0%),
+      rgb(var(--c-brand2)) var(--pct, 0%),
+      rgb(var(--c-line) / 0.18) var(--pct, 0%)
+    );
+  }
+  .track-range::-moz-range-track {
+    height: 4px;
+    border-radius: 999px;
+    background: rgb(var(--c-line) / 0.18);
+  }
+  .track-range::-moz-range-progress {
+    height: 4px;
+    border-radius: 999px;
+    background: rgb(var(--c-brand));
+  }
+  .track-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    margin-top: -4px;
+    border-radius: 999px;
+    background: rgb(var(--c-content));
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .track-range:hover::-webkit-slider-thumb,
+  .track-range:focus-visible::-webkit-slider-thumb {
+    opacity: 1;
+  }
+  .track-range::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: none;
+    border-radius: 999px;
+    background: rgb(var(--c-content));
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--c-line) / 0.16);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--c-line) / 0.3);
+  background-clip: content-box;
+}
+
+/* Respect the OS setting: motion is decoration, never the only signal. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .hoverable:hover {
+    transform: none;
+  }
+}
