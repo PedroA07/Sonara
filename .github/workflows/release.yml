@@ -89,6 +89,58 @@ jobs:
           esac
           ls -l src-tauri/binaries
 
+      # Release notes live in CHANGELOG.md so every version documents itself
+      # without this workflow being edited again. The heading format is
+      # `## [x.y.z] — date`; the section runs until the next `## ` heading.
+      - name: Extract release notes from CHANGELOG.md
+        id: notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          BODY=""
+          if [ -f CHANGELOG.md ]; then
+            # Compare the first token of each heading literally, so version
+            # numbers are never treated as regular expressions.
+            BODY=$(awk -v v="$VERSION" '
+              /^## / {
+                if (found) exit
+                line = $0
+                sub(/^## +/, "", line)
+                gsub(/[][]/, "", line)
+                split(line, parts, / +/)
+                if (parts[1] == v) found = 1
+                next
+              }
+              found { print }
+            ' CHANGELOG.md)
+          fi
+          if [ -z "$(printf %s "$BODY" | tr -d '[:space:]')" ]; then
+            echo "::warning::CHANGELOG.md has no section for $VERSION; using the generic body."
+            BODY="Notas desta versão ainda não publicadas."
+          fi
+          {
+            echo "body<<SONARA_NOTES_EOF"
+            printf '%s\n' "$BODY"
+            printf '%s\n' \
+              "---" \
+              "" \
+              "## Baixar" \
+              "" \
+              "Escolha o arquivo do seu sistema abaixo, ou use a página de download:" \
+              "**https://pedroa07.github.io/Sonara/**" \
+              "" \
+              "| Sistema | Arquivo |" \
+              "|---|---|" \
+              "| Windows | \`.exe\` (instalador) |" \
+              "| macOS | \`.dmg\` |" \
+              "| Linux | \`.AppImage\` ou \`.deb\` |" \
+              "" \
+              "O yt-dlp e o ffmpeg já vêm junto — não é preciso instalar mais nada." \
+              "Se algum download falhar dentro do app, abra **Configurações → Diagnóstico**."
+            echo "SONARA_NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build & release (Tauri)
         uses: tauri-apps/tauri-action@v0
         env:
@@ -105,18 +157,5 @@ jobs:
           releaseDraft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
           includeUpdaterJson: true
-          releaseBody: |
-            ## Sonara ${{ github.ref_name }}
-
-            Baixe o instalador do seu sistema abaixo, ou use a página de download:
-            **https://pedroa07.github.io/Sonara/**
-
-            | Sistema | Arquivo |
-            |---|---|
-            | Windows | `.exe` (instalador) |
-            | macOS | `.dmg` |
-            | Linux | `.AppImage` ou `.deb` |
-
-            O yt-dlp e o ffmpeg já vêm junto — não é preciso instalar mais nada.
-            Se um download falhar, abra **Configurações → Diagnóstico** no app.
+          releaseBody: ${{ steps.notes.outputs.body }}
           args: ${{ matrix.args }}
