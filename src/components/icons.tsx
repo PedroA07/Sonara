@@ -43,8 +43,17 @@ export const IconSettings = (p: IconProps) => (
 );
 
 /* ---- Player transport ---- */
+// Shuffle: two paths that cross and swap, each ending in its own arrowhead.
+// The previous version was a plain X with stray arrows — at 17px it read as a
+// "close" glyph rather than "shuffle".
 export const IconShuffle = (p: IconProps) => (
-  <Svg {...p}><path d="M16 3h5v5" /><path d="M4 20 21 3" /><path d="M21 16v5h-5" /><path d="m15 15 6 6" /><path d="m4 4 5 5" /></Svg>
+  <Svg {...p}>
+    <path d="M3 7h3.1c1.4 0 2.7.7 3.5 1.9l.6.9" />
+    <path d="M3 17h3.1c1.4 0 2.7-.7 3.5-1.9l4.8-7.2c.8-1.2 2.1-1.9 3.5-1.9H21" />
+    <path d="m17.5 3 3.5 3-3.5 3" />
+    <path d="m13.9 14.3.6.8c.8 1.2 2.1 1.9 3.5 1.9H21" />
+    <path d="m17.5 14 3.5 3-3.5 3" />
+  </Svg>
 );
 export const IconPrev = (p: IconProps) => (
   <Svg {...p} fill="currentColor" stroke="none"><path d="M7 5a1 1 0 0 0-1 1v12a1 1 0 0 0 2 0v-4.6l8.4 5.4A1 1 0 0 0 18 18V6a1 1 0 0 0-1.6-.8L8 10.6V6a1 1 0 0 0-1-1z" /></Svg>
@@ -58,11 +67,27 @@ export const IconPlay = (p: IconProps) => (
 export const IconPause = (p: IconProps) => (
   <Svg {...p} fill="currentColor" stroke="none"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></Svg>
 );
+// Repeat: a closed loop centred in the box. The old paths ran from y=2 to y=22,
+// so the glyph was taller than every other transport icon and looked misaligned
+// next to play/next.
 export const IconRepeat = (p: IconProps) => (
-  <Svg {...p}><path d="m17 2 4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></Svg>
+  <Svg {...p}>
+    <path d="M4 12V9.5A3.5 3.5 0 0 1 7.5 6H19" />
+    <path d="m16 3 3.5 3L16 9" />
+    <path d="M20 12v2.5a3.5 3.5 0 0 1-3.5 3.5H5" />
+    <path d="m8 15-3.5 3L8 21" />
+  </Svg>
 );
+// Repeat one: the same loop with a "1" in the middle — clearer than the dot it
+// used to draw, which was easy to mistake for a bullet.
 export const IconRepeatOne = (p: IconProps) => (
-  <Svg {...p}><path d="m17 2 4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" /></Svg>
+  <Svg {...p}>
+    <path d="M4 12V9.5A3.5 3.5 0 0 1 7.5 6H19" />
+    <path d="m16 3 3.5 3L16 9" />
+    <path d="M20 12v2.5a3.5 3.5 0 0 1-3.5 3.5H5" />
+    <path d="m8 15-3.5 3L8 21" />
+    <path d="M10.9 10.7 12.4 9.8v4.6" strokeWidth={2.2} />
+  </Svg>
 );
 export const IconVolume = (p: IconProps) => (
   <Svg {...p}><path d="M11 5 6 9H2v6h4l5 4z" /><path d="M15.5 8.5a5 5 0 0 1 0 7" /><path d="M19 5a9 9 0 0 1 0 14" /></Svg>
