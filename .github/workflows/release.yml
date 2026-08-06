@@ -1,8 +1,27 @@
 name: Release
 
+# Three ways in, because relying on the tag push alone produced a published
+# release with no installers attached:
+#
+#  - push: the normal path (`git push origin v0.2.0`).
+#  - release: a release created by hand in the GitHub UI creates its tag
+#    "on publish", and that does not reliably fire the tag push event — the
+#    release would otherwise sit there empty. Releases created by this workflow
+#    itself never re-trigger it: GitHub does not fire events for actions taken
+#    with GITHUB_TOKEN, so there is no loop.
+#  - workflow_dispatch: re-run a build by hand, e.g. when one platform failed
+#    or a release was published before the workflow existed.
 on:
   push:
     tags: ["v*"]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag a publicar (ex.: v0.2.0)"
+        required: true
+        type: string
 
 # Required so tauri-action can create the GitHub Release with the built
 # installers using the automatic GITHUB_TOKEN.
@@ -27,8 +46,23 @@ jobs:
             triple: x86_64-pc-windows-msvc
             args: ""
     runs-on: ${{ matrix.os }}
+    env:
+      # The tag lives in a different place depending on which trigger fired, so
+      # it is resolved once here instead of at every use site.
+      SONARA_TAG: ${{ inputs.tag || github.event.release.tag_name || github.ref_name }}
     steps:
+      # Build the tagged commit, not whatever the default branch points at —
+      # on a workflow_dispatch these are not the same thing.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.event.release.tag_name || github.ref_name }}
+
+      - name: Confirm what is being built
+        shell: bash
+        run: |
+          echo "Tag:    $SONARA_TAG"
+          echo "Commit: $(git rev-parse HEAD)"
+          echo "Versão em package.json: $(node -p "require('./package.json').version")"
 
       - uses: actions/setup-node@v4
         with:
@@ -97,7 +131,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${SONARA_TAG#v}"
           BODY=""
           if [ -f CHANGELOG.md ]; then
             # Compare the first token of each heading literally, so version
@@ -149,13 +183,13 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "Sonara ${{ github.ref_name }}"
+          tagName: ${{ env.SONARA_TAG }}
+          releaseName: "Sonara ${{ env.SONARA_TAG }}"
           # Published, not draft: the download page and the in-app updater both
           # read `releases/latest/download/latest.json`, which 404s while the
           # release sits as a draft. Pre-releases are still marked as such.
           releaseDraft: false
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          prerelease: ${{ contains(env.SONARA_TAG, '-') }}
           includeUpdaterJson: true
           releaseBody: ${{ steps.notes.outputs.body }}
           args: ${{ matrix.args }}
