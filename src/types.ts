@@ -140,6 +140,12 @@ export interface SearchResult {
   thumbnail: string;
 }
 
+export interface CoverCandidate {
+  thumb: string;
+  full: string;
+  label: string;
+}
+
 export type JobStatus = "running" | "done" | "error" | "pending" | "canceled";
 
 export interface DownloadJob {

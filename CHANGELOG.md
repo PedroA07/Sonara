@@ -6,6 +6,30 @@ e a publica como descrição da release — mantenha o formato dos títulos
 
 ---
 
+## [0.3.0] — 2026-08-07
+
+### Álbuns e artistas agora podem ser corrigidos
+
+- **Excluir álbum** criado por engano — as músicas continuam na biblioteca, só o
+  agrupamento sai.
+- **Editar álbum**: nome, artista e ano.
+- **Renomear e excluir artistas**, direto na aba Artistas.
+
+### Capas
+
+- **Buscar capa na edição**: o botão “Buscar capa” abre uma grade de imagens de
+  referência; clique numa para ver e aplicar como capa da música.
+- **Capa automática ao baixar**: depois do download, o app procura a arte
+  quadrada do álbum e substitui a miniatura 16:9 do vídeo. Se não achar, fica a
+  miniatura de sempre.
+
+### Nome do artista no campo certo
+
+Títulos no formato “Artista - Música” passam a ser separados no download: o
+artista vai para o campo Artista e o título fica só com o nome da música.
+
+---
+
 ## [0.2.2] — 2026-08-07
 
 ### Ajustes de interface

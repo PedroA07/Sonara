@@ -1,5 +1,6 @@
+use crate::commands::search::reindex;
 use crate::db::Db;
-use crate::error::AppResult;
+use crate::error::{AppError, AppResult};
 use crate::models::{AlbumCard, Artist, Track};
 use tauri::State;
 
@@ -120,6 +121,76 @@ pub fn album_tracks(db: State<Db>, album_id: i64) -> AppResult<Vec<Track>> {
     let mut stmt = conn.prepare(&sql)?;
     let rows = stmt.query_map([album_id], map_track)?.collect::<Result<Vec<_>, _>>()?;
     Ok(rows)
+}
+
+/// Find or create an artist by name, returning its id.
+fn artist_id_for(conn: &rusqlite::Connection, name: &str) -> AppResult<i64> {
+    if let Ok(id) = conn.query_row("SELECT id FROM artist WHERE name = ?1", [name], |r| r.get::<_, i64>(0)) {
+        return Ok(id);
+    }
+    conn.execute("INSERT INTO artist (name) VALUES (?1)", [name])?;
+    Ok(conn.last_insert_rowid())
+}
+
+/// RF-05: edit an album — title, year and/or its artist (by name). Blank fields
+/// are left unchanged.
+#[tauri::command]
+pub fn update_album(
+    db: State<Db>,
+    album_id: i64,
+    title: Option<String>,
+    year: Option<i64>,
+    artist: Option<String>,
+) -> AppResult<()> {
+    let conn = db.0.lock().unwrap();
+    let title = title.map(|t| t.trim().to_string()).filter(|t| !t.is_empty());
+    let artist_id = match artist.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+        Some(name) => Some(artist_id_for(&conn, name)?),
+        None => None,
+    };
+    conn.execute(
+        "UPDATE album SET
+           title     = COALESCE(?2, title),
+           year      = COALESCE(?3, year),
+           artist_id = COALESCE(?4, artist_id)
+         WHERE id = ?1",
+        rusqlite::params![album_id, title, year, artist_id],
+    )?;
+    let _ = reindex(&conn);
+    Ok(())
+}
+
+/// RF-05: delete an album the user created by mistake. The tracks stay in the
+/// library (their `album_id` is cleared by the ON DELETE SET NULL foreign key).
+#[tauri::command]
+pub fn delete_album(db: State<Db>, album_id: i64) -> AppResult<()> {
+    let conn = db.0.lock().unwrap();
+    conn.execute("DELETE FROM album WHERE id = ?1", [album_id])?;
+    let _ = reindex(&conn);
+    Ok(())
+}
+
+/// RF-05: rename an artist.
+#[tauri::command]
+pub fn rename_artist(db: State<Db>, artist_id: i64, name: String) -> AppResult<()> {
+    let name = name.trim();
+    if name.is_empty() {
+        return Err(AppError::Other("O nome do artista não pode ficar vazio.".into()));
+    }
+    let conn = db.0.lock().unwrap();
+    conn.execute("UPDATE artist SET name = ?2 WHERE id = ?1", rusqlite::params![artist_id, name])?;
+    let _ = reindex(&conn);
+    Ok(())
+}
+
+/// RF-05: delete an artist. Albums/tracks stay (their link is cleared); the
+/// track↔artist links cascade away.
+#[tauri::command]
+pub fn delete_artist(db: State<Db>, artist_id: i64) -> AppResult<()> {
+    let conn = db.0.lock().unwrap();
+    conn.execute("DELETE FROM artist WHERE id = ?1", [artist_id])?;
+    let _ = reindex(&conn);
+    Ok(())
 }
 
 /// RF-03: artists list.

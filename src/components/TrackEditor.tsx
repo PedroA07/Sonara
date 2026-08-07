@@ -6,8 +6,9 @@ import { artistOf } from "../lib/format";
 import { toast } from "../store/useToastStore";
 import CoverArt from "./CoverArt";
 import CropModal from "./CropModal";
+import CoverSearchModal from "./CoverSearchModal";
 import { Button, Checkbox, Modal, TextField } from "./ui";
-import { IconAlert } from "./icons";
+import { IconAlert, IconSearch } from "./icons";
 
 /** RF-05: edit metadata for one (or several) tracks, optionally writing the
  *  tags back into the audio files themselves. */
@@ -29,6 +30,7 @@ export default function TrackEditor({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [cropData, setCropData] = useState<string | null>(null);
+  const [searchingCover, setSearchingCover] = useState(false);
 
   const save = async () => {
     setBusy(true); setErr("");
@@ -116,7 +118,12 @@ export default function TrackEditor({
                 <div className="text-sm text-content truncate">{single.title}</div>
                 <div className="text-xs text-muted truncate">{artistOf(single)}</div>
               </div>
-              <Button size="sm" onClick={pickCover}>Trocar a capa…</Button>
+              <div className="flex flex-col gap-1.5 shrink-0">
+                <Button size="sm" onClick={pickCover}>Trocar a capa…</Button>
+                <Button size="sm" variant="ghost" onClick={() => setSearchingCover(true)}>
+                  <IconSearch size={13} /> Buscar capa
+                </Button>
+              </div>
             </div>
           )}
 
@@ -161,6 +168,16 @@ export default function TrackEditor({
       </Modal>
 
       {cropData && <CropModal dataUrl={cropData} busy={busy} onCancel={() => setCropData(null)} onCrop={onCropped} />}
+
+      {searchingCover && single && (
+        <CoverSearchModal
+          trackId={single.id}
+          initialQuery={[artist, title].filter((s) => s.trim()).join(" ")}
+          writeFile={writeFile}
+          onClose={() => setSearchingCover(false)}
+          onApplied={onSaved}
+        />
+      )}
     </>
   );
 }

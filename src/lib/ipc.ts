@@ -2,6 +2,7 @@ import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import type {
   Track, AlbumCard, Artist, ParsedTrack, ImportSuggestion, ImportStrategy, DestKind,
   PlaylistCard, TrackEdit, DownloadJob, SearchResult, ToolStatus, ExportOptions, ExportResult,
+  CoverCandidate,
 } from "../types";
 
 export const api = {
@@ -11,6 +12,12 @@ export const api = {
   listAlbums: () => invoke<AlbumCard[]>("list_albums"),
   albumTracks: (albumId: number) => invoke<Track[]>("album_tracks", { albumId }),
   listArtists: () => invoke<Artist[]>("list_artists"),
+  // Album / artist management (RF-05)
+  updateAlbum: (albumId: number, fields: { title?: string; year?: number; artist?: string }) =>
+    invoke<void>("update_album", { albumId, ...fields }),
+  deleteAlbum: (albumId: number) => invoke<void>("delete_album", { albumId }),
+  renameArtist: (artistId: number, name: string) => invoke<void>("rename_artist", { artistId, name }),
+  deleteArtist: (artistId: number) => invoke<void>("delete_artist", { artistId }),
   // Import (RF-01 / RF-02)
   scanFolder: (path: string) => invoke<ImportSuggestion>("scan_folder", { path }),
   listAudioFiles: (path: string) => invoke<string[]>("list_audio_files", { path }),
@@ -45,6 +52,10 @@ export const api = {
   readImageBase64: (path: string) => invoke<string>("read_image_base64", { path }),
   setCoverFromBytes: (trackId: number, pngBase64: string, writeFile: boolean) =>
     invoke<string>("set_cover_from_bytes", { trackId, pngBase64, writeFile }),
+  searchCoverArt: (query: string, limit?: number) =>
+    invoke<CoverCandidate[]>("search_cover_art", { query, limit }),
+  setCoverFromUrl: (trackId: number, url: string, writeFile: boolean) =>
+    invoke<string>("set_cover_from_url", { trackId, url, writeFile }),
   // Playlists (RF-04)
   listPlaylists: () => invoke<PlaylistCard[]>("list_playlists"),
   createPlaylist: (name: string) => invoke<number>("create_playlist", { name }),

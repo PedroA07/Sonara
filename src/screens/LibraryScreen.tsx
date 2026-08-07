@@ -11,7 +11,7 @@ import AddToPlaylist from "../components/AddToPlaylist";
 import ExportModal from "../components/ExportModal";
 import CoverArt from "../components/CoverArt";
 import {
-  Badge, Button, Checkbox, EmptyState, Equalizer, IconButton, Modal, PageHeader, Segmented, Spinner,
+  Badge, Button, Checkbox, EmptyState, Equalizer, IconButton, Modal, PageHeader, Segmented, Spinner, TextField,
 } from "../components/ui";
 import {
   IconEdit, IconPlus, IconPlay, IconTrash, IconSearch, IconExport, IconMusic, IconSparkle, IconFolder,
@@ -105,6 +105,29 @@ export default function LibraryScreen() {
     });
 
   const toggleAll = () => setSelected(allSelected ? new Set() : new Set(shown.map((t) => t.id)));
+
+  const renameArtistPrompt = async (ar: Artist) => {
+    const name = window.prompt("Novo nome do artista:", ar.name);
+    if (name == null || !name.trim() || name.trim() === ar.name) return;
+    try {
+      await api.renameArtist(ar.id, name.trim());
+      toast.success("Artista renomeado");
+      load();
+    } catch (e) {
+      toast.error("Não foi possível renomear", String(e));
+    }
+  };
+
+  const deleteArtistConfirm = async (ar: Artist) => {
+    if (!window.confirm(`Excluir o artista "${ar.name}"?\n\nOs álbuns e as músicas continuam na biblioteca.`)) return;
+    try {
+      await api.deleteArtist(ar.id);
+      toast.success("Artista excluído", "Os álbuns e músicas continuam na biblioteca.");
+      load();
+    } catch (e) {
+      toast.error("Não foi possível excluir", String(e));
+    }
+  };
 
   const doDelete = async (list: Track[]) => {
     try {
@@ -250,16 +273,23 @@ export default function LibraryScreen() {
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
                 {artists.map((ar) => (
-                  <button key={ar.id} onClick={() => { setQ(ar.name); setView("tracks"); }}
-                    className="flex items-center gap-3 bg-panel border border-line/[.09] rounded-2xl px-4 py-3 hoverable hover:bg-panel2 text-left">
-                    <span className="w-10 h-10 rounded-full brand-gradient text-white flex items-center justify-center font-semibold shrink-0">
-                      {ar.name.trim().charAt(0).toUpperCase() || "?"}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm text-content truncate">{ar.name}</span>
-                      <span className="block text-xs text-muted">{ar.album_count} álbum(ns)</span>
-                    </span>
-                  </button>
+                  <div key={ar.id}
+                    className="group relative flex items-center gap-3 bg-panel border border-line/[.09] rounded-2xl px-4 py-3 hover:bg-panel2">
+                    <button onClick={() => { setQ(ar.name); setView("tracks"); }} title={`Ver músicas de ${ar.name}`}
+                      className="flex items-center gap-3 min-w-0 flex-1 text-left">
+                      <span className="w-10 h-10 rounded-full brand-gradient text-white flex items-center justify-center font-semibold shrink-0">
+                        {ar.name.trim().charAt(0).toUpperCase() || "?"}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-sm text-content truncate">{ar.name}</span>
+                        <span className="block text-xs text-muted">{ar.album_count} álbum(ns)</span>
+                      </span>
+                    </button>
+                    <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0">
+                      <IconButton label="Renomear artista" onClick={() => renameArtistPrompt(ar)} className="w-8 h-8"><IconEdit size={14} /></IconButton>
+                      <IconButton label="Excluir artista" onClick={() => deleteArtistConfirm(ar)} className="w-8 h-8 hover:text-danger"><IconTrash size={14} /></IconButton>
+                    </div>
+                  </div>
                 ))}
               </div>
             )
@@ -307,7 +337,7 @@ export default function LibraryScreen() {
         </div>
       )}
 
-      {openAlbum && <AlbumModal album={openAlbum} onClose={() => setOpenAlbum(null)} onExport={setExporting} />}
+      {openAlbum && <AlbumModal album={openAlbum} onClose={() => setOpenAlbum(null)} onExport={setExporting} onChanged={load} />}
       {editing && <TrackEditor tracks={editing} onClose={() => setEditing(null)} onSaved={() => { setSelected(new Set()); load(); }} />}
       {addingTo && <AddToPlaylist trackId={addingTo.id} onClose={() => setAddingTo(null)} />}
       {exporting && <ExportModal tracks={exporting} onClose={() => setExporting(null)} />}
@@ -444,15 +474,21 @@ function TrackTable({
 /* ─────────────────────────── Album modal ─────────────────────────── */
 
 function AlbumModal({
-  album, onClose, onExport,
+  album, onClose, onExport, onChanged,
 }: {
   album: AlbumCard;
   onClose: () => void;
   onExport: (tracks: Track[]) => void;
+  onChanged: () => void;
 }) {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [cover, setCover] = useState<string | null>(album.cover_path);
   const [enriching, setEnriching] = useState(false);
+  const [mode, setMode] = useState<"view" | "edit">("view");
+  const [title, setTitle] = useState(album.title);
+  const [year, setYear] = useState(album.year?.toString() ?? "");
+  const [artist, setArtist] = useState(album.artist_name ?? "");
+  const [busy, setBusy] = useState(false);
   const setQueue = usePlayerStore((s) => s.setQueue);
 
   useEffect(() => { api.albumTracks(album.id).then(setTracks).catch(() => setTracks([])); }, [album.id]);
@@ -461,7 +497,7 @@ function AlbumModal({
     setEnriching(true);
     try {
       const p = await api.enrichAlbum(album.id);
-      if (p) { setCover(p); toast.success("Capa encontrada", "Buscada no MusicBrainz / Cover Art Archive."); }
+      if (p) { setCover(p); toast.success("Capa encontrada", "Buscada no MusicBrainz / Cover Art Archive."); onChanged(); }
       else toast.info("Nenhuma capa encontrada", "Tente editar o álbum e adicionar a capa manualmente.");
     } catch (e) {
       toast.error("A busca de capa falhou", String(e));
@@ -470,54 +506,108 @@ function AlbumModal({
     }
   };
 
+  const save = async () => {
+    setBusy(true);
+    try {
+      await api.updateAlbum(album.id, {
+        title: title.trim() || undefined,
+        year: year.trim() ? Number(year) : undefined,
+        artist: artist.trim() || undefined,
+      });
+      toast.success("Álbum atualizado");
+      onChanged();
+      onClose();
+    } catch (e) {
+      toast.error("Não foi possível salvar", String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!window.confirm(`Excluir o álbum "${album.title}"?\n\nAs músicas continuam na sua biblioteca — só o agrupamento em álbum é removido.`)) return;
+    setBusy(true);
+    try {
+      await api.deleteAlbum(album.id);
+      toast.success("Álbum excluído", "As músicas continuam na sua biblioteca.");
+      onChanged();
+      onClose();
+    } catch (e) {
+      toast.error("Não foi possível excluir", String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const total = tracks.reduce((s, t) => s + (t.duration ?? 0), 0);
 
   return (
     <Modal
-      title={album.title}
-      subtitle={`${album.artist_name ?? "Artista desconhecido"}${album.year ? ` · ${album.year}` : ""}`}
+      title={mode === "edit" ? "Editar álbum" : album.title}
+      subtitle={
+        mode === "edit"
+          ? "Altere o nome, o artista ou o ano — vale para o álbum todo."
+          : `${album.artist_name ?? "Artista desconhecido"}${album.year ? ` · ${album.year}` : ""}`
+      }
       onClose={onClose}
       width="w-[600px]"
       footer={
-        <>
-          <Button variant="ghost" onClick={enrich} loading={enriching}>
-            <IconSparkle size={15} /> Buscar capa
-          </Button>
-          <Button onClick={() => onExport(tracks)} disabled={tracks.length === 0}>
-            <IconExport size={15} /> Exportar álbum
-          </Button>
-          <Button variant="primary" onClick={() => { setQueue(tracks, 0); onClose(); }} disabled={tracks.length === 0}>
-            <IconPlay size={14} /> Tocar
-          </Button>
-        </>
+        mode === "edit" ? (
+          <>
+            <Button variant="ghost" onClick={() => setMode("view")} disabled={busy}>Cancelar</Button>
+            <Button variant="primary" onClick={save} loading={busy}>Salvar</Button>
+          </>
+        ) : (
+          <>
+            <Button variant="danger" onClick={remove} disabled={busy}><IconTrash size={14} /> Excluir</Button>
+            <Button onClick={() => setMode("edit")}><IconEdit size={14} /> Editar</Button>
+            <Button variant="ghost" onClick={enrich} loading={enriching}><IconSparkle size={15} /> Capa</Button>
+            <Button onClick={() => onExport(tracks)} disabled={tracks.length === 0}><IconExport size={15} /> Exportar</Button>
+            <Button variant="primary" onClick={() => { setQueue(tracks, 0); onClose(); }} disabled={tracks.length === 0}>
+              <IconPlay size={14} /> Tocar
+            </Button>
+          </>
+        )
       }
     >
-      <div className="flex items-center gap-4 mb-4">
-        <div className="w-24 h-24 shrink-0 rounded-xl overflow-hidden shadow-soft"><CoverArt path={cover} /></div>
-        <div className="text-sm text-muted">
-          {tracks.length} {tracks.length === 1 ? "faixa" : "faixas"} · {fmtTotal(total)}
+      {mode === "edit" ? (
+        <div className="space-y-3.5 pb-2">
+          <TextField label="Nome do álbum" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <div className="flex gap-3">
+            <TextField label="Artista" value={artist} onChange={(e) => setArtist(e.target.value)} className="flex-1" />
+            <TextField label="Ano" value={year} onChange={(e) => setYear(e.target.value)} inputMode="numeric" className="w-28" />
+          </div>
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-24 h-24 shrink-0 rounded-xl overflow-hidden shadow-soft"><CoverArt path={cover} /></div>
+            <div className="text-sm text-muted">
+              {tracks.length} {tracks.length === 1 ? "faixa" : "faixas"} · {fmtTotal(total)}
+            </div>
+          </div>
 
-      <ol className="text-sm pb-2">
-        {tracks.map((t, i) => (
-          <li key={t.id}>
-            <button onClick={() => { setQueue(tracks, i); onClose(); }} title={`Tocar "${t.title}"`}
-              className="w-full flex items-center justify-between gap-3 py-2 px-2 rounded-lg hover:bg-line/[.06] text-left">
-              <span className="min-w-0 flex items-center gap-3">
-                <span className="text-muted text-xs w-5 tabular-nums">{t.track_no ?? i + 1}</span>
-                <span className="truncate text-content/90">{t.title}</span>
-              </span>
-              <span className="text-muted text-xs tabular-nums shrink-0">{fmtDuration(t.duration)}</span>
-            </button>
-          </li>
-        ))}
-        {tracks.length === 0 && (
-          <li className="text-muted text-sm py-4 flex items-center gap-2">
-            <IconFolder size={15} /> Este álbum não tem faixas registradas.
-          </li>
-        )}
-      </ol>
+          <ol className="text-sm pb-2">
+            {tracks.map((t, i) => (
+              <li key={t.id}>
+                <button onClick={() => { setQueue(tracks, i); onClose(); }} title={`Tocar "${t.title}"`}
+                  className="w-full flex items-center justify-between gap-3 py-2 px-2 rounded-lg hover:bg-line/[.06] text-left">
+                  <span className="min-w-0 flex items-center gap-3">
+                    <span className="text-muted text-xs w-5 tabular-nums">{t.track_no ?? i + 1}</span>
+                    <span className="truncate text-content/90">{t.title}</span>
+                  </span>
+                  <span className="text-muted text-xs tabular-nums shrink-0">{fmtDuration(t.duration)}</span>
+                </button>
+              </li>
+            ))}
+            {tracks.length === 0 && (
+              <li className="text-muted text-sm py-4 flex items-center gap-2">
+                <IconFolder size={15} /> Este álbum não tem faixas registradas.
+              </li>
+            )}
+          </ol>
+        </>
+      )}
     </Modal>
   );
 }

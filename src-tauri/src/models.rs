@@ -108,6 +108,15 @@ pub struct PlaylistCard {
     pub track_count: i64,
 }
 
+/// A candidate cover image (from the iTunes search) shown so the user can
+/// preview and pick artwork for a track/album.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoverCandidate {
+    pub thumb: String, // small preview URL
+    pub full: String,  // high-res URL to actually download
+    pub label: String, // "Artista — Álbum" for context
+}
+
 /// One YouTube search result (RF-10), shown so the user can preview and pick.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchResult {

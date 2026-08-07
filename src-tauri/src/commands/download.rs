@@ -155,6 +155,42 @@ fn get_or_create_album(tx: &rusqlite::Transaction, title: &str, artist_id: Optio
 /// up under Artistas/Álbuns, not just in a flat track list), extracts the
 /// embedded cover, and updates a row that already points at the same file
 /// instead of silently doing nothing.
+/// Separate "Artist - Song" titles so the artist lands in the artist field.
+/// Returns the cleaned title and the artist to use.
+///  - With a known artist, only strips a leading "Artist - " from the title.
+///  - Without one, splits on the first " - " and uses the left side as artist.
+fn split_artist_title(raw: &str, artist: Option<&str>) -> (String, Option<String>) {
+    let title = raw.trim();
+    const SEPS: [&str; 4] = [" - ", " – ", " — ", " − "];
+
+    if let Some(a) = artist.map(str::trim).filter(|s| !s.is_empty()) {
+        for sep in SEPS {
+            let prefix = format!("{a}{sep}");
+            if title.to_lowercase().starts_with(&prefix.to_lowercase()) {
+                if let Some(rest) = title.get(prefix.len()..) {
+                    let rest = rest.trim();
+                    if !rest.is_empty() {
+                        return (rest.to_string(), Some(a.to_string()));
+                    }
+                }
+            }
+        }
+        return (title.to_string(), Some(a.to_string()));
+    }
+
+    for sep in SEPS {
+        if let Some(idx) = title.find(sep) {
+            let left = title[..idx].trim();
+            let right = title[idx + sep.len()..].trim();
+            // Guard against splitting song names that merely contain a dash.
+            if !left.is_empty() && !right.is_empty() && left.chars().count() <= 60 {
+                return (right.to_string(), Some(left.to_string()));
+            }
+        }
+    }
+    (title.to_string(), None)
+}
+
 fn finalize(app: &AppHandle, files: &[String], dest_kind: Option<&str>, dest_id: Option<i64>) -> (usize, Option<i64>) {
     let covers_dir = app.path().app_data_dir().ok().map(|d| d.join("covers"));
     let db = app.state::<Db>();
@@ -165,18 +201,20 @@ fn finalize(app: &AppHandle, files: &[String], dest_kind: Option<&str>, dest_id:
 
     for f in files {
         let parsed = match metadata::parse_file(Path::new(f)) { Ok(p) => p, Err(_) => continue };
-        let title = parsed.title.clone().filter(|t| !t.trim().is_empty()).unwrap_or_else(|| {
+        let raw_title = parsed.title.clone().filter(|t| !t.trim().is_empty()).unwrap_or_else(|| {
             Path::new(f).file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_else(|| "Download".into())
         });
 
-        // yt-dlp's --embed-metadata fills artist/album from the source, which is
-        // exactly what the library groups by.
-        let artist_id = parsed
-            .album_artist
-            .clone()
-            .or_else(|| parsed.artist.clone())
-            .filter(|s| !s.trim().is_empty())
-            .and_then(|n| get_or_create_artist(&tx, n.trim()));
+        // YouTube titles are usually "Artist - Song", and the channel ends up in
+        // the artist tag. Split so the artist lands in the artist field and the
+        // song name (without the "Artist - " prefix) becomes the title.
+        let existing_artist = parsed.album_artist.clone().or_else(|| parsed.artist.clone());
+        let (title, artist_name) = split_artist_title(&raw_title, existing_artist.as_deref());
+        let artist_id = artist_name
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .and_then(|n| get_or_create_artist(&tx, n));
         let album_id = parsed
             .album
             .clone()
@@ -411,6 +449,14 @@ pub async fn start_download(
                             title: title.clone(), track_id, file_path: file, ..Default::default()
                         });
                         emit_library_changed(&app2);
+                        // Best-effort: swap the 16:9 thumbnail for proper square
+                        // album art. Runs after the job is already "done", so a
+                        // miss or a network hiccup never affects the download.
+                        if let Some(tid) = track_id {
+                            if crate::commands::edit::auto_cover_for_track(&app2, tid).is_ok() {
+                                emit_library_changed(&app2);
+                            }
+                        }
                     } else {
                         let msg = if last_err.is_empty() && code == 0 {
                             "Nada foi baixado. Confira o link e tente de novo.".to_string()

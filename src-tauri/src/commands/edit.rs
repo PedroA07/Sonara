@@ -1,10 +1,11 @@
 use crate::db::Db;
 use crate::error::{AppError, AppResult};
-use crate::models::TrackEdit;
+use crate::models::{CoverCandidate, TrackEdit};
 use crate::services::metadata;
 use base64::Engine;
 use rusqlite::Transaction;
-use std::path::Path;
+use std::io::Read;
+use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager, State};
 
 fn get_or_create_artist(tx: &Transaction, name: &str) -> AppResult<i64> {
@@ -117,8 +118,22 @@ pub fn read_image_base64(path: String) -> AppResult<String> {
     Ok(base64::engine::general_purpose::STANDARD.encode(bytes))
 }
 
-/// RF-05: save a cropped cover (PNG bytes, base64) to the app's covers folder
-/// and set it as the track's cover. Returns the stored path.
+/// The covers folder inside app-data (created on demand).
+fn covers_dir(app: &AppHandle) -> AppResult<PathBuf> {
+    let dir = app.path().app_data_dir().map_err(|e| AppError::Other(e.to_string()))?.join("covers");
+    std::fs::create_dir_all(&dir)?;
+    Ok(dir)
+}
+
+/// Save cover bytes with a timestamped name (so the webview never serves a stale
+/// cached image) and return the stored path.
+fn save_cover_bytes(app: &AppHandle, track_id: i64, bytes: &[u8], ext: &str) -> AppResult<String> {
+    let path = covers_dir(app)?.join(format!("{track_id}-{}.{ext}", chrono_now_millis()));
+    std::fs::write(&path, bytes)?;
+    Ok(path.to_string_lossy().to_string())
+}
+
+/// RF-05: save a cropped cover (PNG bytes, base64) as the track's cover.
 #[tauri::command]
 pub fn set_cover_from_bytes(
     app: AppHandle,
@@ -130,21 +145,111 @@ pub fn set_cover_from_bytes(
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(png_base64.as_bytes())
         .map_err(|e| AppError::Other(e.to_string()))?;
-    let dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| AppError::Other(e.to_string()))?
-        .join("covers");
-    std::fs::create_dir_all(&dir)?;
-    // Timestamped name so the webview doesn't serve a stale cached image.
-    let name = format!("{track_id}-{}.png", chrono_now_millis());
-    let path = dir.join(name);
-    std::fs::write(&path, &bytes)?;
-    let path_str = path.to_string_lossy().to_string();
-
+    let path = save_cover_bytes(&app, track_id, &bytes, "png")?;
     let conn = db.0.lock().unwrap();
-    apply_cover(&conn, track_id, &path_str, write_file)?;
-    Ok(path_str)
+    apply_cover(&conn, track_id, &path, write_file)?;
+    Ok(path)
+}
+
+/// RF-05: search album artwork on the iTunes Search API (no key required) and
+/// return candidate images the user can preview and pick.
+#[tauri::command]
+pub fn search_cover_art(query: String, limit: Option<u32>) -> AppResult<Vec<CoverCandidate>> {
+    let q = query.trim();
+    if q.is_empty() {
+        return Ok(vec![]);
+    }
+    let n = limit.unwrap_or(12).clamp(1, 25);
+    let body = ureq::get("https://itunes.apple.com/search")
+        .query("term", q)
+        .query("media", "music")
+        .query("entity", "album")
+        .query("limit", &n.to_string())
+        .call()
+        .map_err(|e| AppError::Other(format!("busca de capa: {e}")))?
+        .into_string()
+        .map_err(AppError::Io)?;
+    let v: serde_json::Value =
+        serde_json::from_str(&body).map_err(|e| AppError::Other(format!("busca de capa (json): {e}")))?;
+
+    let mut out = Vec::new();
+    if let Some(results) = v["results"].as_array() {
+        for r in results {
+            let art = match r["artworkUrl100"].as_str() {
+                Some(a) if !a.is_empty() => a,
+                _ => continue,
+            };
+            let artist = r["artistName"].as_str().unwrap_or("");
+            let album = r["collectionName"].as_str().unwrap_or("");
+            out.push(CoverCandidate {
+                thumb: art.to_string(),
+                // iTunes serves a larger image if you rewrite the size segment.
+                full: art.replace("100x100bb", "600x600bb"),
+                label: format!("{artist} — {album}").trim_matches(|c: char| c == ' ' || c == '—').to_string(),
+            });
+        }
+    }
+    Ok(out)
+}
+
+/// RF-05: download an image by URL and set it as the track's cover.
+#[tauri::command]
+pub fn set_cover_from_url(
+    app: AppHandle,
+    db: State<Db>,
+    track_id: i64,
+    url: String,
+    write_file: bool,
+) -> AppResult<String> {
+    let bytes = fetch_image(url.trim())?;
+    let path = save_cover_bytes(&app, track_id, &bytes, "jpg")?;
+    let conn = db.0.lock().unwrap();
+    apply_cover(&conn, track_id, &path, write_file)?;
+    Ok(path)
+}
+
+/// Download an image over HTTP into memory.
+pub(crate) fn fetch_image(url: &str) -> AppResult<Vec<u8>> {
+    let resp = ureq::get(url).call().map_err(|e| AppError::Download(format!("baixar capa: {e}")))?;
+    let mut bytes = Vec::new();
+    resp.into_reader().read_to_end(&mut bytes).map_err(AppError::Io)?;
+    if bytes.is_empty() {
+        return Err(AppError::Other("imagem vazia".into()));
+    }
+    Ok(bytes)
+}
+
+/// Best-effort: look up proper album art for a just-downloaded track and set it
+/// as the cover, replacing the 16:9 video thumbnail with square artwork. Called
+/// after a download finishes; the caller ignores errors (no match, offline…).
+pub(crate) fn auto_cover_for_track(app: &AppHandle, track_id: i64) -> AppResult<()> {
+    let (title, artist): (String, Option<String>) = {
+        let db = app.state::<Db>();
+        let conn = db.0.lock().map_err(|_| AppError::Other("db lock".into()))?;
+        conn.query_row(
+            "SELECT t.title,
+                    COALESCE(
+                      (SELECT ar.name FROM track_artist ta JOIN artist ar ON ar.id = ta.artist_id WHERE ta.track_id = t.id LIMIT 1),
+                      (SELECT ar.name FROM album al JOIN artist ar ON ar.id = al.artist_id WHERE al.id = t.album_id))
+             FROM track t WHERE t.id = ?1",
+            [track_id],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )?
+    };
+    let query = match artist.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+        Some(a) => format!("{a} {title}"),
+        None => title,
+    };
+    let first = search_cover_art(query, Some(1))?
+        .into_iter()
+        .next()
+        .ok_or_else(|| AppError::Other("sem capa".into()))?;
+    let bytes = fetch_image(&first.full)?;
+    let path = save_cover_bytes(app, track_id, &bytes, "jpg")?;
+    let db = app.state::<Db>();
+    let conn = db.0.lock().map_err(|_| AppError::Other("db lock".into()))?;
+    apply_cover(&conn, track_id, &path, false)?; // DB/library only; don't rewrite the file
+    Ok(())
 }
 
 /// Milliseconds since the Unix epoch (avoids an extra date crate dependency).
