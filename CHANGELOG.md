@@ -6,6 +6,18 @@ e a publica como descrição da release — mantenha o formato dos títulos
 
 ---
 
+## [0.2.2] — 2026-08-07
+
+### Ajustes de interface
+
+- **Tabela de músicas não corta mais.** As colunas (Álbum, Gênero) agora
+  aparecem de forma responsiva, sem deixar espaços vazios que desalinhavam as
+  linhas nem espremer o título quando a fila está aberta.
+- **Barras de progresso e volume** usam o degradê da marca (violeta → ciano),
+  no lugar da cor chapada.
+
+---
+
 ## [0.2.1] — 2026-08-07
 
 ### Correções no editor de música
