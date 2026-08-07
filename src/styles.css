@@ -196,12 +196,11 @@ textarea,
   .track-range::-webkit-slider-runnable-track {
     height: 4px;
     border-radius: 999px;
-    background: linear-gradient(
-      to right,
-      rgb(var(--c-brand)) var(--pct, 0%),
-      rgb(var(--c-brand2)) var(--pct, 0%),
-      rgb(var(--c-line) / 0.18) var(--pct, 0%)
-    );
+    /* Filled portion uses the full brand gradient (violet → cyan), matching the
+       gradient used across the app and the download page; the rest is the track. */
+    background:
+      linear-gradient(90deg, rgb(var(--c-brand)), rgb(var(--c-brand2))) left / var(--pct, 0%) 100% no-repeat,
+      rgb(var(--c-line) / 0.18);
   }
   .track-range::-moz-range-track {
     height: 4px;
@@ -211,7 +210,7 @@ textarea,
   .track-range::-moz-range-progress {
     height: 4px;
     border-radius: 999px;
-    background: rgb(var(--c-brand));
+    background: linear-gradient(90deg, rgb(var(--c-brand)), rgb(var(--c-brand2)));
   }
   .track-range::-webkit-slider-thumb {
     -webkit-appearance: none;

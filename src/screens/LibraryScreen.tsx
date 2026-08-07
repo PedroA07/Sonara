@@ -356,7 +356,12 @@ function TrackTable({
   onExport: (t: Track) => void;
   onDelete: (t: Track) => void;
 }) {
-  const cols = "grid-cols-[36px_1fr_180px_120px_64px_128px]";
+  // Responsive: each optional column (Álbum, Gênero) is added to the grid track
+  // list at the same breakpoint its cell becomes visible, so hidden columns
+  // never leave an empty reserved gap that misaligns the row or crushes the
+  // title. Fewer fixed pixels means the title keeps room even with the queue open.
+  const cols =
+    "grid-cols-[32px_1fr_56px_128px] lg:grid-cols-[32px_1fr_110px_56px_128px] xl:grid-cols-[32px_1fr_150px_110px_56px_128px]";
   return (
     <div className="bg-panel border border-line/[.09] rounded-2xl overflow-hidden">
       <div className={`grid ${cols} items-center gap-3 px-4 py-2.5 text-[11px] uppercase tracking-wide text-muted border-b divider`}>
@@ -369,8 +374,8 @@ function TrackTable({
           />
         </div>
         <div>Título</div>
-        <div className="hidden lg:block">Álbum</div>
-        <div className="hidden md:block">Gênero</div>
+        <div className="hidden xl:block">Álbum</div>
+        <div className="hidden lg:block">Gênero</div>
         <div className="text-right">Duração</div>
         <div />
       </div>
@@ -411,8 +416,8 @@ function TrackTable({
               </span>
             </button>
 
-            <div className="hidden lg:block text-xs text-muted truncate">{t.album_title ?? "—"}</div>
-            <div className="hidden md:block text-xs text-muted truncate">{t.genre ?? "—"}</div>
+            <div className="hidden xl:block text-xs text-muted truncate">{t.album_title ?? "—"}</div>
+            <div className="hidden lg:block text-xs text-muted truncate">{t.genre ?? "—"}</div>
             <div className="text-xs text-muted text-right tabular-nums">{fmtDuration(t.duration)}</div>
 
             <div className="flex justify-end gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
