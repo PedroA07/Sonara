@@ -1,6 +1,6 @@
 {
   "name": "sonara",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Sonara — desktop music player (Tauri + React + TypeScript + SQLite)",
   "type": "module",
   "scripts": {

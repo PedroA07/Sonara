@@ -6,6 +6,18 @@ e a publica como descrição da release — mantenha o formato dos títulos
 
 ---
 
+## [0.2.1] — 2026-08-07
+
+### Correções no editor de música
+
+- **Janela do editor não fica mais cortada.** O conteúdo agora rola dentro da
+  janela quando é mais alto que a tela (o topo, com a capa, ficava escondido).
+- **Dá para editar Artista e Álbum de verdade.** Ao trocar o artista, a mudança
+  passa a aparecer na biblioteca — antes o app mantinha o artista antigo junto
+  do novo e mostrava o errado.
+
+---
+
 ## [0.2.0] — 2026-08-06
 
 ### Os downloads voltaram a funcionar

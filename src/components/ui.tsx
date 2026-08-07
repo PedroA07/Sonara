@@ -196,7 +196,7 @@ export function Modal({
             <IconClose size={16} />
           </IconButton>
         </div>
-        <div className="px-6 pb-2 overflow-y-auto">{children}</div>
+        <div className="px-6 pb-2 overflow-y-auto flex-1 min-h-0">{children}</div>
         {footer && (
           <div className="flex justify-end gap-2 px-6 py-4 mt-2 border-t divider">{footer}</div>
         )}

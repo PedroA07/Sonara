@@ -63,7 +63,12 @@ pub fn update_track_metadata(
             rusqlite::params![id, edit.title, edit.genre, edit.year, edit.track_no, edit.disc_no, album_id],
         )?;
         if let Some(aid) = artist_id {
-            tx.execute("INSERT OR IGNORE INTO track_artist (track_id, artist_id) VALUES (?1, ?2)",
+            // Replace the track's artist(s), don't just add. The library shows the
+            // first track_artist alphabetically, so merely inserting a new link
+            // left the old (often alphabetically-earlier) artist on display —
+            // which looked like "editing the artist does nothing".
+            tx.execute("DELETE FROM track_artist WHERE track_id = ?1", [id])?;
+            tx.execute("INSERT INTO track_artist (track_id, artist_id) VALUES (?1, ?2)",
                 rusqlite::params![id, aid])?;
         }
 
