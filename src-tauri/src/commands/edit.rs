@@ -240,24 +240,26 @@ pub(crate) fn auto_tag_for_track(app: &AppHandle, track_id: i64) -> AppResult<()
     let info = lookup_song(&title, artist.as_deref())?
         .ok_or_else(|| AppError::Other("nenhuma correspondência".into()))?;
 
-    // Square album art replaces the 16:9 video thumbnail.
-    if let Some(art) = info.artwork.as_deref() {
-        if let Ok(bytes) = fetch_image(art) {
-            if let Ok(path) = save_cover_bytes(app, track_id, &bytes, "jpg") {
-                let db = app.state::<Db>();
-                if let Ok(conn) = db.0.lock() {
-                    // DB/library only — don't rewrite the audio file behind the user's back.
-                    let _ = apply_cover(&conn, track_id, &path, false);
-                }
-            }
-        }
+    // Fetch the square artwork before taking the database lock — no point
+    // holding it across a network round-trip.
+    let cover_path = info
+        .artwork
+        .as_deref()
+        .and_then(|art| fetch_image(art).ok())
+        .and_then(|bytes| save_cover_bytes(app, track_id, &bytes, "jpg").ok());
+
+    let db = app.state::<Db>();
+    let mut conn = db.0.lock().map_err(|_| AppError::Other("db lock".into()))?;
+
+    // Square album art replaces the 16:9 video thumbnail. Library only — don't
+    // rewrite the audio file behind the user's back.
+    if let Some(path) = cover_path.as_deref() {
+        let _ = apply_cover(&conn, track_id, path, false);
     }
 
     // Fill in the album (and its year) so downloads land under a real album
     // instead of loose tracks. Only when the track has no album yet, or when the
     // tag yt-dlp produced is just the artist/song name repeated.
-    let db = app.state::<Db>();
-    let mut conn = db.0.lock().map_err(|_| AppError::Other("db lock".into()))?;
     let current_album: Option<String> = conn
         .query_row(
             "SELECT (SELECT title FROM album WHERE album.id = track.album_id) FROM track WHERE id = ?1",
