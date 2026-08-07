@@ -6,6 +6,25 @@ e a publica como descrição da release — mantenha o formato dos títulos
 
 ---
 
+## [0.4.0] — 2026-08-07
+
+### Prévias ao lado na tela cheia
+
+Na tela "Tocando agora", agora aparecem duas prévias: à **esquerda** a faixa
+anterior da fila e à **direita** a próxima. Clique em qualquer uma para pular
+direto para ela. Em janelas estreitas elas ficam ocultas e continua valendo a
+linha "A seguir" embaixo.
+
+### Álbum preenchido sozinho ao baixar
+
+Ao terminar um download, o Sonara pesquisa a música pelo **nome + artista** num
+catálogo musical e preenche o **álbum correto** e o **ano** — no lugar do ano de
+upload do vídeo. Só preenche quando o álbum está vazio ou quando o que veio do
+YouTube é só uma repetição do artista/título, então informações boas não são
+sobrescritas. A capa quadrada do álbum vem na mesma consulta.
+
+---
+
 ## [0.3.1] — 2026-08-07
 
 ### O app quebrava depois de atualizar

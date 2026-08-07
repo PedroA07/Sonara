@@ -1,3 +1,4 @@
+import type { Track } from "../types";
 import { usePlayerStore } from "../store/usePlayerStore";
 import { useSettingsStore } from "../store/useSettingsStore";
 import { artistOf, fmtClock } from "../lib/format";
@@ -14,6 +15,7 @@ export default function NowPlaying() {
   const s = usePlayerStore();
   const { replaygain } = useSettingsStore();
   const current = s.queue[s.currentIndex];
+  const prev = s.queue[s.currentIndex - 1];
   const next = s.queue[s.currentIndex + 1];
   const pct = s.duration > 0 ? (s.currentTime / s.duration) * 100 : 0;
 
@@ -37,7 +39,12 @@ export default function NowPlaying() {
         {replaygain && current?.gain ? <Badge tone="brand">ReplayGain</Badge> : null}
       </div>
 
-      <div className="relative z-10 flex-1 min-h-0 flex flex-col items-center justify-center px-6 gap-7">
+      <div className="relative z-10 flex-1 min-h-0 flex items-center justify-center gap-8 px-6">
+        {/* Side previews: what just played and what comes next. Hidden on
+            narrow windows, where the "A seguir" line at the bottom stands in. */}
+        <SidePreview track={prev} label="Anterior" side="left" onPlay={() => s.jumpTo(s.currentIndex - 1)} />
+
+        <div className="flex flex-col items-center justify-center gap-7 min-w-0">
         <div className="w-[min(42vh,360px)] aspect-square rounded-3xl overflow-hidden shadow-lift">
           <CoverArt path={current?.cover_path} size="lg" />
         </div>
@@ -98,13 +105,49 @@ export default function NowPlaying() {
             style={{ ["--pct" as string]: `${(s.muted ? 0 : s.volume) * 100}%` }}
           />
         </div>
+        </div>
+
+        <SidePreview track={next} label="A seguir" side="right" onPlay={() => s.jumpTo(s.currentIndex + 1)} />
       </div>
 
       {next && (
-        <div className="relative z-10 px-6 py-4 text-center text-xs text-muted">
+        <div className="relative z-10 px-6 py-4 text-center text-xs text-muted xl:hidden">
           A seguir: <span className="text-content/85">{next.title}</span> · {artistOf(next)}
         </div>
       )}
     </div>
+  );
+}
+
+/** A peek at the track before/after the current one. Clicking it jumps there.
+ *  Renders an empty placeholder (not nothing) so the centre column doesn't
+ *  shift sideways when one of the two sides is missing. */
+function SidePreview({
+  track, label, side, onPlay,
+}: {
+  track?: Track;
+  label: string;
+  side: "left" | "right";
+  onPlay: () => void;
+}) {
+  if (!track) return <div className="hidden xl:block w-[190px] shrink-0" aria-hidden="true" />;
+
+  return (
+    <button
+      onClick={onPlay}
+      title={`Tocar "${track.title}"`}
+      className={`hidden xl:flex w-[190px] shrink-0 flex-col gap-3 rounded-2xl p-3 text-left
+        opacity-55 hover:opacity-100 transition-opacity focus-visible:opacity-100
+        ${side === "left" ? "items-start" : "items-end text-right"}`}
+    >
+      <span className="text-[10px] uppercase tracking-[0.14em] text-muted">{label}</span>
+      <span className="w-full aspect-square rounded-xl overflow-hidden shadow-soft">
+        <CoverArt path={track.cover_path} />
+      </span>
+      <span className="w-full min-w-0">
+        <span className="block text-sm text-content truncate">{track.title}</span>
+        <span className="block text-xs text-muted truncate">{artistOf(track)}</span>
+      </span>
+    </button>
   );
 }

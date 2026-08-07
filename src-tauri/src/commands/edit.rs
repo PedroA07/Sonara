@@ -219,10 +219,11 @@ pub(crate) fn fetch_image(url: &str) -> AppResult<Vec<u8>> {
     Ok(bytes)
 }
 
-/// Best-effort: look up proper album art for a just-downloaded track and set it
-/// as the cover, replacing the 16:9 video thumbnail with square artwork. Called
-/// after a download finishes; the caller ignores errors (no match, offline…).
-pub(crate) fn auto_cover_for_track(app: &AppHandle, track_id: i64) -> AppResult<()> {
+/// Best-effort identification of a just-downloaded track: looks the song up in
+/// a music catalogue to set square album art (in place of the 16:9 video
+/// thumbnail) and to fill in the album and its year. Called after the download
+/// already finished; the caller ignores errors (no match, offline…).
+pub(crate) fn auto_tag_for_track(app: &AppHandle, track_id: i64) -> AppResult<()> {
     let (title, artist): (String, Option<String>) = {
         let db = app.state::<Db>();
         let conn = db.0.lock().map_err(|_| AppError::Other("db lock".into()))?;
@@ -236,20 +237,124 @@ pub(crate) fn auto_cover_for_track(app: &AppHandle, track_id: i64) -> AppResult<
             |r| Ok((r.get(0)?, r.get(1)?)),
         )?
     };
-    let query = match artist.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
-        Some(a) => format!("{a} {title}"),
-        None => title,
-    };
-    let first = search_cover_art(query, Some(1))?
-        .into_iter()
-        .next()
-        .ok_or_else(|| AppError::Other("sem capa".into()))?;
-    let bytes = fetch_image(&first.full)?;
-    let path = save_cover_bytes(app, track_id, &bytes, "jpg")?;
+    let info = lookup_song(&title, artist.as_deref())?
+        .ok_or_else(|| AppError::Other("nenhuma correspondência".into()))?;
+
+    // Square album art replaces the 16:9 video thumbnail.
+    if let Some(art) = info.artwork.as_deref() {
+        if let Ok(bytes) = fetch_image(art) {
+            if let Ok(path) = save_cover_bytes(app, track_id, &bytes, "jpg") {
+                let db = app.state::<Db>();
+                if let Ok(conn) = db.0.lock() {
+                    // DB/library only — don't rewrite the audio file behind the user's back.
+                    let _ = apply_cover(&conn, track_id, &path, false);
+                }
+            }
+        }
+    }
+
+    // Fill in the album (and its year) so downloads land under a real album
+    // instead of loose tracks. Only when the track has no album yet, or when the
+    // tag yt-dlp produced is just the artist/song name repeated.
     let db = app.state::<Db>();
-    let conn = db.0.lock().map_err(|_| AppError::Other("db lock".into()))?;
-    apply_cover(&conn, track_id, &path, false)?; // DB/library only; don't rewrite the file
+    let mut conn = db.0.lock().map_err(|_| AppError::Other("db lock".into()))?;
+    let current_album: Option<String> = conn
+        .query_row(
+            "SELECT (SELECT title FROM album WHERE album.id = track.album_id) FROM track WHERE id = ?1",
+            [track_id],
+            |r| r.get(0),
+        )
+        .ok()
+        .flatten();
+
+    let placeholder = current_album.as_deref().map_or(true, |a| {
+        let a = a.trim();
+        a.is_empty()
+            || a.eq_ignore_ascii_case(&title)
+            || artist.as_deref().is_some_and(|ar| a.eq_ignore_ascii_case(ar.trim()))
+    });
+    if !placeholder {
+        return Ok(()); // a real album is already set — leave it alone
+    }
+
+    let tx = conn.transaction()?;
+    let artist_id = match info.artist.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+        Some(a) => Some(get_or_create_artist(&tx, a)?),
+        None => None,
+    };
+    let album_id = get_or_create_album(&tx, info.album.trim(), artist_id)?;
+    tx.execute(
+        "UPDATE album SET year = COALESCE(?2, year) WHERE id = ?1",
+        rusqlite::params![album_id, info.year],
+    )?;
+    tx.execute(
+        "UPDATE track SET album_id = ?2, year = COALESCE(?3, year) WHERE id = ?1",
+        rusqlite::params![track_id, album_id, info.year],
+    )?;
+    tx.commit()?;
+    let _ = crate::commands::search::reindex(&conn);
     Ok(())
+}
+
+/// What a music-catalogue lookup tells us about a song.
+pub(crate) struct ReleaseInfo {
+    pub album: String,
+    pub artist: Option<String>,
+    pub year: Option<i64>,
+    pub artwork: Option<String>,
+}
+
+/// Look a song up on the iTunes Search API to find the album it belongs to.
+/// Searching by *song* (not album) is what maps "artist + title" to the right
+/// release. Returns `None` when nothing matches confidently.
+pub(crate) fn lookup_song(title: &str, artist: Option<&str>) -> AppResult<Option<ReleaseInfo>> {
+    let title = title.trim();
+    if title.is_empty() {
+        return Ok(None);
+    }
+    let artist = artist.map(str::trim).filter(|s| !s.is_empty());
+    let term = match artist {
+        Some(a) => format!("{a} {title}"),
+        None => title.to_string(),
+    };
+
+    let body = ureq::get("https://itunes.apple.com/search")
+        .query("term", &term)
+        .query("media", "music")
+        .query("entity", "song")
+        .query("limit", "8")
+        .call()
+        .map_err(|e| AppError::Other(format!("busca de álbum: {e}")))?
+        .into_string()
+        .map_err(AppError::Io)?;
+    let v: serde_json::Value =
+        serde_json::from_str(&body).map_err(|e| AppError::Other(format!("busca de álbum (json): {e}")))?;
+    let results = match v["results"].as_array() {
+        Some(r) if !r.is_empty() => r.clone(),
+        _ => return Ok(None),
+    };
+
+    // Prefer a hit whose artist matches what we already know — that guards
+    // against covers and same-titled songs by other people.
+    let pick = artist
+        .and_then(|a| {
+            results.iter().find(|r| {
+                r["artistName"].as_str().is_some_and(|n| n.trim().eq_ignore_ascii_case(a))
+            })
+        })
+        .or_else(|| results.first());
+
+    let Some(r) = pick else { return Ok(None) };
+    let album = match r["collectionName"].as_str().map(str::trim).filter(|s| !s.is_empty()) {
+        Some(a) => a.to_string(),
+        None => return Ok(None),
+    };
+    Ok(Some(ReleaseInfo {
+        album,
+        artist: r["artistName"].as_str().map(|s| s.to_string()),
+        year: r["releaseDate"].as_str().and_then(|d| d.get(..4)).and_then(|y| y.parse().ok()),
+        artwork: r["artworkUrl100"].as_str().map(|a| a.replace("100x100bb", "600x600bb")),
+    }))
 }
 
 /// Milliseconds since the Unix epoch (avoids an extra date crate dependency).

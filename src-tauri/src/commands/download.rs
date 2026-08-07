@@ -449,11 +449,12 @@ pub async fn start_download(
                             title: title.clone(), track_id, file_path: file, ..Default::default()
                         });
                         emit_library_changed(&app2);
-                        // Best-effort: swap the 16:9 thumbnail for proper square
-                        // album art. Runs after the job is already "done", so a
-                        // miss or a network hiccup never affects the download.
+                        // Best-effort identification: square album art instead of
+                        // the 16:9 thumbnail, plus the real album name and year.
+                        // Runs after the job is already "done", so a miss or a
+                        // network hiccup never affects the download.
                         if let Some(tid) = track_id {
-                            if crate::commands::edit::auto_cover_for_track(&app2, tid).is_ok() {
+                            if crate::commands::edit::auto_tag_for_track(&app2, tid).is_ok() {
                                 emit_library_changed(&app2);
                             }
                         }
