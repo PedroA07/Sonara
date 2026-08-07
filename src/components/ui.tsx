@@ -149,7 +149,11 @@ export function Badge({
 /* ─────────────────────────── Modal ─────────────────────────── */
 
 /** Backdrop + card, closable with Escape, click-outside or the × button.
- *  Traps nothing fancy — it just always offers a visible way out. */
+ *  Traps nothing fancy — it just always offers a visible way out.
+ *
+ *  The backdrop scrolls and the card uses `my-auto`: centred when there is room,
+ *  but on a short window the card sits at the top and can be scrolled to,
+ *  instead of having its header clipped out of reach. */
 export function Modal({
   title, subtitle, onClose, children, footer, width = "w-[520px]",
 }: {
@@ -173,7 +177,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[3px] flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[3px] flex items-start justify-center overflow-y-auto p-4 animate-fade-in"
       onClick={onClose}
       role="presentation"
     >
@@ -184,7 +188,7 @@ export function Modal({
         aria-modal="true"
         aria-label={title}
         onClick={(e) => e.stopPropagation()}
-        className={`bg-elev border border-line/[.12] rounded-2xl shadow-lift max-w-[94vw] max-h-[88vh]
+        className={`bg-elev border border-line/[.12] rounded-2xl shadow-lift max-w-[94vw] max-h-[88vh] my-auto
           flex flex-col outline-none animate-scale-in ${width}`}
       >
         <div className="flex items-start gap-3 px-6 pt-5 pb-4">

@@ -8,7 +8,35 @@ mod models;
 mod services;
 
 use db::Db;
-use tauri::Manager;
+use tauri::{LogicalSize, Manager};
+
+/// Keep the window inside the screen. A fixed default size (in logical pixels)
+/// is taller than the usable area on small or display-scaled screens, so the
+/// window opened partly off-screen and dialogs looked cut off at the top.
+/// Everything here is best-effort: a failure must never stop the app starting.
+fn fit_window_to_screen(app: &tauri::App) {
+    let Some(win) = app.get_webview_window("main") else { return };
+    let monitor = win
+        .current_monitor()
+        .ok()
+        .flatten()
+        .or_else(|| win.primary_monitor().ok().flatten());
+    let Some(monitor) = monitor else { return };
+
+    let scale = monitor.scale_factor();
+    let screen = monitor.size().to_logical::<f64>(scale);
+    // Room for the taskbar and the window frame.
+    let max_w = (screen.width - 32.0).max(640.0);
+    let max_h = (screen.height - 96.0).max(460.0);
+
+    if let Ok(outer) = win.outer_size() {
+        let cur = outer.to_logical::<f64>(scale);
+        if cur.width > max_w || cur.height > max_h {
+            let _ = win.set_size(LogicalSize::new(cur.width.min(max_w), cur.height.min(max_h)));
+        }
+    }
+    let _ = win.center();
+}
 
 fn main() {
     tauri::Builder::default()
@@ -24,6 +52,7 @@ fn main() {
             db.migrate()?;
             app.manage(db);
             app.manage(commands::download::Downloads::default());
+            fit_window_to_screen(app);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

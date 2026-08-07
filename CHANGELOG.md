@@ -6,6 +6,30 @@ e a publica como descrição da release — mantenha o formato dos títulos
 
 ---
 
+## [0.3.1] — 2026-08-07
+
+### O app quebrava depois de atualizar
+
+A instalação era feita em `Arquivos de Programas` (para todos os usuários), o que
+exige permissão de administrador. O atualizador automático roda o instalador em
+segundo plano e **não consegue pedir essa permissão**, então a atualização parava
+no meio e deixava o app sem abrir.
+
+Agora o Sonara é instalado **para o seu usuário**, sem pedir administrador — que é
+o modo em que a atualização automática funciona de ponta a ponta.
+
+> **Vindo de uma versão anterior:** desinstale o Sonara antigo antes de instalar
+> este (Configurações do Windows → Aplicativos → Sonara → Desinstalar), para não
+> ficar com duas cópias.
+
+### A janela abria cortada
+
+Em telas menores — ou com o Windows usando escala de 125%/150% — a janela abria
+mais alta que a tela, e o topo das janelas de edição ficava cortado. Agora o app
+mede a área útil da tela ao abrir e ajusta o tamanho, além de já abrir centralizado.
+
+---
+
 ## [0.3.0] — 2026-08-07
 
 ### Álbuns e artistas agora podem ser corrigidos
