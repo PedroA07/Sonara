@@ -269,7 +269,7 @@ pub(crate) fn auto_tag_for_track(app: &AppHandle, track_id: i64) -> AppResult<()
         .ok()
         .flatten();
 
-    let placeholder = current_album.as_deref().map_or(true, |a| {
+    let placeholder = current_album.as_deref().is_none_or(|a| {
         let a = a.trim();
         a.is_empty()
             || a.eq_ignore_ascii_case(&title)
