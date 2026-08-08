@@ -200,7 +200,16 @@ fn finalize(app: &AppHandle, files: &[String], dest_kind: Option<&str>, dest_id:
     let mut first_id: Option<i64> = None;
 
     for f in files {
-        let parsed = match metadata::parse_file(Path::new(f)) { Ok(p) => p, Err(_) => continue };
+        // `parse_file` só falha quando o arquivo sumiu do disco — tags ilegíveis
+        // já entram com o nome do arquivo como título. Antes, qualquer falha de
+        // leitura fazia a faixa sumir depois de um download que dizia "Pronto!".
+        let parsed = match metadata::parse_file(Path::new(f)) {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("[sonara] não consegui importar {f}: {e}");
+                continue;
+            }
+        };
         let raw_title = parsed.title.clone().filter(|t| !t.trim().is_empty()).unwrap_or_else(|| {
             Path::new(f).file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_else(|| "Download".into())
         });
