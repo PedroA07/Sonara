@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import type { Screen } from "../types";
 import { usePlayerStore } from "../store/usePlayerStore";
 import { useSettingsStore } from "../store/useSettingsStore";
+import { useLyricsStore } from "../store/useLyricsStore";
 
 /** Global shortcuts. Ignored while typing, and never hijacking the OS
  *  combinations (Ctrl/Cmd + key) that the webview already handles. */
@@ -33,6 +34,10 @@ export function useKeyboardShortcuts(navigate?: (s: Screen) => void) {
         case "r": case "R": p.cycleRepeat(); break;
         case "q": case "Q": p.toggleQueue(); break;
         case "f": case "F": p.setExpanded(!p.expanded); break;
+        // A letra vive dentro da tela cheia: L abre as duas de uma vez.
+        case "l": case "L": p.setExpanded(true); break;
+        case "[": useLyricsStore.getState().nudgeOffset(e.shiftKey ? -500 : -100); break;
+        case "]": useLyricsStore.getState().nudgeOffset(e.shiftKey ? 500 : 100); break;
         case "Escape": if (p.expanded) p.setExpanded(false); break;
         case "t": case "T": {
           const s = useSettingsStore.getState();
@@ -63,6 +68,8 @@ export const SHORTCUTS: { keys: string; action: string }[] = [
   { keys: "R", action: "Repetir" },
   { keys: "Q", action: "Mostrar/ocultar a fila" },
   { keys: "F", action: "Tela cheia (tocando agora)" },
+  { keys: "L", action: "Abrir a letra" },
+  { keys: "[ / ]", action: "Adiantar / atrasar a letra (Shift = 500 ms)" },
   { keys: "T", action: "Alternar tema claro/escuro" },
   { keys: "1 – 5", action: "Ir para cada seção do menu" },
 ];

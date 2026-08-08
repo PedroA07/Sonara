@@ -1,12 +1,16 @@
+import { useEffect, useState } from "react";
 import type { Track } from "../types";
 import { usePlayerStore, selectDurationSec, selectPositionSec } from "../store/usePlayerStore";
 import { useSettingsStore } from "../store/useSettingsStore";
 import { artistOf, fmtClock } from "../lib/format";
 import CoverArt from "./CoverArt";
-import { Badge, IconButton } from "./ui";
+import { Badge, IconButton, Segmented } from "./ui";
+import LyricsPane from "./lyrics/LyricsPane";
+import LyricsEditor from "./lyrics/LyricsEditor";
+import { useLyricsStore } from "../store/useLyricsStore";
 import {
   IconShuffle, IconPrev, IconNext, IconPlay, IconPause, IconRepeat, IconRepeatOne,
-  IconVolume, IconChevronDown,
+  IconVolume, IconChevronDown, IconMusic, IconText,
 } from "./icons";
 
 /** Full-screen "now playing". Purely reflects/controls the shared player store —
@@ -22,6 +26,21 @@ export default function NowPlaying() {
   const positionSec = usePlayerStore(selectPositionSec);
   const durationSec = usePlayerStore(selectDurationSec);
   const pct = s.durationMs > 0 ? (s.positionMs / s.durationMs) * 100 : 0;
+
+  // Aba ativa do painel. "Vídeo" entra no PR do modo vídeo.
+  const [pane, setPane] = useState<"cover" | "lyrics">("cover");
+  const [editing, setEditing] = useState(false);
+  const loadLyrics = useLyricsStore((st) => st.load);
+  const clearLyrics = useLyricsStore((st) => st.clear);
+  const lyricsProviderOn = useSettingsStore((st) => st.lyricsProviderEnabled);
+
+  // A letra só é buscada quando a aba está aberta: numa biblioteca grande, o
+  // custo de resolver a letra de toda faixa que toca não se justifica.
+  useEffect(() => {
+    if (pane !== "lyrics") return;
+    if (!current) { clearLyrics(); return; }
+    loadLyrics(current.id, lyricsProviderOn);
+  }, [pane, current?.id, lyricsProviderOn, loadLyrics, clearLyrics]);
 
   return (
     <div className="fixed inset-0 z-40 bg-ink flex flex-col animate-fade-in">
@@ -41,8 +60,24 @@ export default function NowPlaying() {
         </IconButton>
         <span className="text-xs uppercase tracking-[0.14em] text-muted">Tocando agora</span>
         {replaygain && current?.gain ? <Badge tone="brand">ReplayGain</Badge> : null}
+        <div className="ml-auto">
+          <Segmented
+            value={pane}
+            onChange={setPane}
+            size="sm"
+            options={[
+              { value: "cover", label: "Capa", icon: <IconMusic size={13} /> },
+              { value: "lyrics", label: "Letra", icon: <IconText size={13} /> },
+            ]}
+          />
+        </div>
       </div>
 
+      {pane === "lyrics" ? (
+        <div className="relative z-10 flex-1 min-h-0 flex flex-col">
+          <LyricsPane onEdit={() => setEditing(true)} onOpenSettings={() => s.setExpanded(false)} />
+        </div>
+      ) : (
       <div className="relative z-10 flex-1 min-h-0 flex items-center justify-center gap-8 px-6">
         {/* Side previews: what just played and what comes next. Hidden on
             narrow windows, where the "A seguir" line at the bottom stands in. */}
@@ -113,8 +148,11 @@ export default function NowPlaying() {
 
         <SidePreview track={next} label="A seguir" side="right" onPlay={() => s.jumpTo(s.currentIndex + 1)} />
       </div>
+      )}
 
-      {next && (
+      {editing && <LyricsEditor onClose={() => setEditing(false)} />}
+
+      {next && pane === "cover" && (
         <div className="relative z-10 px-6 py-4 text-center text-xs text-muted xl:hidden">
           A seguir: <span className="text-content/85">{next.title}</span> · {artistOf(next)}
         </div>

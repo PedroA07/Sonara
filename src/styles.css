@@ -22,6 +22,10 @@
   --c-danger: 248 113 113;
   --c-warn: 251 191 36;
   --line-alpha: 0.09;
+  /* Letra: as linhas de contexto usam cor sólida, não opacidade. Texto a 30%
+     de opacidade reprova no contraste AA — a cor calculada passa. */
+  --c-lyric-near: 176 182 202;
+  --c-lyric-far: 118 126 148;
   color-scheme: dark;
 }
 
@@ -39,6 +43,8 @@
   --c-danger: 220 38 38;
   --c-warn: 217 119 6;
   --line-alpha: 0.12;
+  --c-lyric-near: 88 96 120;
+  --c-lyric-far: 122 130 152;
   color-scheme: light;
 }
 
@@ -265,5 +271,42 @@ textarea,
   }
   .hoverable:hover {
     transform: none;
+  }
+}
+
+/* ─────────────────────────── letra sincronizada ─────────────────────────── */
+
+@layer components {
+  /* Trecho instrumental: três pontos que respiram no lugar de uma linha vazia. */
+  .lyric-dots {
+    display: inline-flex;
+    gap: 7px;
+    align-items: center;
+  }
+  .lyric-dots i {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: rgb(var(--c-brand));
+    animation: lyric-dot 1.4s ease-in-out infinite;
+  }
+  .lyric-dots i:nth-child(2) { animation-delay: 0.18s; }
+  .lyric-dots i:nth-child(3) { animation-delay: 0.36s; }
+  @keyframes lyric-dot {
+    0%, 100% { transform: scale(0.6); opacity: 0.35; }
+    50%      { transform: scale(1);   opacity: 1; }
+  }
+
+  /* Preenchimento palavra a palavra. `--fill` é escrita pelo rAF direto no
+     elemento, então o texto avança sem passar por render do React. */
+  .lyric-fill {
+    background-image: linear-gradient(
+      90deg,
+      rgb(var(--c-content)) var(--fill, 0%),
+      rgb(var(--c-lyric-far)) var(--fill, 0%)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }

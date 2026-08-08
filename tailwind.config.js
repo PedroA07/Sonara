@@ -22,6 +22,8 @@ export default {
         success: c("--c-success"),
         danger: c("--c-danger"),
         warn: c("--c-warn"),
+        "lyric-near": c("--c-lyric-near"),
+        "lyric-far": c("--c-lyric-far"),
       },
       boxShadow: {
         soft: "0 1px 2px rgb(0 0 0 / 0.16), 0 8px 24px -12px rgb(0 0 0 / 0.35)",

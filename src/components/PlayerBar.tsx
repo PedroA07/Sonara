@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePlayerStore, selectDurationSec, selectPositionSec } from "../store/usePlayerStore";
 import { useSettingsStore } from "../store/useSettingsStore";
 import { fileUrl } from "../lib/ipc";
+import { useMiniLyricLine } from "../hooks/useMiniLyricLine";
 import { artistOf, fmtClock } from "../lib/format";
 import CoverArt from "./CoverArt";
 import { IconButton } from "./ui";
@@ -36,6 +37,8 @@ export default function PlayerBar() {
   // segundo só para redesenhar "1:24". A barra usa o valor cheio, mas por CSS.
   const positionSec = usePlayerStore(selectPositionSec);
   const durationSec = usePlayerStore(selectDurationSec);
+  // Mini-letra: substitui o nome do artista pela linha que está sendo cantada.
+  const miniLine = useMiniLyricLine();
   const current = s.queue[s.currentIndex];
   const next = s.queue[s.currentIndex + 1];
   nextRef.current = next;
@@ -200,7 +203,7 @@ export default function PlayerBar() {
             {current?.title ?? "Nada tocando"}
           </div>
           <div className="truncate text-xs text-muted mt-0.5">
-            {current ? artistOf(current) : "Escolha uma música na biblioteca"}
+            {miniLine || (current ? artistOf(current) : "Escolha uma música na biblioteca")}
           </div>
         </div>
       </div>

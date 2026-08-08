@@ -93,6 +93,10 @@ export interface Settings {
   replaygain: boolean;
   downloadDir: string;
   audioFormat: AudioFormat;
+  /** Busca de letra em provedor online — opt-in, desligada por padrão. */
+  lyricsProviderEnabled: boolean;
+  /** Mostrar a linha atual da letra na barra do player. */
+  lyricsMiniLine: boolean;
 }
 
 /** Health of the bundled yt-dlp/ffmpeg, shown in Configurações. */
