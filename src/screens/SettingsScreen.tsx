@@ -26,7 +26,9 @@ const FORMATS: { value: AudioFormat; label: string; hint: string }[] = [
 export default function SettingsScreen() {
   const {
     theme, crossfade, replaygain, downloadDir, audioFormat,
+    lyricsProviderEnabled, lyricsMiniLine,
     setTheme, setCrossfade, setReplaygain, setDownloadDir, setAudioFormat,
+    setLyricsProviderEnabled, setLyricsMiniLine,
   } = useSettingsStore();
 
   const [dupes, setDupes] = useState(false);
@@ -137,6 +139,32 @@ export default function SettingsScreen() {
             </>
           )}
         </div>
+      </Section>
+
+      {/* ── Letras ──────────────────────────────────────────────── */}
+      <Section
+        title="Letras"
+        description="O Sonara sempre lê a letra que já vem dentro do arquivo de música ou de um .lrc ao lado dele. A busca online é uma escolha sua."
+      >
+        <Row
+          label="Buscar letras na internet"
+          hint="Quando o arquivo não traz letra, consultar um serviço público de letras (LRCLIB) usando o nome da música, o artista e a duração. Desligado, nada sai do seu computador."
+        >
+          <Toggle
+            checked={lyricsProviderEnabled}
+            onChange={(v) => {
+              setLyricsProviderEnabled(v);
+              toast.success(v ? "Busca de letras ligada" : "Busca de letras desligada");
+            }}
+            label="Buscar letras na internet"
+          />
+        </Row>
+        <Row
+          label="Mostrar a linha atual na barra do player"
+          hint="Substitui o nome do artista pela linha que está sendo cantada, enquanto a letra estiver carregada."
+        >
+          <Toggle checked={lyricsMiniLine} onChange={setLyricsMiniLine} label="Mostrar a linha atual na barra" />
+        </Row>
       </Section>
 
       {/* ── Playback ────────────────────────────────────────────── */}

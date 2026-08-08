@@ -10,6 +10,8 @@ interface SettingsState extends Settings {
   setReplaygain: (b: boolean) => void;
   setDownloadDir: (p: string) => void;
   setAudioFormat: (f: AudioFormat) => void;
+  setLyricsProviderEnabled: (b: boolean) => void;
+  setLyricsMiniLine: (b: boolean) => void;
 }
 
 const systemTheme = (): "dark" | "light" =>
@@ -29,6 +31,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   replaygain: false,
   downloadDir: "",
   audioFormat: "m4a",
+  // Busca online de letra: desligada por padrão. É consulta a serviço de
+  // terceiro, então precisa ser escolha explícita de quem usa.
+  lyricsProviderEnabled: false,
+  lyricsMiniLine: true,
   loaded: false,
 
   load: async () => {
@@ -45,6 +51,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         replaygain: s.replaygain === "true",
         downloadDir: s.download_dir || defaults.download_dir || "",
         audioFormat: (s.audio_format as AudioFormat) || "m4a",
+        lyricsProviderEnabled: s.lyrics_provider_enabled === "true",
+        lyricsMiniLine: s.lyrics_mini_line !== "false",
         loaded: true,
       });
     } catch {
@@ -73,6 +81,14 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setAudioFormat: (audioFormat) => {
     set({ audioFormat });
     api.setSetting("audio_format", audioFormat).catch(() => {});
+  },
+  setLyricsProviderEnabled: (lyricsProviderEnabled) => {
+    set({ lyricsProviderEnabled });
+    api.setSetting("lyrics_provider_enabled", String(lyricsProviderEnabled)).catch(() => {});
+  },
+  setLyricsMiniLine: (lyricsMiniLine) => {
+    set({ lyricsMiniLine });
+    api.setSetting("lyrics_mini_line", String(lyricsMiniLine)).catch(() => {});
   },
 }));
 

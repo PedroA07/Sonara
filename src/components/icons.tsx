@@ -149,6 +149,10 @@ export const IconGrid = (p: IconProps) => (
 export const IconList = (p: IconProps) => (
   <Svg {...p}><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3.5" y1="6" x2="3.6" y2="6" /><line x1="3.5" y1="12" x2="3.6" y2="12" /><line x1="3.5" y1="18" x2="3.6" y2="18" /></Svg>
 );
+/** Letra: linhas de texto de comprimentos diferentes, como versos. */
+export const IconText = (p: IconProps) => (
+  <Svg {...p}><path d="M4 6h16" /><path d="M4 11h11" /><path d="M4 16h13" /><path d="M4 21h7" /></Svg>
+);
 export const IconStop = (p: IconProps) => (
   <Svg {...p} fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="2" /></Svg>
 );
