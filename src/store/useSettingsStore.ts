@@ -13,6 +13,7 @@ interface SettingsState extends Settings {
   setLyricsProviderEnabled: (b: boolean) => void;
   setLyricsMiniLine: (b: boolean) => void;
   setLyricsAutoFetchOnDownload: (b: boolean) => void;
+  setVideoQuality: (q: string) => void;
 }
 
 const systemTheme = (): "dark" | "light" =>
@@ -37,6 +38,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   lyricsProviderEnabled: false,
   lyricsMiniLine: true,
   lyricsAutoFetchOnDownload: false,
+  // 720p: cabe na janela, baixa rápido e não enche o disco (ADR-05).
+  videoQuality: "720p",
   loaded: false,
 
   load: async () => {
@@ -56,6 +59,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         lyricsProviderEnabled: s.lyrics_provider_enabled === "true",
         lyricsMiniLine: s.lyrics_mini_line !== "false",
         lyricsAutoFetchOnDownload: s.lyrics_auto_fetch_on_download === "true",
+        videoQuality: s.video_quality || "720p",
         loaded: true,
       });
     } catch {
@@ -102,6 +106,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setLyricsAutoFetchOnDownload: (lyricsAutoFetchOnDownload) => {
     set({ lyricsAutoFetchOnDownload });
     api.setSetting("lyrics_auto_fetch_on_download", String(lyricsAutoFetchOnDownload)).catch(() => {});
+  },
+  setVideoQuality: (videoQuality) => {
+    set({ videoQuality });
+    api.setSetting("video_quality", videoQuality).catch(() => {});
   },
 }));
 

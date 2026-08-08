@@ -41,6 +41,21 @@ export function fmtDate(iso: string | null): string {
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 }
 
+/**
+ * Tamanho de arquivo em unidade legível.
+ *
+ * Base 1024 e sem casa decimal a partir de MB: "78 MB" é o que a pessoa precisa
+ * para decidir se baixa, e "78,43 MB" só ocupa espaço no botão.
+ */
+export function fmtBytes(bytes: number | null | undefined): string {
+  const n = bytes ?? 0;
+  if (n <= 0) return "0 MB";
+  if (n < 1024 * 1024) return `${Math.max(1, Math.round(n / 1024))} KB`;
+  const mb = n / (1024 * 1024);
+  if (mb < 1024) return `${Math.round(mb)} MB`;
+  return `${(mb / 1024).toFixed(1).replace(".", ",")} GB`;
+}
+
 /** A track's artist, with a consistent fallback instead of an empty cell. */
 export function artistOf(t: { artist_name?: string | null }): string {
   return t.artist_name?.trim() || "Artista desconhecido";

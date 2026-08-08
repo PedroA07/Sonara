@@ -1,14 +1,16 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import type { AudioFormat, ThemeMode, ToolStatus } from "../types";
+import type { AudioFormat, ThemeMode, ToolStatus, VideoStorage } from "../types";
 import { api, isDesktop } from "../lib/ipc";
 import { useSettingsStore } from "../store/useSettingsStore";
 import { toast } from "../store/useToastStore";
 import { SHORTCUTS } from "../hooks/useKeyboardShortcuts";
 import DuplicatesModal from "../components/DuplicatesModal";
+import { canPlayH264 } from "../lib/media";
+import { fmtBytes } from "../lib/format";
 import { APP_VERSION } from "../version";
 import { Badge, Button, PageHeader, Segmented, Spinner, Toggle } from "../components/ui";
-import { IconFolder, IconRefresh, IconCheck, IconAlert, IconSparkle } from "../components/icons";
+import { IconFolder, IconRefresh, IconCheck, IconAlert, IconSparkle, IconTrash, IconVideo } from "../components/icons";
 
 const THEMES: { value: ThemeMode; label: string }[] = [
   { value: "dark", label: "Escuro" },
@@ -23,15 +25,26 @@ const FORMATS: { value: AudioFormat; label: string; hint: string }[] = [
   { value: "flac", label: "FLAC", hint: "Sem perdas no arquivo final; a fonte do YouTube já é comprimida." },
 ];
 
+const VIDEO_QUALITIES: { value: string; label: string; hint: string }[] = [
+  { value: "720p", label: "720p", hint: "Padrão. Boa nitidez na janela do app, arquivos de 40–120 MB." },
+  { value: "1080p", label: "1080p", hint: "Mais nítido em tela cheia; os arquivos costumam dobrar de tamanho." },
+  { value: "max", label: "Máxima", hint: "A melhor que o YouTube tiver em H.264. Pode passar de 500 MB por música." },
+];
+
 export default function SettingsScreen() {
   const {
     theme, crossfade, replaygain, downloadDir, audioFormat,
-    lyricsProviderEnabled, lyricsMiniLine, lyricsAutoFetchOnDownload,
+    lyricsProviderEnabled, lyricsMiniLine, lyricsAutoFetchOnDownload, videoQuality,
     setTheme, setCrossfade, setReplaygain, setDownloadDir, setAudioFormat,
-    setLyricsProviderEnabled, setLyricsMiniLine, setLyricsAutoFetchOnDownload,
+    setLyricsProviderEnabled, setLyricsMiniLine, setLyricsAutoFetchOnDownload, setVideoQuality,
   } = useSettingsStore();
 
   const [dupes, setDupes] = useState(false);
+  const [storage, setStorage] = useState<VideoStorage | null>(null);
+  const [clearing, setClearing] = useState(false);
+  // Consultado uma vez, no cliente: no Windows e no macOS é sempre verdadeiro,
+  // no Linux depende dos plugins do GStreamer instalados na distribuição.
+  const [h264] = useState(() => canPlayH264());
   const [reindexing, setReindexing] = useState(false);
   const [tools, setTools] = useState<ToolStatus | null>(null);
   const [checking, setChecking] = useState(false);
@@ -43,7 +56,11 @@ export default function SettingsScreen() {
     finally { setChecking(false); }
   };
 
-  useEffect(() => { if (isDesktop) checkTools(); }, []);
+  const loadStorage = () => {
+    api.videoStorage().then(setStorage).catch(() => setStorage(null));
+  };
+
+  useEffect(() => { if (isDesktop) { checkTools(); loadStorage(); } }, []);
 
   const pickFolder = async () => {
     try {
@@ -130,6 +147,18 @@ export default function SettingsScreen() {
                 label="Pasta de downloads gravável"
                 detail={tools?.download_dir ?? "—"}
               />
+              {/* No Linux o WebKitGTK só decodifica H.264 com os plugins do
+                  GStreamer instalados. Sem isso a aba Vídeo não aparece — e é
+                  melhor dizer o porquê do que sumir sem explicação. */}
+              <Check
+                ok={h264}
+                label="Vídeo H.264 (modo vídeo)"
+                detail={
+                  h264
+                    ? "este sistema toca os vídeos baixados pelo Sonara"
+                    : "faltam os codecs do sistema (no Linux: instale gstreamer1.0-libav e gstreamer1.0-plugins-good)"
+                }
+              />
               <div className="pt-1.5 flex items-center gap-3">
                 <Button size="sm" onClick={checkTools} loading={checking}>
                   <IconRefresh size={14} /> Verificar de novo
@@ -184,6 +213,114 @@ export default function SettingsScreen() {
           As letras vêm do <b className="text-content/80">LRCLIB</b>, um acervo público e colaborativo, e ficam
           guardadas só no seu computador. O Sonara se identifica no pedido e respeita os limites do serviço.
         </p>
+      </Section>
+
+      {/* ── Vídeo e armazenamento ───────────────────────────────── */}
+      <Section
+        title="Vídeo"
+        description="O vídeo de uma música é um arquivo à parte, baixado só quando você pede. A música em si nunca é substituída."
+      >
+        {h264 ? (
+          <>
+            <div className="px-4 py-3.5">
+              <div className="text-sm text-content mb-1">Qualidade do vídeo</div>
+              <p className="text-xs text-muted mb-2.5">
+                {VIDEO_QUALITIES.find((q) => q.value === videoQuality)?.hint}
+              </p>
+              <Segmented
+                value={videoQuality}
+                onChange={(v) => { setVideoQuality(v); toast.success(`Vídeos agora em ${v}`); }}
+                options={VIDEO_QUALITIES.map((q) => ({ value: q.value, label: q.label }))}
+                size="sm"
+              />
+            </div>
+
+            <div className="px-4 py-3.5">
+              <div className="flex items-center gap-2 mb-1">
+                <IconVideo size={15} className="text-muted" />
+                <span className="text-sm text-content">Espaço usado pelos vídeos</span>
+              </div>
+              {storage === null ? (
+                <p className="text-xs text-muted">—</p>
+              ) : storage.items.length === 0 ? (
+                <p className="text-xs text-muted">
+                  Nenhum vídeo baixado. Abra a aba <b className="text-content/80">Vídeo</b> em “Tocando agora”
+                  para baixar o de uma música.
+                </p>
+              ) : (
+                <>
+                  <p className="text-xs text-muted mb-2.5">
+                    <b className="text-content">{fmtBytes(storage.totalBytes)}</b> em {storage.items.length}{" "}
+                    {storage.items.length === 1 ? "vídeo" : "vídeos"}. Apagar os vídeos não mexe nas músicas.
+                  </p>
+                  <ul className="space-y-1 max-h-56 overflow-y-auto mb-2.5">
+                    {storage.items.map((v) => (
+                      <li
+                        key={v.trackId}
+                        className="flex items-center gap-3 text-xs bg-panel2 border border-line/[.08] rounded-lg px-2.5 py-1.5"
+                      >
+                        <span className="truncate flex-1 text-content/90">{v.title}</span>
+                        {v.missing ? (
+                          <span className="text-warn shrink-0">arquivo sumiu</span>
+                        ) : (
+                          <span className="text-muted shrink-0 tabular-nums">
+                            {v.height ? `${v.height}p · ` : ""}{fmtBytes(v.bytes)}
+                          </span>
+                        )}
+                        <IconButtonInline
+                          label={`Apagar o vídeo de ${v.title}`}
+                          onClick={async () => {
+                            try {
+                              await api.deleteVideo(v.trackId);
+                              loadStorage();
+                            } catch (e) {
+                              toast.error("Não foi possível apagar", String(e));
+                            }
+                          }}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" onClick={loadStorage}><IconRefresh size={14} /> Atualizar</Button>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      loading={clearing}
+                      onClick={async () => {
+                        if (!window.confirm(
+                          `Apagar ${storage.items.length} vídeo(s) e liberar ${fmtBytes(storage.totalBytes)}?\n\nAs músicas continuam na biblioteca.`
+                        )) return;
+                        setClearing(true);
+                        try {
+                          const n = await api.deleteAllVideos();
+                          toast.success(`${n} vídeo(s) apagado(s)`, "As músicas continuam na biblioteca.");
+                          loadStorage();
+                        } catch (e) {
+                          toast.error("Não foi possível apagar", String(e));
+                        } finally {
+                          setClearing(false);
+                        }
+                      }}
+                    >
+                      <IconTrash size={14} /> Apagar todos
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="px-4 py-3.5">
+            <p className="text-sm text-muted leading-relaxed">
+              Este sistema não consegue decodificar vídeo H.264, então a aba <b className="text-content/80">Vídeo</b>{" "}
+              fica escondida. No Linux isso costuma ser resolvido instalando os plugins do GStreamer:
+            </p>
+            <code className="block mt-2 text-xs bg-panel2 border border-line/[.08] rounded-lg px-3 py-2 text-content/80">
+              sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good
+            </code>
+          </div>
+        )}
       </Section>
 
       {/* ── Playback ────────────────────────────────────────────── */}
@@ -249,6 +386,21 @@ export default function SettingsScreen() {
 
       {dupes && <DuplicatesModal onClose={() => setDupes(false)} />}
     </div>
+  );
+}
+
+/** Lixeira minúscula das linhas da lista de vídeos. */
+function IconButtonInline({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-muted
+        hover:text-danger hover:bg-danger/10 transition-colors"
+    >
+      <IconTrash size={13} />
+    </button>
   );
 }
 

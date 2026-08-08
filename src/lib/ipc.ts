@@ -2,7 +2,7 @@ import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import type {
   Track, AlbumCard, Artist, ParsedTrack, ImportSuggestion, ImportStrategy, DestKind,
   PlaylistCard, TrackEdit, DownloadJob, SearchResult, ToolStatus, ExportOptions, ExportResult,
-  CoverCandidate, Lyrics, LyricsResolution, LyricsCandidate,
+  CoverCandidate, Lyrics, LyricsResolution, LyricsCandidate, VideoProbe, VideoStorage,
 } from "../types";
 
 export const api = {
@@ -60,6 +60,17 @@ export const api = {
   lyricsFetchBatch: (trackIds: number[]) => invoke<number>("lyrics_fetch_batch", { trackIds }),
   lyricsCancelBatch: () => invoke<void>("lyrics_cancel_batch"),
   lyricsForgetMiss: (trackId: number) => invoke<void>("lyrics_forget_miss", { trackId }),
+  // Modo vídeo (E2) — arquivo separado, ligado à faixa (ADR-05).
+  videoProbe: (trackId: number, quality?: string) =>
+    invoke<VideoProbe>("video_probe", { trackId, quality }),
+  downloadVideo: (trackId: number, quality?: string) =>
+    invoke<number>("download_video", { trackId, quality }),
+  deleteVideo: (trackId: number) => invoke<void>("delete_video", { trackId }),
+  /** Devolve o offset já limitado pelo core. */
+  setVideoOffset: (trackId: number, offsetMs: number) =>
+    invoke<number>("set_video_offset", { trackId, offsetMs }),
+  videoStorage: () => invoke<VideoStorage>("video_storage"),
+  deleteAllVideos: () => invoke<number>("delete_all_videos"),
   // Maintenance / enrichment (F5)
   rebuildSearchIndex: () => invoke<void>("rebuild_search_index"),
   findDuplicates: () => invoke<Track[]>("find_duplicates"),

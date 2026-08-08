@@ -15,6 +15,10 @@ export interface Track {
   /** Resolved by the backend for display (never edited through this shape). */
   artist_name: string | null;
   album_title: string | null;
+  /** Vídeo baixado para esta faixa (ADR-05). `null` = só áudio. */
+  video_path: string | null;
+  /** Calibração de lipsync, em ms. */
+  video_offset_ms: number;
 }
 
 export interface AlbumCard {
@@ -99,6 +103,8 @@ export interface Settings {
   lyricsMiniLine: boolean;
   /** Procurar a letra sozinho ao terminar um download. Depende da busca online. */
   lyricsAutoFetchOnDownload: boolean;
+  /** Teto de resolução do vídeo baixado: "720p" | "1080p" | "max". */
+  videoQuality: string;
 }
 
 /** Health of the bundled yt-dlp/ffmpeg, shown in Configurações. */
@@ -123,6 +129,31 @@ export interface ExportOptions {
   playlist_name: string | null;
   /** Gravar a letra como `.lrc` junto de cada arquivo. Desmarcado por padrão. */
   include_lrc: boolean;
+}
+
+export interface VideoProbe {
+  trackId: number;
+  sourceUrl: string;
+  /** Ausente quando o YouTube não informa o tamanho do formato escolhido. */
+  sizeBytes: number | null;
+  height: number | null;
+  title: string;
+  quality: string;
+}
+
+export interface VideoStorageItem {
+  trackId: number;
+  title: string;
+  path: string;
+  bytes: number;
+  height: number | null;
+  /** O registro existe mas o arquivo sumiu do disco. */
+  missing: boolean;
+}
+
+export interface VideoStorage {
+  totalBytes: number;
+  items: VideoStorageItem[];
 }
 
 export interface ExportResult {

@@ -146,6 +146,148 @@ pub fn build_ytdlp_args(
     args
 }
 
+// ── vídeo (E2) ───────────────────────────────────────────────────────────────
+
+/// Teto de resolução do vídeo baixado, escolhido em Configurações.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum VideoQuality {
+    P720,
+    P1080,
+    /// A melhor que existir — ainda dentro do combo H.264 + AAC.
+    Max,
+}
+
+impl VideoQuality {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            VideoQuality::P720 => "720p",
+            VideoQuality::P1080 => "1080p",
+            VideoQuality::Max => "max",
+        }
+    }
+
+    /// Valor guardado em `setting`. Desconhecido cai em 720p, que é o padrão:
+    /// cabe na tela, baixa rápido e não enche o disco.
+    ///
+    /// `to_lowercase` e não `to_ascii_lowercase`: uma das grafias aceitas é
+    /// "máx", e o "Á" maiúsculo passaria intocado pela versão ASCII.
+    pub fn parse(s: &str) -> Self {
+        match s.trim().to_lowercase().as_str() {
+            "1080p" | "1080" => VideoQuality::P1080,
+            "max" | "máx" | "maxima" | "máxima" => VideoQuality::Max,
+            _ => VideoQuality::P720,
+        }
+    }
+
+    pub fn max_height(self) -> Option<u32> {
+        match self {
+            VideoQuality::P720 => Some(720),
+            VideoQuality::P1080 => Some(1080),
+            VideoQuality::Max => None,
+        }
+    }
+}
+
+/// Seletor de formato do yt-dlp para um vídeo que o webview consegue tocar.
+///
+/// **H.264 (`avc1`) + AAC (`mp4a`) em MP4 é o único combo com suporte amplo** em
+/// WebView2, WKWebView e WebKitGTK. VP9/AV1/WebM tocam no Chrome e falham no
+/// player embutido, então nem são pedidos: baixar 200 MB de um arquivo que a
+/// tela não abre é pior do que não baixar.
+///
+/// A última alternativa (`b[ext=mp4]`) existe porque alguns vídeos não expõem
+/// faixas separadas; ali o `ext=mp4` é a única garantia que resta.
+pub fn video_format_selector(quality: VideoQuality) -> String {
+    let height = match quality.max_height() {
+        Some(h) => format!("[height<=?{h}]"),
+        None => String::new(),
+    };
+    format!("bv*[vcodec^=avc1]{height}+ba[acodec^=mp4a]/b[ext=mp4]{height}/b[ext=mp4]")
+}
+
+/// Argumentos do yt-dlp para baixar o vídeo de uma faixa.
+///
+/// `out_template` já vem com o caminho final completo (`…/.video/<id>.%(ext)s`),
+/// porque o nome do arquivo é derivado do id da faixa e não do título: o título
+/// muda quando a pessoa edita a faixa, e o arquivo ficaria órfão.
+pub fn build_video_args(
+    input: &str,
+    out_template: &str,
+    ffmpeg_dir: &str,
+    quality: VideoQuality,
+) -> Vec<String> {
+    let mut args: Vec<String> = vec![
+        "-f".into(), video_format_selector(quality),
+        "--merge-output-format".into(), "mp4".into(),
+        // O container precisa sair com o índice no começo para o webview
+        // conseguir dar seek sem baixar o arquivo inteiro de novo.
+        "--postprocessor-args".into(), "ffmpeg:-movflags +faststart".into(),
+        "--no-playlist".into(),
+        "--windows-filenames".into(),
+        "--no-mtime".into(),
+        "--no-overwrites".into(),
+        "--no-color".into(),
+        "--newline".into(),
+        "--retries".into(), "5".into(),
+        "--fragment-retries".into(), "5".into(),
+        "--socket-timeout".into(), "30".into(),
+        "-o".into(), out_template.into(),
+    ];
+
+    if !ffmpeg_dir.is_empty() {
+        args.push("--ffmpeg-location".into());
+        args.push(ffmpeg_dir.into());
+    }
+
+    // Mesmo par de marcadores do download de áudio: progresso legível por
+    // máquina e caminho final explícito, em vez de adivinhado.
+    args.push("--progress".into());
+    args.push("--progress-template".into());
+    args.push(format!(
+        "download:{PROGRESS_MARKER}%(progress._percent_str)s|%(progress._speed_str)s|%(progress._eta_str)s|%(info.title)s"
+    ));
+    args.push("--no-simulate".into());
+    args.push("--print".into());
+    args.push(format!("after_move:{FILE_MARKER}%(filepath)s"));
+
+    args.push(input.to_string());
+    args
+}
+
+/// Argumentos para *só perguntar* o tamanho e a altura, sem baixar nada.
+///
+/// É o que enche o "Baixar vídeo (~78 MB)": sem esse número a pessoa aceita um
+/// download sem saber se são 40 MB ou 600.
+pub fn build_video_probe_args(input: &str, quality: VideoQuality) -> Vec<String> {
+    vec![
+        "-f".into(), video_format_selector(quality),
+        "--no-playlist".into(),
+        "--no-warnings".into(),
+        "--no-color".into(),
+        "--socket-timeout".into(), "20".into(),
+        "--simulate".into(),
+        "--print".into(),
+        format!("{FILE_MARKER}%(filesize_approx)s|%(height)s|%(title)s"),
+        input.to_string(),
+    ]
+}
+
+/// Lê a linha do probe: `bytes|altura|título`. Campos ausentes vêm como "NA".
+pub fn parse_video_probe(line: &str) -> Option<(Option<i64>, Option<i64>, String)> {
+    let rest = line.trim().strip_prefix(FILE_MARKER)?;
+    let mut parts = rest.split('|');
+    let num = |s: Option<&str>| {
+        s.map(str::trim)
+            .filter(|v| !v.is_empty() && *v != "NA" && *v != "None")
+            .and_then(|v| v.parse::<i64>().ok())
+            .filter(|v| *v > 0)
+    };
+    let bytes = num(parts.next());
+    let height = num(parts.next());
+    let title = parts.collect::<Vec<_>>().join("|").trim().to_string();
+    Some((bytes, height, title))
+}
+
 /// Heuristic to classify user input as link vs. search query, video vs. playlist.
 ///
 /// A URL that carries **both** `v=` and `list=` is the "playing from a playlist"
@@ -386,6 +528,77 @@ mod tests {
         assert_eq!(AudioFormat::parse("MP3").as_str(), "mp3");
         assert_eq!(AudioFormat::parse("banana").as_str(), "m4a");
         assert!(!AudioFormat::parse("opus").supports_thumbnail());
+    }
+
+    #[test]
+    fn video_selector_pins_the_only_codecs_the_webview_plays() {
+        let s = video_format_selector(VideoQuality::P720);
+        assert!(s.contains("vcodec^=avc1"), "H.264 é obrigatório: {s}");
+        assert!(s.contains("acodec^=mp4a"), "AAC é obrigatório: {s}");
+        assert!(s.contains("[height<=?720]"));
+        // Nada de VP9/AV1/WebM: tocam no Chrome e falham no player embutido.
+        assert!(!s.contains("vp9") && !s.contains("av01") && !s.contains("webm"));
+    }
+
+    #[test]
+    fn video_quality_controls_only_the_height() {
+        assert!(video_format_selector(VideoQuality::P1080).contains("[height<=?1080]"));
+        // "máx" tira o teto, mas não afrouxa o codec.
+        let max = video_format_selector(VideoQuality::Max);
+        assert!(!max.contains("height<="));
+        assert!(max.contains("vcodec^=avc1"));
+    }
+
+    #[test]
+    fn video_quality_round_trips() {
+        assert_eq!(VideoQuality::parse("1080p").as_str(), "1080p");
+        assert_eq!(VideoQuality::parse("MÁX").as_str(), "max");
+        // Valor estranho não vira erro nem "máxima": cai no padrão econômico.
+        assert_eq!(VideoQuality::parse("banana").as_str(), "720p");
+        assert_eq!(VideoQuality::parse("720p").max_height(), Some(720));
+        assert_eq!(VideoQuality::parse("max").max_height(), None);
+    }
+
+    #[test]
+    fn builds_video_args() {
+        let a = build_video_args("url", "/v/12.%(ext)s", "/ff", VideoQuality::P720);
+        assert!(a.contains(&"--merge-output-format".to_string()));
+        assert!(a.iter().any(|x| x == "mp4"));
+        assert!(a.contains(&"--no-playlist".to_string()));
+        assert!(a.contains(&"--ffmpeg-location".to_string()));
+        // Seek no webview depende do índice no começo do arquivo.
+        assert!(a.iter().any(|x| x.contains("+faststart")));
+        assert!(a.iter().any(|x| x == "/v/12.%(ext)s"));
+        assert!(a.iter().any(|x| x.contains(PROGRESS_MARKER)));
+        assert!(a.iter().any(|x| x.contains(FILE_MARKER)));
+        assert_eq!(a.last().unwrap(), "url");
+    }
+
+    #[test]
+    fn probe_asks_without_downloading() {
+        let a = build_video_probe_args("url", VideoQuality::P1080);
+        assert!(a.contains(&"--simulate".to_string()));
+        assert!(!a.contains(&"--no-simulate".to_string()));
+    }
+
+    #[test]
+    fn parses_the_probe_line() {
+        let (bytes, h, t) =
+            parse_video_probe(&format!("{FILE_MARKER}81234567|720|Uma música")).unwrap();
+        assert_eq!(bytes, Some(81_234_567));
+        assert_eq!(h, Some(720));
+        assert_eq!(t, "Uma música");
+
+        // Campos que o YouTube não informa não podem virar 0 nem quebrar a tela.
+        let (bytes, h, _) = parse_video_probe(&format!("{FILE_MARKER}NA|NA|X")).unwrap();
+        assert_eq!(bytes, None);
+        assert_eq!(h, None);
+
+        // Título com "|" continua inteiro.
+        let (_, _, t) = parse_video_probe(&format!("{FILE_MARKER}1|2|a|b")).unwrap();
+        assert_eq!(t, "a|b");
+
+        assert!(parse_video_probe("sem marcador").is_none());
     }
 
     #[test]

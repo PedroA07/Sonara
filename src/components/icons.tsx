@@ -153,6 +153,24 @@ export const IconList = (p: IconProps) => (
 export const IconText = (p: IconProps) => (
   <Svg {...p}><path d="M4 6h16" /><path d="M4 11h11" /><path d="M4 16h13" /><path d="M4 21h7" /></Svg>
 );
+/* ---- Modo vídeo ---- */
+/** Vídeo: uma tela com o triângulo de play, que é como a aba se apresenta. */
+export const IconVideo = (p: IconProps) => (
+  <Svg {...p}><rect x="2.5" y="5" width="19" height="14" rx="3" /><path d="M10.5 9.5v5l4.5-2.5z" fill="currentColor" stroke="none" /></Svg>
+);
+/** Tela cheia: quatro cantos abrindo para fora. */
+export const IconFullscreen = (p: IconProps) => (
+  <Svg {...p}><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9" /><path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9" /><path d="M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15" /><path d="M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15" /></Svg>
+);
+/** Sair da tela cheia: os mesmos cantos, apontando para dentro. */
+export const IconExitFullscreen = (p: IconProps) => (
+  <Svg {...p}><path d="M9 4v3.5A1.5 1.5 0 0 1 7.5 9H4" /><path d="M20 9h-3.5A1.5 1.5 0 0 1 15 7.5V4" /><path d="M15 20v-3.5a1.5 1.5 0 0 1 1.5-1.5H20" /><path d="M4 15h3.5A1.5 1.5 0 0 1 9 16.5V20" /></Svg>
+);
+/** Picture-in-picture: a janelinha destacada no canto. */
+export const IconPip = (p: IconProps) => (
+  <Svg {...p}><rect x="2.5" y="5" width="19" height="14" rx="3" /><rect x="12" y="11" width="7" height="5.5" rx="1.5" fill="currentColor" stroke="none" /></Svg>
+);
+
 export const IconStop = (p: IconProps) => (
   <Svg {...p} fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="2" /></Svg>
 );

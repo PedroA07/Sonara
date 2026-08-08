@@ -10,3 +10,4 @@ pub mod maintenance;
 pub mod enrich;
 pub mod export;
 pub mod lyrics;
+pub mod video;

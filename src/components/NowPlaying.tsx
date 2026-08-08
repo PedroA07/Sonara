@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Track } from "../types";
-import { usePlayerStore, selectDurationSec, selectPositionSec } from "../store/usePlayerStore";
+import { usePlayerStore, selectDurationSec, selectPositionSec, hasVideo } from "../store/usePlayerStore";
 import { useSettingsStore } from "../store/useSettingsStore";
 import { artistOf, fmtClock } from "../lib/format";
 import CoverArt from "./CoverArt";
@@ -8,10 +8,12 @@ import { Badge, IconButton, Segmented } from "./ui";
 import LyricsPane from "./lyrics/LyricsPane";
 import LyricsEditor from "./lyrics/LyricsEditor";
 import LyricsSearchModal from "./lyrics/LyricsSearchModal";
+import VideoPane, { VideoOffer, VideoUnsupported } from "./video/VideoPane";
+import { canPlayH264 } from "../lib/media";
 import { useLyricsStore } from "../store/useLyricsStore";
 import {
   IconShuffle, IconPrev, IconNext, IconPlay, IconPause, IconRepeat, IconRepeatOne,
-  IconVolume, IconChevronDown, IconMusic, IconText,
+  IconVolume, IconChevronDown, IconMusic, IconText, IconVideo,
 } from "./icons";
 
 /** Full-screen "now playing". Purely reflects/controls the shared player store —
@@ -28,10 +30,29 @@ export default function NowPlaying() {
   const durationSec = usePlayerStore(selectDurationSec);
   const pct = s.durationMs > 0 ? (s.positionMs / s.durationMs) * 100 : 0;
 
-  // Aba ativa do painel. "Vídeo" entra no PR do modo vídeo.
-  const [pane, setPane] = useState<"cover" | "lyrics">("cover");
+  // A aba mora no store: trocar de faixa pode derrubar a aba Vídeo, e a barra
+  // do player também abre a Letra direto.
+  const pane = s.pane;
+  const setPane = s.setPane;
   const [editing, setEditing] = useState(false);
   const [searching, setSearching] = useState(false);
+
+  /**
+   * O vídeo acabou de ficar pronto: a faixa na fila ganha o caminho e a aba
+   * troca da oferta para o player. Sem isto a tela continuaria oferecendo um
+   * download que já terminou, até a biblioteca ser recarregada.
+   */
+  // Sem codec H.264 a aba Vídeo continua listada, mas explica o que falta em
+  // vez de sumir sem motivo — some só quando não há nem faixa para assistir.
+  const h264 = canPlayH264();
+
+  const onVideoReady = (trackId: number, path: string) => {
+    if (!path) return;
+    usePlayerStore.setState((st) => ({
+      queue: st.queue.map((t) => (t.id === trackId ? { ...t, video_path: path } : t)),
+    }));
+    usePlayerStore.getState().setPane("video");
+  };
   const loadLyrics = useLyricsStore((st) => st.load);
   const clearLyrics = useLyricsStore((st) => st.clear);
   const lyricsProviderOn = useSettingsStore((st) => st.lyricsProviderEnabled);
@@ -39,7 +60,8 @@ export default function NowPlaying() {
   // A letra só é buscada quando a aba está aberta: numa biblioteca grande, o
   // custo de resolver a letra de toda faixa que toca não se justifica.
   useEffect(() => {
-    if (pane !== "lyrics") return;
+    // A aba Vídeo também precisa da letra: é ela que alimenta o overlay.
+    if (pane === "cover") return;
     if (!current) { clearLyrics(); return; }
     loadLyrics(current.id, lyricsProviderOn);
   }, [pane, current?.id, lyricsProviderOn, loadLyrics, clearLyrics]);
@@ -70,12 +92,18 @@ export default function NowPlaying() {
             options={[
               { value: "cover", label: "Capa", icon: <IconMusic size={13} /> },
               { value: "lyrics", label: "Letra", icon: <IconText size={13} /> },
+              { value: "video", label: "Vídeo", icon: <IconVideo size={13} /> },
             ]}
           />
         </div>
       </div>
 
-      {pane === "lyrics" ? (
+      {pane === "video" ? (
+        !current ? null
+          : !h264 ? <VideoUnsupported track={current} />
+          : hasVideo(current) ? <VideoPane track={current} />
+          : <VideoOffer track={current} onDone={(path) => onVideoReady(current.id, path)} />
+      ) : pane === "lyrics" ? (
         <div className="relative z-10 flex-1 min-h-0 flex flex-col">
           <LyricsPane
             onEdit={() => setEditing(true)}
