@@ -1,5 +1,5 @@
-import { useEffect, useRef, type SyntheticEvent } from "react";
-import { usePlayerStore } from "../store/usePlayerStore";
+import { useEffect, useRef, useState } from "react";
+import { usePlayerStore, selectDurationSec, selectPositionSec } from "../store/usePlayerStore";
 import { useSettingsStore } from "../store/useSettingsStore";
 import { fileUrl } from "../lib/ipc";
 import { artistOf, fmtClock } from "../lib/format";
@@ -24,11 +24,35 @@ export default function PlayerBar() {
   const active = useRef(0);            // which slot maps to the current track
   const fading = useRef(false);        // crossfade in progress
   const advancing = useRef(false);     // suppress duplicate onEnded during crossfade
+  // O laço de animação é montado por estado de reprodução, não por faixa. Estes
+  // refs deixam a faixa seguinte e o crossfade visíveis lá dentro sem que uma
+  // troca de música derrube e recrie o laço.
+  const nextRef = useRef<Track | undefined>(undefined);
+  const startCrossfadeRef = useRef<((a: HTMLAudioElement) => void) | null>(null);
 
   const s = usePlayerStore();
   const { crossfade, replaygain } = useSettingsStore();
+  // Relógio: o texto muda 1×/s, então selecionar o segundo evita 60 renders por
+  // segundo só para redesenhar "1:24". A barra usa o valor cheio, mas por CSS.
+  const positionSec = usePlayerStore(selectPositionSec);
+  const durationSec = usePlayerStore(selectDurationSec);
   const current = s.queue[s.currentIndex];
   const next = s.queue[s.currentIndex + 1];
+  nextRef.current = next;
+
+  // `setPosition` é lido do store fora do render: chamá-lo ~60×/s através de
+  // uma prop desestruturada faria o laço remontar a cada quadro.
+  const setPosition = usePlayerStore((st) => st.setPosition);
+
+  // Janela oculta não precisa de relógio a 60 fps; o áudio segue tocando.
+  const [hidden, setHidden] = useState(() =>
+    typeof document !== "undefined" && document.hidden
+  );
+  useEffect(() => {
+    const onVis = () => setHidden(document.hidden);
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
 
   const getActive = () => (active.current === 0 ? slot0 : slot1).current;
   const getInactive = () => (active.current === 0 ? slot1 : slot0).current;
@@ -83,13 +107,13 @@ export default function PlayerBar() {
   // Honour seek requests.
   useEffect(() => {
     const a = getActive();
-    if (a && s.seekReq !== null) {
-      a.currentTime = s.seekReq;
+    if (a && s.seekReqMs !== null) {
+      a.currentTime = s.seekReqMs / 1000;
       if (s.isPlaying) a.play().catch(() => {});
       s.clearSeek();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [s.seekReq]);
+  }, [s.seekReqMs]);
 
   const startCrossfade = (a: HTMLAudioElement) => {
     const b = getInactive();
@@ -113,14 +137,30 @@ export default function PlayerBar() {
     requestAnimationFrame(step);
   };
 
-  const onTime = (e: SyntheticEvent<HTMLAudioElement>, slot: number) => {
-    if (slot !== active.current) return;
-    const a = e.currentTarget;
-    s.setTime(a.currentTime);
-    if (crossfade > 0 && next && !fading.current && a.duration - a.currentTime <= crossfade) {
-      startCrossfade(a);
-    }
-  };
+  // ADR-01: o relógio é lido do backend ativo a cada quadro e publicado no
+  // store. `onTimeUpdate` dispara ~4×/s em cadência irregular — suficiente para
+  // um relógio, insuficiente para a letra acompanhar sem tremer.
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      const a = getActive();
+      if (a) {
+        setPosition(a.currentTime * 1000);
+        if (crossfade > 0 && nextRef.current && !fading.current
+            && a.duration - a.currentTime <= crossfade) {
+          startCrossfadeRef.current?.(a);
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    // Parado ou com a janela oculta não há o que animar: o laço é suspenso para
+    // não gastar bateria à toa.
+    if (s.isPlaying && !hidden) raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.isPlaying, hidden, crossfade]);
+
+  startCrossfadeRef.current = startCrossfade;
 
   const onEnded = (slot: number) => {
     if (slot !== active.current) return;
@@ -128,14 +168,14 @@ export default function PlayerBar() {
     s.handleEnded();
   };
 
-  const pct = s.duration > 0 ? (s.currentTime / s.duration) * 100 : 0;
+  const pct = s.durationMs > 0 ? (s.positionMs / s.durationMs) * 100 : 0;
   const volPct = (s.muted ? 0 : s.volume) * 100;
   const hasTrack = !!current;
 
   return (
     <footer className="h-[84px] shrink-0 bg-panel border-t divider flex items-center px-5 gap-5 relative z-20">
-      <audio ref={slot0} onTimeUpdate={(e) => onTime(e, 0)} onLoadedMetadata={(e) => active.current === 0 && s.setDuration(e.currentTarget.duration)} onEnded={() => onEnded(0)} />
-      <audio ref={slot1} onTimeUpdate={(e) => onTime(e, 1)} onLoadedMetadata={(e) => active.current === 1 && s.setDuration(e.currentTarget.duration)} onEnded={() => onEnded(1)} />
+      <audio ref={slot0} onLoadedMetadata={(e) => active.current === 0 && s.setDurationMs(e.currentTarget.duration * 1000)} onEnded={() => onEnded(0)} />
+      <audio ref={slot1} onLoadedMetadata={(e) => active.current === 1 && s.setDurationMs(e.currentTarget.duration * 1000)} onEnded={() => onEnded(1)} />
 
       {/* ── Now playing ───────────────────────────────────────────── */}
       <div className="w-[260px] min-w-0 flex items-center gap-3">
@@ -198,16 +238,16 @@ export default function PlayerBar() {
         </div>
 
         <div className="w-full max-w-xl flex items-center gap-2.5 text-[11px] text-muted tabular-nums">
-          <span className="w-9 text-right">{fmtClock(s.currentTime)}</span>
+          <span className="w-9 text-right">{fmtClock(positionSec)}</span>
           <input
-            type="range" min={0} max={s.duration || 0} step={0.1} value={s.currentTime}
+            type="range" min={0} max={s.durationMs || 0} step={100} value={s.positionMs}
             onChange={(e) => s.requestSeek(Number(e.target.value))}
             disabled={!hasTrack}
             aria-label="Posição na música"
             className="flex-1 track-range"
             style={{ ["--pct" as string]: `${pct}%` }}
           />
-          <span className="w-9">{fmtClock(s.duration)}</span>
+          <span className="w-9">{fmtClock(durationSec)}</span>
         </div>
       </div>
 

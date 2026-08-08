@@ -1,5 +1,5 @@
 import type { Track } from "../types";
-import { usePlayerStore } from "../store/usePlayerStore";
+import { usePlayerStore, selectDurationSec, selectPositionSec } from "../store/usePlayerStore";
 import { useSettingsStore } from "../store/useSettingsStore";
 import { artistOf, fmtClock } from "../lib/format";
 import CoverArt from "./CoverArt";
@@ -17,7 +17,11 @@ export default function NowPlaying() {
   const current = s.queue[s.currentIndex];
   const prev = s.queue[s.currentIndex - 1];
   const next = s.queue[s.currentIndex + 1];
-  const pct = s.duration > 0 ? (s.currentTime / s.duration) * 100 : 0;
+  // Mesmo motivo da PlayerBar: o texto do relógio muda 1×/s, então selecionar o
+  // segundo evita re-render a cada quadro.
+  const positionSec = usePlayerStore(selectPositionSec);
+  const durationSec = usePlayerStore(selectDurationSec);
+  const pct = s.durationMs > 0 ? (s.positionMs / s.durationMs) * 100 : 0;
 
   return (
     <div className="fixed inset-0 z-40 bg-ink flex flex-col animate-fade-in">
@@ -58,15 +62,15 @@ export default function NowPlaying() {
         </div>
 
         <div className="w-full max-w-xl flex items-center gap-3 text-xs text-muted tabular-nums">
-          <span className="w-10 text-right">{fmtClock(s.currentTime)}</span>
+          <span className="w-10 text-right">{fmtClock(positionSec)}</span>
           <input
-            type="range" min={0} max={s.duration || 0} step={0.1} value={s.currentTime}
+            type="range" min={0} max={s.durationMs || 0} step={100} value={s.positionMs}
             onChange={(e) => s.requestSeek(Number(e.target.value))}
             aria-label="Posição na música"
             className="flex-1 track-range"
             style={{ ["--pct" as string]: `${pct}%` }}
           />
-          <span className="w-10">{fmtClock(s.duration)}</span>
+          <span className="w-10">{fmtClock(durationSec)}</span>
         </div>
 
         <div className="flex items-center gap-6">

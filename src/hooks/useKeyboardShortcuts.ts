@@ -5,6 +5,9 @@ import { useSettingsStore } from "../store/useSettingsStore";
 
 /** Global shortcuts. Ignored while typing, and never hijacking the OS
  *  combinations (Ctrl/Cmd + key) that the webview already handles. */
+/** Salto das setas ← / →. */
+const SEEK_STEP_MS = 5_000;
+
 export function useKeyboardShortcuts(navigate?: (s: Screen) => void) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -17,11 +20,11 @@ export function useKeyboardShortcuts(navigate?: (s: Screen) => void) {
         case " ": e.preventDefault(); p.toggle(); break;
         case "ArrowRight":
           if (e.shiftKey) p.next();
-          else p.requestSeek(Math.min(p.duration, p.currentTime + 5));
+          else p.requestSeek(Math.min(p.durationMs, p.positionMs + SEEK_STEP_MS));
           break;
         case "ArrowLeft":
           if (e.shiftKey) p.prev();
-          else p.requestSeek(Math.max(0, p.currentTime - 5));
+          else p.requestSeek(Math.max(0, p.positionMs - SEEK_STEP_MS));
           break;
         case "ArrowUp": e.preventDefault(); p.setVolume(Math.min(1, p.volume + 0.05)); break;
         case "ArrowDown": e.preventDefault(); p.setVolume(Math.max(0, p.volume - 0.05)); break;
