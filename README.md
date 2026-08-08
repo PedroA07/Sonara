@@ -30,7 +30,34 @@ Stack: **Tauri 2 + React 18 + TypeScript + SQLite (rusqlite)**.
 | **Editor** | Título, artista, álbum, gênero, ano, nº da faixa e capa (com recorte) — de uma faixa ou de várias, gravando ou não nas tags do arquivo. |
 | **Player** | Fila, playlists, aleatório, repetir, crossfade/gapless, equalização de volume (ReplayGain) e atalhos de teclado. |
 | **Manutenção** | Busca full-text (FTS5), detecção de duplicatas e enriquecimento de capas via MusicBrainz / Cover Art Archive. |
+| **Letra sincronizada** | A letra rola sozinha, destaca a linha atual e marca o refrão. Lê de tags, de um `.lrc` ao lado ou — opt-in — do LRCLIB. Editor, busca manual e ajuste de sincronia por faixa. |
+| **Modo vídeo** | Baixa o vídeo da faixa e alterna áudio↔vídeo sem perder o ponto da música. Tela cheia, picture-in-picture e letra sobre o vídeo. |
 | **Auto-update** | Verifica novas versões na inicialização e instala com um clique. |
+
+**📖 Manual de ajuda:** [pedroa07.github.io/Sonara/ajuda](https://pedroa07.github.io/Sonara/ajuda/)
+
+## Novidades da 0.5.0
+
+**Letra sincronizada.** A letra acompanha a música: rola sozinha, destaca a linha
+que está sendo cantada e marca o refrão com uma barra na lateral. Clique numa
+linha para saltar até ela; `[` e `]` acertam o atraso, salvo por faixa.
+
+A resolução segue uma cadeia, parando no primeiro sucesso: **tags do arquivo →
+`.lrc` ao lado → cache → provedor online**. O provedor (LRCLIB) é **opt-in e
+nasce desligado**; ligado, envia só nome, artista e duração, identifica o cliente
+no `User-Agent` e respeita `Retry-After`. O parser de LRC, a resolução e a
+detecção de refrão vivem no core, em Rust, e são testados lá.
+
+**Modo vídeo.** Baixa o vídeo de uma faixa e alterna entre ouvir e assistir **sem
+perder o ponto da música**. O vídeo é um arquivo separado (`<downloads>/.video/`)
+e nunca substitui o áudio. Formato fixado em H.264 + AAC/MP4 — o único combo que
+WebView2, WKWebView e WebKitGTK tocam. Configurações mostra o espaço usado e
+deixa apagar os vídeos mantendo as músicas.
+
+**Site e ajuda.** Landing page com prints reais gerados por script
+(`npm run screenshots`) sobre uma biblioteca de demonstração fictícia, galeria
+com ampliação, passo a passo, comparação de formatos e um manual completo em
+`/ajuda`.
 
 ## Novidades da 0.2.0
 
@@ -75,16 +102,19 @@ sonara/
 │  ├─ screens/              # Biblioteca, Playlists, Buscar&Baixar, Downloads, Config
 │  ├─ store/                # Estado global (zustand): player, downloads, settings, toasts
 │  ├─ lib/ipc.ts            # Wrapper tipado do invoke() do Tauri
+│  ├─ lib/media/            # MediaBackend: AudioBackend, VideoBackend, controller
 │  ├─ lib/format.ts         # Formatação compartilhada (duração, datas, artista)
 │  └─ types.ts              # Tipos compartilhados com o core
 ├─ src-tauri/               # Core Rust (Tauri 2)
 │  ├─ src/
 │  │  ├─ main.rs            # Bootstrap: abre DB, roda migration, registra commands
-│  │  ├─ commands/          # library, import, playback, download, export, edit…
-│  │  └─ services/          # metadata (lofty), downloader (yt-dlp/ffmpeg), enrich
-│  ├─ migrations/           # 0001_init … 0005_download_details
+│  │  ├─ commands/          # library, import, playback, download, export, edit, lyrics, video
+│  │  └─ services/          # metadata (lofty), downloader (yt-dlp/ffmpeg), enrich,
+│  │                        # lyrics (parser LRC + refrão), lyrics_provider (LRCLIB)
+│  ├─ migrations/           # 0001_init … 0007_video
 │  └─ tauri.conf.json
-└─ docs/index.html          # Página de download (GitHub Pages)
+├─ scripts/                 # screenshots.mjs + demo-library.mjs (prints da landing)
+└─ docs/                    # GitHub Pages: index.html, ajuda/, img/ (prints gerados)
 ```
 
 ## Mapa requisito → código
@@ -102,6 +132,9 @@ sonara/
 | **Exportação** | `commands/export.rs`, `components/ExportModal.tsx` |
 | F5 Busca FTS5 / duplicatas / capas | `commands/search.rs`, `commands/maintenance.rs`, `services/enrich.rs` |
 | F6 Auto-update | `hooks/useAutoUpdate.ts`, `components/UpdateBanner.tsx`, `release.yml` |
+| **E1 Letra sincronizada** | `services/lyrics.rs`, `services/lyrics_provider.rs`, `commands/lyrics.rs`, `components/lyrics/`, `lib/lyrics.ts` |
+| **E2 Modo vídeo** | `commands/video.rs`, `services/downloader.rs` (`build_video_args`), `lib/media/`, `components/video/` |
+| **E3 Site e ajuda** | `scripts/screenshots.mjs`, `docs/index.html`, `docs/ajuda/index.html` |
 
 ## Pré-requisitos (desenvolvimento)
 
@@ -136,19 +169,40 @@ npm run app:build    # gera o instalador por plataforma
 ## Testes
 
 ```bash
-npx tsc --noEmit                                 # front-end
+npx tsc --noEmit                                 # tipos do front-end
+npx vitest run                                   # front-end
 cargo test --manifest-path src-tauri/Cargo.toml  # core
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 ```
 
-Os testes do core cobrem a montagem dos argumentos do yt-dlp, o parse do
-progresso e do caminho final, a classificação de links (incluindo a regressão do
-`watch?v=…&list=…`), a tradução das mensagens de erro e a sanitização de nomes de
-arquivo da exportação.
+Os testes do core cobrem a montagem dos argumentos do yt-dlp (áudio e vídeo), o
+parse do progresso e do caminho final, a classificação de links (incluindo a
+regressão do `watch?v=…&list=…`), a tradução das mensagens de erro, a sanitização
+de nomes de arquivo da exportação, o parser de LRC caso a caso, a detecção de
+refrão e o casamento de duração com o provedor de letras.
+
+No front-end, os testes cobrem a busca binária da linha ativa da letra, a troca
+de backend áudio↔vídeo preservando a posição dentro de 150 ms e a regra de que
+trocar para uma faixa sem vídeo cai para a Letra.
+
+### Prints da landing page
+
+```bash
+npm run build
+npm i --no-save playwright && npx playwright install chromium
+npm run screenshots        # regenera docs/img a partir do app de verdade
+```
+
+O Playwright **não** é dependência do projeto — é ferramenta desta tarefa, e
+instalá-lo no `package.json` faria os três jobs de build baixarem um navegador à
+toa. O workflow `screenshots` (manual) faz o mesmo pelo GitHub Actions.
 
 ## Integração contínua
 
 - `.github/workflows/ci.yml` — compila `cargo build` + `cargo test` e `tsc`/`vite build`
   em Linux, macOS e Windows a cada push/PR.
+- `.github/workflows/screenshots.yml` — manual (`workflow_dispatch`): regera os
+  prints da landing page a partir da interface atual.
 - `.github/workflows/release.yml` — em tags `v*`, baixa os sidecars reais
   (yt-dlp + ffmpeg) e publica os instaladores com `tauri-action`, junto com o
   `latest.json` assinado do auto-update.

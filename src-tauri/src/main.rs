@@ -101,6 +101,7 @@ fn main() {
             commands::video::video_storage,
             commands::video::delete_all_videos,
             commands::export::open_path,
+            commands::export::open_url,
             commands::edit::update_track_metadata,
             commands::edit::set_track_cover,
             commands::edit::read_image_base64,

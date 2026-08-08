@@ -4,13 +4,36 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sonara — baixe suas músicas e leve para onde quiser</title>
-<meta name="description" content="Sonara é um player de música para computador com download integrado. Baixe do YouTube, organize sua biblioteca e exporte para o pendrive, o celular ou o som do carro. Windows, macOS e Linux.">
+<meta name="description" content="Sonara é um player de música para computador com download integrado, letra sincronizada e modo vídeo. Baixe, organize e exporte para o pendrive, o celular ou o som do carro. Windows, macOS e Linux.">
+<link rel="canonical" href="https://pedroa07.github.io/Sonara/">
 <meta property="og:title" content="Sonara — baixe suas músicas e leve para onde quiser">
-<meta property="og:description" content="Player de música para computador com download integrado e exportação para qualquer pasta ou dispositivo.">
+<meta property="og:description" content="Player de música para computador com download integrado, letra sincronizada e modo vídeo. Grátis e de código aberto.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="icon.png">
+<meta property="og:url" content="https://pedroa07.github.io/Sonara/">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:image" content="https://pedroa07.github.io/Sonara/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Sonara — baixe suas músicas, leve para onde quiser.">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0b0d16">
 <link rel="icon" href="icon.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Sonara",
+  "applicationCategory": "MultimediaApplication",
+  "operatingSystem": "Windows 10, macOS 11, Linux",
+  "url": "https://pedroa07.github.io/Sonara/",
+  "downloadUrl": "https://github.com/PedroA07/Sonara/releases/latest",
+  "softwareVersion": "0.5.0",
+  "inLanguage": "pt-BR",
+  "license": "https://github.com/PedroA07/Sonara/blob/main/LICENSE",
+  "description": "Player de música para computador com download integrado, letra sincronizada e modo vídeo.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "BRL" }
+}
+</script>
 <style>
   :root{
     --brand:#7c5cff; --brand2:#22d3ee;
@@ -26,6 +49,9 @@
     -webkit-font-smoothing:antialiased;overflow-x:hidden
   }
   a{color:inherit}
+  /* Link dentro de texto corrido não pode se distinguir só pela cor (WCAG 1.4.1):
+     sublinhado resolve sem inventar uma cor nova. */
+  p a,li a,td a{text-decoration:underline;text-underline-offset:2px}
   .wrap{max-width:1000px;margin:0 auto;padding:0 20px}
 
   /* ── Header ─────────────────────────────────────────── */
@@ -39,6 +65,84 @@
   .nav-links a{text-decoration:none;transition:color .15s}
   .nav-links a:hover{color:var(--text)}
   @media(max-width:720px){.nav-links{display:none}}
+
+  /* ── Recursos com print ao lado ─────────────────────── */
+  .feat-row{display:grid;grid-template-columns:1fr 1.15fr;gap:44px;align-items:center;margin:0 0 64px}
+  .feat-row:nth-child(even) .feat-text{order:2}
+  .feat-row h3{font-size:24px;letter-spacing:-.02em;margin-bottom:12px}
+  .feat-row p{color:var(--muted);font-size:15.5px}
+  .feat-row ul{color:var(--muted);font-size:14.5px;margin:14px 0 0 18px;display:grid;gap:6px}
+  .feat-badge{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:#c4b5fd;background:rgb(124 92 255 / .16);border:1px solid rgb(124 92 255 / .3);
+    padding:3px 9px;border-radius:999px;margin-bottom:12px}
+  @media(max-width:860px){
+    .feat-row{grid-template-columns:1fr;gap:22px;margin-bottom:48px}
+    .feat-row:nth-child(even) .feat-text{order:0}
+  }
+
+  /* Moldura de janela em volta de cada print. */
+  .frame{border-radius:14px;overflow:hidden;border:1px solid rgb(var(--line) / .1);
+    background:var(--panel);box-shadow:0 26px 70px rgb(0 0 0 / .5)}
+  .frame img{display:block;width:100%;height:auto}
+  .frame figcaption{font-size:12.5px;color:#7c8499;padding:9px 14px;border-top:1px solid rgb(var(--line) / .07)}
+
+  /* ── Galeria ────────────────────────────────────────── */
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+  .gallery button{padding:0;border:1px solid rgb(var(--line) / .1);background:var(--panel);
+    border-radius:12px;overflow:hidden;cursor:pointer;display:block;text-align:left;
+    transition:transform .15s,border-color .15s}
+  .gallery button:hover,.gallery button:focus-visible{transform:translateY(-3px);border-color:rgb(124 92 255 / .5)}
+  .gallery img{display:block;width:100%;height:auto}
+  .gallery span{display:block;font-size:13px;color:var(--muted);padding:9px 12px}
+
+  .lightbox{position:fixed;inset:0;z-index:100;background:rgb(4 6 12 / .93);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px}
+  .lightbox[hidden]{display:none}
+  .lightbox img{max-width:min(1280px,94vw);max-height:78vh;border-radius:12px;
+    border:1px solid rgb(var(--line) / .14)}
+  .lightbox .cap{color:var(--muted);font-size:14px;max-width:760px;text-align:center}
+  .lb-btn{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;
+    background:var(--panel2);border:1px solid rgb(var(--line) / .12);color:var(--text);
+    font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .lb-btn:hover{background:var(--elev)}
+  .lb-prev{left:20px} .lb-next{right:20px}
+  .lb-close{position:absolute;top:20px;right:20px;transform:none}
+  :focus-visible{outline:2px solid #a78bfa;outline-offset:3px}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+  /* ── Tutoriais ──────────────────────────────────────── */
+  .tuts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+  .tut{background:var(--panel);border:1px solid rgb(var(--line) / .09);border-radius:var(--radius);padding:22px}
+  .tut h3{font-size:17px;margin-bottom:12px;letter-spacing:-.01em}
+  .tut ol{margin:0 0 0 18px;color:var(--muted);font-size:14.5px;display:grid;gap:8px}
+  .tut ol b{color:var(--text);font-weight:600}
+
+  /* ── Tabelas ────────────────────────────────────────── */
+  .tbl-wrap{overflow-x:auto;border:1px solid rgb(var(--line) / .09);border-radius:var(--radius);background:var(--panel)}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px}
+  th,td{text-align:left;padding:13px 16px;border-bottom:1px solid rgb(var(--line) / .07);vertical-align:top}
+  th{font-size:12.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+  tr:last-child td{border-bottom:0}
+  td.k{white-space:nowrap;font-weight:600}
+  td.dim{color:var(--muted)}
+  kbd{display:inline-block;background:var(--panel2);border:1px solid rgb(var(--line) / .14);
+    border-bottom-width:2px;border-radius:6px;padding:1px 7px;font-size:12.5px;font-family:inherit}
+
+  /* ── Requisitos e changelog ─────────────────────────── */
+  .reqs{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+  .req{background:var(--panel);border:1px solid rgb(var(--line) / .09);border-radius:var(--radius);padding:20px}
+  .req h3{font-size:15px;margin-bottom:8px}
+  .req p{color:var(--muted);font-size:14px}
+  .rel-notes{background:var(--panel);border:1px solid rgb(var(--line) / .09);border-radius:var(--radius);padding:24px 26px}
+  .rel-notes h3{font-size:16px;margin-bottom:4px}
+  .rel-notes ul{margin:14px 0 0 18px;color:var(--muted);font-size:14.5px;display:grid;gap:9px}
+  .rel-notes b{color:var(--text)}
+
+  @media(prefers-reduced-motion:reduce){
+    *{animation-duration:.001ms !important;transition-duration:.001ms !important}
+    html{scroll-behavior:auto}
+  }
 
   /* ── Hero ───────────────────────────────────────────── */
   .hero{position:relative;text-align:center;padding:76px 0 60px;overflow:hidden}
@@ -59,7 +163,7 @@
   .btn.secondary{background:var(--panel2);box-shadow:none;border:1px solid rgb(var(--line) / .1);font-size:15px;padding:13px 22px}
   .btn.secondary:hover{background:var(--elev);box-shadow:none}
   .sub{color:var(--muted);font-size:13px;margin-top:12px}
-  .ver{color:#6b7490;font-size:13px;margin-top:8px}
+  .ver{color:#7d86a3;font-size:13px;margin-top:8px}
   .loading{color:var(--muted);font-size:15px}
   /* Shown only when a newer version exists but has no installers yet. */
   .pending{max-width:560px;margin:0 auto 20px;padding:11px 18px;border-radius:12px;font-size:13.5px;
@@ -92,86 +196,6 @@
   .step h3{font-size:15px;margin-bottom:5px;font-weight:650}
   .step p{color:var(--muted);font-size:14px}
 
-  /* ── App preview (faithful to the real interface) ───── */
-  .shot-wrap{overflow-x:auto;padding-bottom:8px}
-  .shot{min-width:680px;max-width:880px;margin:0 auto;border-radius:16px;overflow:hidden;
-    border:1px solid rgb(var(--line) / .1);box-shadow:0 36px 90px rgb(0 0 0 / .55);background:var(--ink)}
-  .shot-bar{height:34px;background:#080a11;display:flex;align-items:center;gap:8px;padding:0 14px;
-    border-bottom:1px solid rgb(var(--line) / .06)}
-  .dot{width:11px;height:11px;border-radius:50%}
-  .dot.r{background:#ff5f57}.dot.y{background:#febc2e}.dot.g{background:#28c840}
-  .shot-title{color:#6b7490;font-size:12px;margin-left:8px}
-  .app{display:flex;height:376px;color:var(--text);font-size:13px}
-  .app-side{width:186px;flex:none;background:var(--panel);border-right:1px solid rgb(var(--line) / .07);
-    display:flex;flex-direction:column;padding:14px 8px}
-  .app-brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;padding:4px 10px 16px;letter-spacing:-.02em}
-  .app-brand .grad{background:linear-gradient(120deg,var(--brand),var(--brand2));
-    -webkit-background-clip:text;background-clip:text;color:transparent}
-  .nav-group{color:#6b7490;font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;padding:0 12px 5px;margin-top:10px}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:9px;color:var(--muted);
-    font-size:12.5px;margin-bottom:1px;position:relative}
-  .nav-item .g{width:17px;height:17px;display:inline-flex;align-items:center;justify-content:center}
-  .nav-item .g svg{width:15px;height:15px}
-  .nav-item .g svg,.tr svg,.vol svg,.act svg{stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-  .nav-item.active{background:rgb(124 92 255 / .12);color:var(--text)}
-  .nav-item.active .g{color:var(--brand)}
-  .nav-item.active::before{content:"";position:absolute;left:-8px;top:50%;transform:translateY(-50%);
-    width:3px;height:18px;border-radius:0 3px 3px 0;background:linear-gradient(180deg,var(--brand),var(--brand2))}
-  .badge{margin-left:auto;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;
-    font-size:10px;font-weight:700;border-radius:999px;padding:1px 6px}
-  .app-ver{margin-top:auto;color:#6b7490;font-size:10.5px;padding:8px 12px}
-  .app-main{flex:1;min-width:0;background:var(--ink);padding:18px 20px;overflow:hidden;position:relative}
-  .app-main::before{content:"";position:absolute;inset:0 0 auto 0;height:170px;pointer-events:none;
-    background:radial-gradient(300px 130px at 25% 0%,rgb(124 92 255 / .16),transparent 70%)}
-  .app-h1{font-size:20px;font-weight:800;letter-spacing:-.02em;position:relative}
-  .app-sub{color:var(--muted);font-size:11.5px;margin:3px 0 14px;position:relative}
-  .pills{display:inline-flex;gap:4px;background:var(--panel2);border:1px solid rgb(var(--line) / .07);
-    border-radius:11px;padding:3px;margin-bottom:14px;position:relative}
-  .pill{font-size:11.5px;padding:4px 12px;border-radius:8px;color:var(--muted)}
-  .pill.on{background:var(--elev);color:var(--text)}
-  .tbl{background:var(--panel);border:1px solid rgb(var(--line) / .08);border-radius:13px;overflow:hidden;position:relative}
-  .th,.tr{display:grid;grid-template-columns:22px 1fr 96px 46px;gap:10px;align-items:center;padding:7px 12px}
-  .th{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7490;
-    border-bottom:1px solid rgb(var(--line) / .07)}
-  .tr{border-bottom:1px solid rgb(var(--line) / .05);font-size:12px}
-  .tr:last-child{border-bottom:0}
-  .tr.on{background:rgb(124 92 255 / .09)}
-  .cov{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,#2a3145,#1a2030);flex:none}
-  .tcell{display:flex;align-items:center;gap:9px;min-width:0}
-  .tname{min-width:0}
-  .tname b{display:block;font-weight:500;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tr.on .tname b{color:var(--brand)}
-  .tname i{display:block;font-style:normal;color:var(--muted);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tdim{color:var(--muted);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tdur{color:var(--muted);font-size:10.5px;text-align:right}
-  .eqb{display:inline-flex;align-items:flex-end;gap:1.5px;height:11px;color:var(--brand)}
-  .eqb i{width:2.5px;border-radius:2px;background:currentColor;animation:eq .9s ease-in-out infinite}
-  .eqb i:nth-child(1){height:40%;animation-delay:-.2s}
-  .eqb i:nth-child(2){height:90%;animation-delay:-.5s}
-  .eqb i:nth-child(3){height:60%;animation-delay:-.8s}
-  @keyframes eq{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
-  .num{color:#6b7490;font-size:10.5px;text-align:center}
-  .app-bar{height:58px;background:var(--panel);border-top:1px solid rgb(var(--line) / .07);
-    display:flex;align-items:center;padding:0 14px;gap:14px}
-  .np{display:flex;align-items:center;gap:9px;width:170px;min-width:0}
-  .np .cov{width:34px;height:34px;border-radius:8px}
-  .np b{display:block;font-size:11.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .np i{display:block;font-style:normal;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tr-c{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
-  .tr-btns{display:flex;align-items:center;gap:13px;color:var(--muted)}
-  .tr-btns .filled svg{width:17px;height:17px;fill:currentColor;stroke:none}
-  .tr-btns svg{width:15px;height:15px}
-  .playbtn{width:31px;height:31px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand2));
-    color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgb(124 92 255 / .5)}
-  .playbtn svg{width:11px;height:11px;fill:currentColor;stroke:none;margin-left:1px}
-  .seek{width:230px;display:flex;align-items:center;gap:7px;font-size:9.5px;color:#6b7490}
-  .seekbar{flex:1;height:3.5px;border-radius:999px;background:rgb(var(--line) / .15);overflow:hidden}
-  .seekbar i{display:block;height:100%;width:38%;border-radius:999px;background:linear-gradient(90deg,var(--brand),var(--brand2))}
-  .rgt{width:170px;display:flex;align-items:center;justify-content:flex-end;gap:8px;color:var(--muted)}
-  .rgt svg{width:14px;height:14px}
-  .volbar{width:58px;height:3.5px;border-radius:999px;background:rgb(var(--line) / .15);overflow:hidden}
-  .volbar i{display:block;height:100%;width:66%;background:linear-gradient(90deg,var(--brand),var(--brand2))}
-
   /* ── Download grid ──────────────────────────────────── */
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
   .card{background:var(--panel);border:1px solid rgb(var(--line) / .08);border-radius:var(--radius);padding:18px}
@@ -181,7 +205,7 @@
   .card li{font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .card a{color:#a5b4fc;text-decoration:none;word-break:break-all}
   .card a:hover{text-decoration:underline}
-  .sz{color:#6b7490;font-size:11.5px}
+  .sz{color:#7d86a3;font-size:11.5px}
   .tag{background:rgb(124 92 255 / .18);color:#c4b5fd;font-size:10.5px;padding:2px 8px;border-radius:999px;font-weight:600}
 
   /* ── FAQ ────────────────────────────────────────────── */
@@ -201,9 +225,11 @@
   code{background:var(--panel2);border:1px solid rgb(var(--line) / .08);border-radius:6px;
     padding:2px 7px;font-size:12.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
 
-  footer{padding:40px 0 56px;text-align:center;color:#6b7490;font-size:13px;border-top:1px solid rgb(var(--line) / .06)}
-  footer a{color:#a5b4fc;text-decoration:none}
-  footer a:hover{text-decoration:underline}
+  footer{padding:40px 0 56px;text-align:center;color:#7d86a3;font-size:13px;border-top:1px solid rgb(var(--line) / .06)}
+  /* Sublinhado sempre, não só no hover: dentro de texto corrido a cor sozinha
+     não basta para distinguir um link (WCAG 1.4.1). */
+  footer a{color:#a5b4fc;text-decoration:underline;text-underline-offset:2px}
+  footer a:hover{color:#c7d2fe}
 
   @media (prefers-reduced-motion: reduce){
     *{animation-duration:.01ms !important;transition-duration:.01ms !important}
@@ -229,10 +255,12 @@
     </a>
     <nav class="nav-links">
       <a href="#recursos">Recursos</a>
-      <a href="#preview">Como é</a>
+      <a href="#galeria">Como é</a>
       <a href="#passos">Como usar</a>
       <a href="#baixar">Baixar</a>
+      <a href="#tutoriais">Passo a passo</a>
       <a href="#duvidas">Dúvidas</a>
+      <a href="ajuda/">Ajuda</a>
     </nav>
   </div>
 </header>
@@ -258,147 +286,310 @@
     </div>
   </div>
 
-  <!-- ── Features ─────────────────────────────────────── -->
+  <!-- ── Recursos ─────────────────────────────────────── -->
   <section id="recursos">
     <div class="wrap">
       <h2>O que o Sonara faz</h2>
-      <p class="h2sub">Tudo em um só app: procurar, baixar, organizar, ouvir e transferir.</p>
-      <div class="features">
+      <p class="h2sub">Procurar, baixar, organizar, ouvir, acompanhar a letra e transferir — sem sair do app.</p>
 
-        <div class="feature">
-          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
-          <h3>Busca dentro do app</h3>
-          <p>Digite o nome da música e veja os resultados com miniatura e duração. Assista à prévia antes de baixar.</p>
+      <div class="feat-row">
+        <div class="feat-text">
+          <h3>Busca e download no mesmo lugar</h3>
+          <p>Digite o nome da música e veja os resultados com miniatura, canal e duração. Escolha se a
+          música vai para a biblioteca, para uma playlist ou para a fila, e acompanhe o progresso na tela.</p>
+          <ul>
+            <li>A capa, o artista e o álbum já vêm preenchidos.</li>
+            <li>Um link de playlist do YouTube baixa a playlist inteira.</li>
+            <li>Deu erro? A mensagem diz o que houve, não “falhou”.</li>
+          </ul>
         </div>
+        <figure class="frame">
+          <picture>
+            <source srcset="img/buscar-dark.webp" type="image/webp">
+            <img src="img/buscar-dark.png" alt="Tela de busca e download do Sonara, com resultados listando título, canal e duração, e um botão de baixar em cada um." width="1440" height="900" loading="lazy" decoding="async">
+          </picture>
+          <figcaption>Buscar &amp; Baixar</figcaption>
+        </figure>
+      </div>
 
-        <div class="feature">
-          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 12 5 5 5-5"/><path d="M5 21h14"/></svg></div>
-          <h3>Download com tudo pronto</h3>
-          <p>A música chega com capa, artista e álbum já preenchidos, e entra direto na biblioteca ou na playlist que você escolher.</p>
+      <div class="feat-row">
+        <div class="feat-text">
+          <span class="feat-badge">Novo na 0.5.0</span>
+          <h3>Letra sincronizada, com o refrão marcado</h3>
+          <p>A letra rola sozinha e a linha que está sendo cantada fica em destaque. O refrão ganha uma
+          barra na lateral, então dá para ver de longe quando ele volta.</p>
+          <ul>
+            <li>Clique numa linha para pular direto para aquele trecho.</li>
+            <li>Letra adiantada ou atrasada? <kbd>[</kbd> e <kbd>]</kbd> acertam, e o ajuste fica salvo.</li>
+            <li>Sem letra no arquivo, o Sonara pode procurar online — mas só se você ligar.</li>
+          </ul>
         </div>
+        <figure class="frame">
+          <picture>
+            <source srcset="img/letra-dark.webp" type="image/webp">
+            <img src="img/letra-dark.png" alt="Tela cheia do Sonara mostrando a letra sincronizada: a linha que está sendo cantada aparece em destaque e o bloco do refrão tem uma barra colorida na lateral." width="1440" height="900" loading="lazy" decoding="async">
+          </picture>
+          <figcaption>Tocando agora &rsaquo; Letra</figcaption>
+        </figure>
+      </div>
 
-        <div class="feature">
-          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m8 7 4-4 4 4"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg></div>
-          <h3>Exportar para qualquer pasta</h3>
-          <p>Copie as músicas para um pendrive, cartão SD ou celular. Organize por artista e álbum, e converta para MP3 se o aparelho pedir.</p>
+      <div class="feat-row">
+        <div class="feat-text">
+          <span class="feat-badge">Novo na 0.5.0</span>
+          <h3>Modo vídeo, sem perder o ponto da música</h3>
+          <p>Baixe o vídeo de uma faixa e alterne entre ouvir e assistir. A troca acontece no ponto exato
+          em que a música estava — você não volta para o começo.</p>
+          <ul>
+            <li>O vídeo é um arquivo separado: sua música continua intacta.</li>
+            <li>Tela cheia, janela flutuante e letra por cima do vídeo.</li>
+            <li>Em Configurações dá para ver quanto os vídeos ocupam e apagá-los mantendo os áudios.</li>
+          </ul>
         </div>
+        <figure class="frame">
+          <picture>
+            <source srcset="img/video-dark.webp" type="image/webp">
+            <img src="img/video-dark.png" alt="Modo vídeo em tela cheia, com o vídeo ocupando o centro, a letra sobreposta embaixo e os botões de tela cheia e janela flutuante." width="1440" height="900" loading="lazy" decoding="async">
+          </picture>
+          <figcaption>Tocando agora &rsaquo; Vídeo — conteúdo de demonstração</figcaption>
+        </figure>
+      </div>
 
-        <div class="feature">
-          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>
-          <h3>Editor de informações</h3>
-          <p>Corrija título, artista, álbum e capa — de uma faixa ou de várias ao mesmo tempo. As mudanças podem ir junto no arquivo.</p>
+      <div class="feat-row">
+        <div class="feat-text">
+          <h3>Levar para o pendrive, o celular ou o carro</h3>
+          <p>Selecione as músicas, escolha a pasta de destino e pronto. Os arquivos originais continuam
+          na sua biblioteca — a exportação é uma cópia.</p>
+          <ul>
+            <li>Organize por artista, por artista/álbum ou tudo junto.</li>
+            <li>Converta para MP3 quando o aparelho for antigo.</li>
+            <li>Gere um arquivo <code>.m3u8</code> de playlist junto.</li>
+          </ul>
         </div>
+        <figure class="frame">
+          <picture>
+            <source srcset="img/exportar-dark.webp" type="image/webp">
+            <img src="img/exportar-dark.png" alt="Janela de exportação, com escolha da pasta de destino, como organizar as pastas, como nomear os arquivos e as opções de conversão." width="1440" height="900" loading="lazy" decoding="async">
+          </picture>
+          <figcaption>Exportar para outra pasta</figcaption>
+        </figure>
+      </div>
 
-        <div class="feature">
-          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
-          <h3>Player completo</h3>
-          <p>Fila, playlists, aleatório, repetir, transição entre faixas e equalização de volume. Atalhos de teclado para tudo.</p>
+      <div class="feat-row">
+        <div class="feat-text">
+          <h3>Sua biblioteca, do seu jeito</h3>
+          <p>Músicas, álbuns, artistas e gêneros. Corrija título, artista, álbum e capa de uma faixa ou de
+          várias ao mesmo tempo — e escolha se a correção vai junto no arquivo.</p>
+          <ul>
+            <li>Busca instantânea por título, artista ou álbum.</li>
+            <li>Capa buscada automaticamente quando falta.</li>
+            <li>Playlists com ordem manual e capa própria.</li>
+          </ul>
         </div>
+        <figure class="frame">
+          <picture>
+            <source srcset="img/editor-dark.webp" type="image/webp">
+            <img src="img/editor-dark.png" alt="Janela de edição de faixa, com campos para título, artista, álbum, ano, gênero e número da faixa, e a capa ao lado." width="1440" height="900" loading="lazy" decoding="async">
+          </picture>
+          <figcaption>Editar informações da faixa</figcaption>
+        </figure>
+      </div>
 
-        <div class="feature">
-          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 4v3"/><path d="M16 4v3"/></svg></div>
-          <h3>Funciona sem internet</h3>
-          <p>Depois de baixadas, suas músicas ficam no seu computador. Nada de assinatura, anúncio ou conta para criar.</p>
+      <div class="feat-row">
+        <div class="feat-text">
+          <h3>Quando algo dá errado, o app te diz o quê</h3>
+          <p>A tela de Diagnóstico mostra, item por item, se as ferramentas de download estão no lugar, se
+          a pasta pode ser gravada e se o seu sistema consegue tocar vídeo.</p>
+          <ul>
+            <li>O yt-dlp e o ffmpeg vêm dentro do instalador.</li>
+            <li>Nada de “ocorreu um erro”: cada falha vem com o que fazer.</li>
+          </ul>
         </div>
+        <figure class="frame">
+          <picture>
+            <source srcset="img/diagnostico-dark.webp" type="image/webp">
+            <img src="img/diagnostico-dark.png" alt="Seção de diagnóstico das configurações, listando yt-dlp, ffmpeg, permissão de escrita na pasta e suporte a vídeo H.264, todos marcados como prontos." width="1440" height="900" loading="lazy" decoding="async">
+          </picture>
+          <figcaption>Configurações &rsaquo; Diagnóstico</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Galeria ──────────────────────────────────────── -->
+  <section id="galeria">
+    <div class="wrap">
+      <h2>Como é por dentro</h2>
+      <p class="h2sub">Prints do app de verdade, gerados por script a cada mudança da interface. Clique para ampliar.</p>
+      <div class="gallery" id="gallery"></div>
+      <p class="h2sub" style="margin-top:20px;font-size:13px">
+        As músicas, os artistas e as capas que aparecem nos prints são fictícios, criados só para esta página.
+      </p>
+    </div>
+  </section>
+
+  <!-- Lightbox: fecha no Esc, navega nas setas, foco preso enquanto aberto. -->
+  <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Print ampliado">
+    <button class="lb-btn lb-close" id="lbClose" aria-label="Fechar (Esc)">✕</button>
+    <button class="lb-btn lb-prev" id="lbPrev" aria-label="Anterior (seta esquerda)">‹</button>
+    <img id="lbImg" src="" alt="">
+    <p class="cap" id="lbCap"></p>
+    <button class="lb-btn lb-next" id="lbNext" aria-label="Próximo (seta direita)">›</button>
+  </div>
+
+  <!-- ── Tutoriais ────────────────────────────────────── -->
+  <section id="tutoriais">
+    <div class="wrap">
+      <h2>Passo a passo</h2>
+      <p class="h2sub">As sete coisas que as pessoas mais querem fazer. Cada uma em poucos passos —
+        e o <a href="ajuda/" style="color:#a5b4fc">manual completo</a> tem todas com mais detalhes.</p>
+      <div class="tuts">
+
+        <article class="tut">
+          <h3>Baixar sua primeira música</h3>
+          <ol>
+            <li>Abra <b>Buscar &amp; Baixar</b> no menu da esquerda.</li>
+            <li>Digite o nome da música e do artista e aperte Enter.</li>
+            <li>Clique na miniatura para ouvir a prévia e confirmar que é a versão certa.</li>
+            <li>Escolha o destino (biblioteca, playlist ou fila) e clique em <b>Baixar</b>.</li>
+            <li>Ela aparece na <b>Biblioteca</b> sozinha, com capa e informações.</li>
+          </ol>
+        </article>
+
+        <article class="tut">
+          <h3>Levar as músicas para o pendrive, o celular ou o carro</h3>
+          <ol>
+            <li>Na <b>Biblioteca</b>, marque as músicas que quer levar.</li>
+            <li>Na barra que aparece embaixo, clique em <b>Exportar</b>.</li>
+            <li>Escolha a pasta do pendrive, do cartão ou do celular conectado.</li>
+            <li>Se o aparelho for antigo, marque <b>Converter para MP3</b>.</li>
+            <li>Clique em <b>Exportar agora</b>. Os originais continuam na biblioteca.</li>
+          </ol>
+        </article>
+
+        <article class="tut">
+          <h3>Ver a letra e acompanhar o refrão</h3>
+          <ol>
+            <li>Com uma música tocando, aperte <kbd>L</kbd> (ou clique na capa e depois em <b>Letra</b>).</li>
+            <li>A linha atual fica em destaque e a letra rola sozinha.</li>
+            <li>O refrão tem uma barra colorida na lateral e um selo na primeira linha.</li>
+            <li>Clique numa linha para pular para aquele trecho.</li>
+            <li>Fora de sincronia? <kbd>[</kbd> adianta e <kbd>]</kbd> atrasa 100 ms — com <kbd>Shift</kbd>, 500 ms.</li>
+          </ol>
+        </article>
+
+        <article class="tut">
+          <h3>Assistir ao vídeo da música</h3>
+          <ol>
+            <li>Com a música tocando, abra <b>Tocando agora</b> e vá na aba <b>Vídeo</b>.</li>
+            <li>Da primeira vez, o app mostra o tamanho e pergunta se pode baixar.</li>
+            <li>Pronto o download, o vídeo começa no ponto em que a música estava.</li>
+            <li><kbd>F</kbd> põe em tela cheia; o botão <b>Janela flutuante</b> deixa o vídeo por cima de outros programas.</li>
+            <li>Para liberar espaço: <b>Configurações → Vídeo → Apagar todos</b>. As músicas ficam.</li>
+          </ol>
+        </article>
+
+        <article class="tut">
+          <h3>Corrigir título, artista e capa</h3>
+          <ol>
+            <li>Passe o mouse sobre a música e clique no ícone de lápis.</li>
+            <li>Ajuste o que estiver errado. Para várias de uma vez, marque-as antes e clique em <b>Editar</b>.</li>
+            <li>Para trocar a capa, clique nela e escolha um arquivo ou busque pelo nome do álbum.</li>
+            <li>Marque <b>Gravar no arquivo</b> se quiser que a correção viaje junto para outros aparelhos.</li>
+          </ol>
+        </article>
+
+        <article class="tut">
+          <h3>Criar e organizar playlists</h3>
+          <ol>
+            <li>Em <b>Playlists</b>, clique em <b>Nova playlist</b> e dê um nome.</li>
+            <li>Na Biblioteca, use o ícone <b>+</b> da música para adicioná-la.</li>
+            <li>Dentro da playlist, arraste para reordenar — a ordem é salva.</li>
+            <li>Ao baixar, você pode mandar a música direto para uma playlist.</li>
+          </ol>
+        </article>
+
+        <article class="tut">
+          <h3>Quando algo dá errado</h3>
+          <ol>
+            <li>Abra <b>Configurações</b> e vá até <b>Diagnóstico</b>.</li>
+            <li>Veja qual item está marcado em vermelho — yt-dlp, ffmpeg, pasta ou vídeo.</li>
+            <li>Clique em <b>Verificar de novo</b> depois de resolver.</li>
+            <li>Se o download falhou, a mensagem no histórico de <b>Downloads</b> diz o motivo.</li>
+            <li>Continuou? <a href="https://github.com/PedroA07/Sonara/issues" style="color:#a5b4fc">Abra um problema no GitHub</a> com essa mensagem.</li>
+          </ol>
+        </article>
 
       </div>
     </div>
   </section>
 
-  <!-- ── App preview ──────────────────────────────────── -->
-  <section id="preview">
+  <!-- ── Formatos ─────────────────────────────────────── -->
+  <section id="formatos">
     <div class="wrap">
-      <h2>Como é por dentro</h2>
-      <p class="h2sub">Uma reprodução fiel da interface — clara, sem menus escondidos.</p>
-      <div class="shot-wrap">
-        <div class="shot">
-          <div class="shot-bar">
-            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-            <span class="shot-title">Sonara</span>
-          </div>
-          <div class="app">
-            <aside class="app-side">
-              <div class="app-brand">
-                <svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true">
-                  <defs><linearGradient id="sg" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#7c5cff"/><stop offset="100%" stop-color="#22d3ee"/>
-                  </linearGradient></defs>
-                  <rect width="48" height="48" rx="13" fill="url(#sg)"/>
-                  <g stroke="#fff" stroke-width="3.4" stroke-linecap="round" opacity=".96">
-                    <path d="M13 24v0"/><path d="M18.5 18.5v11"/><path d="M24 13.5v21"/><path d="M29.5 17v14"/><path d="M35 21v6"/>
-                  </g>
-                </svg>
-                <span class="grad">Sonara</span>
-              </div>
+      <h2>Qual formato escolher</h2>
+      <p class="h2sub">Dá para trocar quando quiser, em Configurações → Downloads.</p>
+      <div class="tbl-wrap">
+        <table>
+          <caption class="sr-only">Comparação entre os formatos de download</caption>
+          <thead>
+            <tr><th scope="col">Formato</th><th scope="col">Tamanho</th><th scope="col">Escolha se…</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="k">M4A <span style="color:#a5b4fc;font-weight:400">· padrão</span></td>
+              <td class="dim">~4 MB por música</td>
+              <td class="dim">Você quer a melhor qualidade. O áudio original é mantido, sem reconverter.
+                Toca em celular, computador e na maioria dos aparelhos recentes.</td>
+            </tr>
+            <tr>
+              <td class="k">MP3</td>
+              <td class="dim">~5 MB por música</td>
+              <td class="dim">O destino é rádio de carro, caixa de som antiga ou um pendrive que vai rodar
+                em qualquer lugar. É o formato que todo aparelho entende.</td>
+            </tr>
+            <tr>
+              <td class="k">OPUS</td>
+              <td class="dim">~2,5 MB por música</td>
+              <td class="dim">Espaço é curto e os arquivos vão ficar só no computador ou no celular.
+                Aparelhos antigos costumam não reconhecer.</td>
+            </tr>
+            <tr>
+              <td class="k">FLAC</td>
+              <td class="dim">~25 MB por música</td>
+              <td class="dim">Você precisa de um arquivo sem perdas para editar depois. Vale saber: a fonte
+                do YouTube já é comprimida, então isso não recupera qualidade perdida.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
-              <div class="nav-group">Minha música</div>
-              <div class="nav-item active"><span class="g"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>Biblioteca</div>
-              <div class="nav-item"><span class="g"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg></span>Playlists</div>
-
-              <div class="nav-group">Descobrir</div>
-              <div class="nav-item"><span class="g"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>Buscar &amp; Baixar</div>
-              <div class="nav-item"><span class="g"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 12 5 5 5-5"/><path d="M5 21h14"/></svg></span>Downloads<span class="badge">1</span></div>
-
-              <div class="app-ver">Sonara 0.2.0</div>
-            </aside>
-
-            <div style="flex:1;min-width:0;display:flex;flex-direction:column">
-              <div class="app-main">
-                <div class="app-h1">Biblioteca</div>
-                <div class="app-sub">Tudo o que você já baixou ou importou.</div>
-                <div class="pills">
-                  <span class="pill on">Músicas</span><span class="pill">Álbuns</span>
-                  <span class="pill">Artistas</span><span class="pill">Gêneros</span>
-                </div>
-                <div class="tbl">
-                  <div class="th"><span></span><span>Título</span><span>Álbum</span><span style="text-align:right">Duração</span></div>
-                  <div class="tr on">
-                    <span class="eqb"><i></i><i></i><i></i></span>
-                    <span class="tcell"><span class="cov"></span><span class="tname"><b>Noite de verão</b><i>Marina Costa</i></span></span>
-                    <span class="tdim">Horizonte</span><span class="tdur">3:42</span>
-                  </div>
-                  <div class="tr">
-                    <span class="num">2</span>
-                    <span class="tcell"><span class="cov"></span><span class="tname"><b>Estrada aberta</b><i>Trio Norte</i></span></span>
-                    <span class="tdim">Caminhos</span><span class="tdur">4:07</span>
-                  </div>
-                  <div class="tr">
-                    <span class="num">3</span>
-                    <span class="tcell"><span class="cov"></span><span class="tname"><b>Chuva na cidade</b><i>Ana Ribeiro</i></span></span>
-                    <span class="tdim">Singles</span><span class="tdur">2:58</span>
-                  </div>
-                  <div class="tr">
-                    <span class="num">4</span>
-                    <span class="tcell"><span class="cov"></span><span class="tname"><b>Manhã cedo</b><i>Grupo Alvorada</i></span></span>
-                    <span class="tdim">Primeiro dia</span><span class="tdur">3:21</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="app-bar">
-                <div class="np">
-                  <span class="cov"></span>
-                  <span style="min-width:0"><b>Noite de verão</b><i>Marina Costa</i></span>
-                </div>
-                <div class="tr-c">
-                  <div class="tr-btns">
-                    <span><svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="m4 4 5 5"/></svg></span>
-                    <span class="filled"><svg viewBox="0 0 24 24"><path d="M7 5a1 1 0 0 0-1 1v12a1 1 0 0 0 2 0v-4.6l8.4 5.4A1 1 0 0 0 18 18V6a1 1 0 0 0-1.6-.8L8 10.6V6a1 1 0 0 0-1-1z"/></svg></span>
-                    <span class="playbtn"><svg viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.52.85l12-7.5a1 1 0 0 0 0-1.7l-12-7.5A1 1 0 0 0 7 4.5z"/></svg></span>
-                    <span class="filled"><svg viewBox="0 0 24 24"><path d="M17 5a1 1 0 0 1 1 1v12a1 1 0 0 1-2 0v-4.6l-8.4 5.4A1 1 0 0 1 6 18V6a1 1 0 0 1 1.6-.8L16 10.6V6a1 1 0 0 1 1-1z"/></svg></span>
-                    <span><svg viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></span>
-                  </div>
-                  <div class="seek"><span>1:24</span><span class="seekbar"><i></i></span><span>3:42</span></div>
-                </div>
-                <div class="rgt">
-                  <span class="act"><svg viewBox="0 0 24 24"><path d="M12 15V3"/><path d="m8 7 4-4 4 4"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg></span>
-                  <span class="vol"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></span>
-                  <span class="volbar"><i></i></span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+  <!-- ── Atalhos ──────────────────────────────────────── -->
+  <section id="atalhos">
+    <div class="wrap">
+      <h2>Atalhos de teclado</h2>
+      <p class="h2sub">Todos também estão listados dentro do app, em Configurações.</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th scope="col">Tecla</th><th scope="col">O que faz</th></tr></thead>
+          <tbody>
+            <tr><td class="k"><kbd>Espaço</kbd></td><td class="dim">Tocar / pausar</td></tr>
+            <tr><td class="k"><kbd>←</kbd> <kbd>→</kbd></td><td class="dim">Voltar / avançar 5 segundos</td></tr>
+            <tr><td class="k"><kbd>Shift</kbd> + <kbd>←</kbd> <kbd>→</kbd></td><td class="dim">Faixa anterior / próxima</td></tr>
+            <tr><td class="k"><kbd>↑</kbd> <kbd>↓</kbd></td><td class="dim">Volume</td></tr>
+            <tr><td class="k"><kbd>M</kbd></td><td class="dim">Mudo</td></tr>
+            <tr><td class="k"><kbd>S</kbd></td><td class="dim">Aleatório</td></tr>
+            <tr><td class="k"><kbd>R</kbd></td><td class="dim">Repetir</td></tr>
+            <tr><td class="k"><kbd>Q</kbd></td><td class="dim">Mostrar / ocultar a fila</td></tr>
+            <tr><td class="k"><kbd>F</kbd></td><td class="dim">Tela cheia (e tela cheia do vídeo, na aba Vídeo)</td></tr>
+            <tr><td class="k"><kbd>L</kbd></td><td class="dim">Abrir a letra</td></tr>
+            <tr><td class="k"><kbd>V</kbd></td><td class="dim">Abrir o vídeo, quando a música tem um</td></tr>
+            <tr><td class="k"><kbd>[</kbd> <kbd>]</kbd></td><td class="dim">Adiantar / atrasar a letra — ou o vídeo, na aba Vídeo</td></tr>
+            <tr><td class="k"><kbd>T</kbd></td><td class="dim">Alternar tema claro / escuro</td></tr>
+            <tr><td class="k"><kbd>1</kbd> – <kbd>5</kbd></td><td class="dim">Ir para cada seção do menu</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </section>
@@ -451,6 +642,49 @@
     </div>
   </section>
 
+  <!-- ── Requisitos ───────────────────────────────────── -->
+  <section id="requisitos">
+    <div class="wrap">
+      <h2>Requisitos</h2>
+      <p class="h2sub">Se o seu computador roda um navegador moderno, roda o Sonara.</p>
+      <div class="reqs">
+        <div class="req"><h3>Windows</h3><p>Windows 10 ou 11, 64 bits. O WebView2 já vem no sistema
+          desde o Windows 10 21H2; em versões mais antigas o instalador o adiciona.</p></div>
+        <div class="req"><h3>macOS</h3><p>macOS 11 (Big Sur) ou mais recente. Funciona nos Macs com chip
+          Intel e nos Apple Silicon (M1 em diante).</p></div>
+        <div class="req"><h3>Linux</h3><p>Distribuição com WebKitGTK 4.1 — Ubuntu 22.04+, Fedora 36+,
+          Debian 12+. Para o modo vídeo, instale <code>gstreamer1.0-libav</code>.</p></div>
+        <div class="req"><h3>Espaço</h3><p>Cerca de 120 MB para o app. As músicas ocupam ~4 MB cada;
+          os vídeos, de 40 a 120 MB — e você escolhe quais baixar.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Novidades ────────────────────────────────────── -->
+  <section id="novidades">
+    <div class="wrap">
+      <h2>O que mudou na 0.5.0</h2>
+      <p class="h2sub">Resumo. A lista completa está no
+        <a href="https://github.com/PedroA07/Sonara/blob/main/CHANGELOG.md" style="color:#a5b4fc">CHANGELOG</a>.</p>
+      <div class="rel-notes">
+        <h3>Letra sincronizada e modo vídeo</h3>
+        <ul>
+          <li><b>A letra acompanha a música.</b> Rola sozinha, destaca a linha atual e marca o refrão.
+            Lê a letra que já vem dentro do arquivo ou de um <code>.lrc</code> ao lado dele; se não houver
+            nenhuma, pode procurar no LRCLIB — <b>desligado por padrão</b>, você decide.</li>
+          <li><b>Editor de letra e ajuste de sincronia.</b> Cole uma letra à mão, marque os tempos com a
+            música tocando e acerte o atraso com <kbd>[</kbd> e <kbd>]</kbd>.</li>
+          <li><b>Busca de letras em lote</b> para várias músicas de uma vez, com progresso e cancelar.</li>
+          <li><b>Modo vídeo.</b> Baixe o vídeo de uma faixa e alterne entre ouvir e assistir sem perder o
+            ponto da música. Tela cheia, janela flutuante e letra por cima do vídeo.</li>
+          <li><b>Controle de espaço.</b> Configurações mostra quanto os vídeos ocupam, faixa a faixa, e
+            deixa apagá-los sem tocar nas músicas.</li>
+          <li><b>Exportar pode incluir a letra</b> num arquivo <code>.lrc</code> — opção desmarcada por padrão.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
   <!-- ── FAQ ──────────────────────────────────────────── -->
   <section id="duvidas">
     <div class="wrap">
@@ -482,6 +716,47 @@
           menores) ou FLAC.</p>
         </details>
         <details>
+          <summary>De onde vem a letra das músicas?</summary>
+          <p>Primeiro do próprio arquivo: muitas músicas já trazem a letra gravada dentro delas. Depois,
+          de um arquivo <code>.lrc</code> com o mesmo nome, se você tiver um. Só se nada disso existir — e
+          <b>só se você ligar a opção</b> em Configurações → Letras — o Sonara consulta o
+          <a href="https://lrclib.net">LRCLIB</a>, um acervo público e colaborativo. Nesse caso ele envia
+          apenas o nome da música, o artista e a duração. Desligado, nada sai do seu computador.</p>
+        </details>
+        <details>
+          <summary>Por que a letra de algumas músicas não aparece?</summary>
+          <p>Ou o arquivo não traz letra e a busca online está desligada, ou o acervo não tem aquela
+          gravação — músicas menos conhecidas, versões ao vivo e remixes costumam faltar. Na tela de letra
+          você pode <b>procurar manualmente</b>, escolhendo entre os resultados, ou <b>colar a letra</b> e
+          marcar os tempos você mesmo.</p>
+        </details>
+        <details>
+          <summary>Quanto espaço as músicas e os vídeos ocupam?</summary>
+          <p>Uma música em M4A fica em torno de <b>4 MB</b> — mil músicas dão uns 4 GB. Vídeos são bem
+          maiores: de <b>40 a 120 MB</b> em 720p, e o dobro disso em 1080p. Por isso o vídeo só é baixado
+          quando você pede, e Configurações → Vídeo mostra quanto eles estão ocupando, com um botão para
+          apagar todos mantendo as músicas.</p>
+        </details>
+        <details>
+          <summary>O app funciona sem internet?</summary>
+          <p>Sim, para tudo que já está no seu computador: tocar, organizar, editar, exportar e ver a letra
+          que já foi encontrada uma vez. Internet só é necessária para <b>baixar</b> músicas e vídeos e para
+          procurar letra online.</p>
+        </details>
+        <details>
+          <summary>Como eu atualizo o Sonara?</summary>
+          <p>Ele avisa sozinho quando sai uma versão nova e instala com um clique. Se preferir, baixe o
+          instalador mais recente desta página e execute por cima — suas músicas, playlists e configurações
+          continuam onde estão.</p>
+        </details>
+        <details>
+          <summary>Como eu desinstalo?</summary>
+          <p>No Windows, por <b>Configurações → Aplicativos</b>. No macOS, arraste o Sonara da pasta
+          Aplicativos para o Lixo. No Linux, apague o <code>.AppImage</code> ou rode
+          <code>sudo apt remove sonara</code>. As <b>músicas baixadas não são apagadas</b>: elas ficam na
+          pasta que você escolheu, normalmente <b>Músicas/Sonara</b>.</p>
+        </details>
+        <details>
           <summary>O Sonara custa alguma coisa?</summary>
           <p>Não. É gratuito e de código aberto, sem anúncios, sem assinatura e sem conta para criar.</p>
         </details>
@@ -503,13 +778,109 @@
     <p>Sonara — player de música de código aberto.</p>
     <p style="margin-top:6px">
       <a href="https://github.com/PedroA07/Sonara">Código no GitHub</a> ·
+      <a href="ajuda/">Manual de ajuda</a> ·
       <a href="https://github.com/PedroA07/Sonara/releases">Todas as versões</a> ·
       <a href="https://github.com/PedroA07/Sonara/issues">Relatar um problema</a>
+    </p>
+    <p style="margin-top:16px;max-width:720px;margin-inline:auto;font-size:13px;line-height:1.7">
+      Use o Sonara para material que você tem o direito de baixar: suas próprias gravações, obras em
+      domínio público, conteúdo com licença livre ou material autorizado pelo titular. Respeite os
+      direitos autorais e os termos de uso dos serviços de onde o conteúdo vem.
+    </p>
+    <p style="margin-top:10px;font-size:12.5px;color:#7d86a3">
+      Letras fornecidas pelo <a href="https://lrclib.net">LRCLIB</a>, quando a busca online está ativada.
+      Sonara não é afiliado ao LRCLIB nem ao YouTube.
     </p>
   </div>
 </footer>
 
 <script>
+
+  /* ── Galeria e lightbox ─────────────────────────────────────────────────
+     Os prints são gerados por `npm run screenshots`; esta lista é a única
+     coisa escrita à mão sobre eles, e o texto alternativo descreve a tela —
+     "print do app" não ajudaria ninguém que usa leitor de tela. */
+  const SHOTS = [
+    ['biblioteca', 'Biblioteca', 'Lista de músicas da biblioteca, com capa, título, artista, álbum, gênero e duração de cada faixa, e a fila aberta à direita.'],
+    ['letra', 'Letra sincronizada', 'Tela cheia com a letra sincronizada: a linha que está sendo cantada em destaque, as vizinhas mais apagadas e o bloco do refrão marcado por uma barra colorida.'],
+    ['video', 'Modo vídeo', 'Modo vídeo em tela cheia, com o vídeo no centro, a letra sobreposta na parte de baixo e os botões de tela cheia e janela flutuante. O vídeo mostrado é conteúdo de demonstração.'],
+    ['albuns', 'Álbuns', 'Álbuns em grade de capas, cada um com nome, artista e número de faixas.'],
+    ['artistas', 'Artistas', 'Artistas em cartões, com a inicial num círculo colorido e a contagem de álbuns.'],
+    ['playlists', 'Playlists', 'Playlists criadas pelo usuário, com capa, nome, descrição e quantidade de músicas.'],
+    ['buscar', 'Buscar & Baixar', 'Busca de músicas com resultados listando título, canal e duração, e um botão de baixar em cada um.'],
+    ['downloads', 'Downloads', 'Downloads em andamento com barra de progresso e o histórico dos já concluídos.'],
+    ['exportar', 'Exportar', 'Janela de exportação com pasta de destino, organização das pastas, padrão de nomes e opções de conversão.'],
+    ['editor', 'Editar faixa', 'Edição de faixa com campos para título, artista, álbum, ano, gênero e número da faixa, e a capa ao lado.'],
+    ['configuracoes', 'Configurações', 'Configurações do app, com pasta de downloads, formato do arquivo baixado e as opções de letra.'],
+    ['diagnostico', 'Diagnóstico', 'Diagnóstico listando yt-dlp, ffmpeg, permissão de escrita na pasta e suporte a vídeo H.264, todos prontos.'],
+  ];
+
+  const gallery = document.getElementById('gallery');
+  if (gallery) {
+    gallery.innerHTML = SHOTS.map(([name, label, alt], i) =>
+      '<button type="button" data-i="' + i + '" aria-label="Ampliar: ' + label + '">' +
+        '<picture>' +
+          '<source srcset="img/' + name + '-dark.webp" type="image/webp">' +
+          '<img src="img/' + name + '-dark.png" alt="' + alt + '" width="1440" height="900" loading="lazy" decoding="async">' +
+        '</picture>' +
+        '<span>' + label + '</span>' +
+      '</button>'
+    ).join('');
+  }
+
+  const lb = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lbImg');
+  const lbCap = document.getElementById('lbCap');
+  let lbIndex = 0;
+  let lastFocus = null;
+
+  function lbShow(i) {
+    lbIndex = (i + SHOTS.length) % SHOTS.length;
+    const [name, label, alt] = SHOTS[lbIndex];
+    lbImg.src = 'img/' + name + '-dark.png';
+    lbImg.alt = alt;
+    lbCap.textContent = label + ' — ' + (lbIndex + 1) + ' de ' + SHOTS.length;
+  }
+
+  function lbOpen(i) {
+    lastFocus = document.activeElement;
+    lbShow(i);
+    lb.hidden = false;
+    document.body.style.overflow = 'hidden';
+    document.getElementById('lbClose').focus();
+  }
+
+  function lbClose() {
+    lb.hidden = true;
+    document.body.style.overflow = '';
+    if (lastFocus) lastFocus.focus();
+  }
+
+  gallery?.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-i]');
+    if (btn) lbOpen(Number(btn.dataset.i));
+  });
+  document.getElementById('lbClose').addEventListener('click', lbClose);
+  document.getElementById('lbPrev').addEventListener('click', () => lbShow(lbIndex - 1));
+  document.getElementById('lbNext').addEventListener('click', () => lbShow(lbIndex + 1));
+  lb.addEventListener('click', (e) => { if (e.target === lb) lbClose(); });
+
+  document.addEventListener('keydown', (e) => {
+    if (lb.hidden) return;
+    if (e.key === 'Escape') { lbClose(); return; }
+    if (e.key === 'ArrowLeft') { lbShow(lbIndex - 1); return; }
+    if (e.key === 'ArrowRight') { lbShow(lbIndex + 1); return; }
+    // Foco preso no modal: sair dele com Tab deixaria o teclado navegando
+    // uma página que está atrás de uma cortina opaca.
+    if (e.key === 'Tab') {
+      const focusable = lb.querySelectorAll('button');
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+
   const REPO = 'PedroA07/Sonara';
   const RELEASES = 'https://github.com/' + REPO + '/releases';
   const OS_LABEL = { windows: 'Windows', macos: 'macOS', linux: 'Linux' };

@@ -1,0 +1,56 @@
+# Regera os prints da landing page a partir do app de verdade.
+#
+# Manual de propósito: prints não precisam ser refeitos a cada commit, só
+# quando a interface muda. Rodar aqui garante que ninguém precise ter o
+# Playwright instalado para atualizar a página.
+name: screenshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: "Commitar os prints atualizados na branch atual"
+        type: boolean
+        default: true
+
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      # `--no-save`: o Playwright é ferramenta desta tarefa, não dependência do
+      # app — instalá-lo no package.json faria os três jobs de build baixarem
+      # um navegador à toa.
+      - name: Instalar o Playwright
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - run: npm run screenshots
+
+      - name: Commitar os prints
+        if: inputs.commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/img
+          if git diff --cached --quiet; then
+            echo "Nenhum print mudou."
+          else
+            git commit -m "chore(docs): regerar os prints da landing page"
+            git push
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: docs/img

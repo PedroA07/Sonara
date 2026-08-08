@@ -1,0 +1,98 @@
+{
+  "biblioteca-dark": {
+    "width": 1440,
+    "height": 900
+  },
+  "albuns-dark": {
+    "width": 1440,
+    "height": 900
+  },
+  "artistas-dark": {
+    "width": 1440,
+    "height": 900
+  },
+  "playlists-dark": {
+    "width": 1440,
+    "height": 900
+  },
+  "buscar-dark": {
+    "width": 1440,
+    "height": 900
+  },
+  "downloads-dark": {
+    "width": 1440,
+    "height": 900
+  },
+  "configuracoes-dark": {
+    "width": 1440,
+    "height": 900
+  },
+  "letra-dark": {
+    "width": 1440,
+    "height": 900
+  },
+  "video-dark": {
+    "width": 1440,
+    "height": 900
+  },
+  "editor-dark": {
+    "width": 1440,
+    "height": 900
+  },
+  "diagnostico-dark": {
+    "width": 1440,
+    "height": 900
+  },
+  "exportar-dark": {
+    "width": 1440,
+    "height": 900
+  },
+  "biblioteca-light": {
+    "width": 1440,
+    "height": 900
+  },
+  "albuns-light": {
+    "width": 1440,
+    "height": 900
+  },
+  "artistas-light": {
+    "width": 1440,
+    "height": 900
+  },
+  "playlists-light": {
+    "width": 1440,
+    "height": 900
+  },
+  "buscar-light": {
+    "width": 1440,
+    "height": 900
+  },
+  "downloads-light": {
+    "width": 1440,
+    "height": 900
+  },
+  "configuracoes-light": {
+    "width": 1440,
+    "height": 900
+  },
+  "letra-light": {
+    "width": 1440,
+    "height": 900
+  },
+  "video-light": {
+    "width": 1440,
+    "height": 900
+  },
+  "editor-light": {
+    "width": 1440,
+    "height": 900
+  },
+  "diagnostico-light": {
+    "width": 1440,
+    "height": 900
+  },
+  "exportar-light": {
+    "width": 1440,
+    "height": 900
+  }
+}
