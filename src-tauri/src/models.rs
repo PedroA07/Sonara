@@ -162,3 +162,85 @@ pub struct ExportResult {
     pub dest_dir: String,
     pub errors: Vec<String>,
 }
+
+// ─────────────────────────── Letras (0006) ───────────────────────────
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LyricsKind {
+    /// Tem tempo por linha — a letra rola sozinha.
+    Synced,
+    /// Só texto, sem tempo.
+    Plain,
+    /// A faixa é declaradamente instrumental; ausência de letra não é erro.
+    Instrumental,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LyricsSource {
+    /// Tags dentro do próprio arquivo de áudio (SYLT/USLT/©lyr/LYRICS).
+    Embedded,
+    /// Arquivo `.lrc` (ou `.txt`) com o mesmo nome do áudio.
+    Sidecar,
+    /// Provedor online.
+    Provider,
+    /// Colada ou editada pela pessoa.
+    Manual,
+}
+
+/// Uma palavra com tempo próprio (LRC "enhanced").
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LyricWord {
+    pub start_ms: i64,
+    pub end_ms: i64,
+    pub text: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LyricLine {
+    pub index: i64,
+    pub start_ms: i64,
+    /// Início da linha seguinte (ou o fim da faixa, na última).
+    pub end_ms: i64,
+    pub text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub words: Option<Vec<LyricWord>>,
+    pub is_chorus: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub chorus_id: Option<i64>,
+    /// Trecho instrumental: linha vazia no arquivo ou vão longo entre falas.
+    pub is_gap: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Lyrics {
+    pub track_id: i64,
+    pub kind: LyricsKind,
+    pub source: LyricsSource,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provider: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lang: Option<String>,
+    /// Calibração da pessoa, em ms. Já aplicada em `lines`.
+    pub offset_ms: i64,
+    pub lines: Vec<LyricLine>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub plain_text: Option<String>,
+}
+
+/// O que aconteceu ao rodar a cadeia de resolução — a UI usa isto para
+/// escolher entre "achei", "não achei" e "não procurei online".
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LyricsResolution {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lyrics: Option<Lyrics>,
+    /// "embedded" | "sidecar" | "cache" | "provider" | "none"
+    pub resolved_from: String,
+    /// Verdadeiro quando a busca online existiria, mas está desligada.
+    pub network_skipped: bool,
+}

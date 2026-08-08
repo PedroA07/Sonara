@@ -174,3 +174,50 @@ export interface DownloadProgress {
   trackId: number | null;
   filePath: string | null;
 }
+
+/* ─────────────────────────── Letras (E1) ─────────────────────────── */
+
+export type LyricsKind = "synced" | "plain" | "instrumental";
+export type LyricsSource = "embedded" | "sidecar" | "provider" | "manual";
+
+export interface LyricWord {
+  startMs: number;
+  endMs: number;
+  text: string;
+}
+
+export interface LyricLine {
+  index: number;
+  startMs: number;
+  /** Início da linha seguinte (ou o fim da faixa, na última). */
+  endMs: number;
+  text: string;
+  /** Só presente em LRC "enhanced", com tempo por palavra. */
+  words?: LyricWord[];
+  isChorus: boolean;
+  /** Agrupa as ocorrências do mesmo refrão. */
+  chorusId?: number;
+  /** Trecho instrumental: linha vazia ou vão longo entre falas. */
+  isGap: boolean;
+}
+
+export interface Lyrics {
+  trackId: number;
+  kind: LyricsKind;
+  source: LyricsSource;
+  provider?: string;
+  lang?: string;
+  /** Calibração da pessoa, em ms — já aplicada em `lines`. */
+  offsetMs: number;
+  lines: LyricLine[];
+  plainText?: string;
+}
+
+/** Onde a letra foi encontrada — a UI usa isto para escolher entre "achei",
+ *  "não achei" e "não procurei online". */
+export interface LyricsResolution {
+  lyrics?: Lyrics;
+  resolvedFrom: "embedded" | "sidecar" | "cache" | "provider" | "none";
+  /** Verdadeiro quando a busca online existiria, mas está desligada. */
+  networkSkipped: boolean;
+}
