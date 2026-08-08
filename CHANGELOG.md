@@ -6,6 +6,41 @@ e a publica como descrição da release — mantenha o formato dos títulos
 
 ---
 
+## [0.5.1] — 2026-08-08
+
+### Músicas .mp3 que não apareciam na biblioteca
+
+Arquivos MP3 com as informações internas (as "tags") danificadas eram
+**descartados em silêncio**: a importação anunciava "12 músicas importadas",
+três nunca apareciam, e nada na tela dizia o porquê. É comum acontecer com
+coleções antigas, arquivos copiados pela metade ou gerados por programas que
+gravam a tag fora do padrão — e como as músicas baixadas pelo próprio Sonara
+saem com a tag limpa, o problema só atingia os arquivos de quem já tinha uma
+coleção.
+
+Agora a leitura tenta três caminhos, do mais completo ao mais simples:
+
+1. lê as informações e as propriedades do áudio;
+2. lê só as informações, sem analisar o áudio;
+3. usa o **nome do arquivo** como título.
+
+**Nenhum arquivo de áudio some mais.** No pior caso ele entra com o nome do
+arquivo no lugar do título, e você corrige em Editar quando quiser.
+
+A tela de importação passou a dizer o que aconteceu: quantas músicas entraram
+com as informações danificadas e quantas realmente não puderam ser abertas.
+
+> **Se você já tinha importado uma pasta e faltaram músicas:** importe a mesma
+> pasta de novo. Nada é duplicado — as que já estão na biblioteca são ignoradas,
+> e as que faltavam entram agora.
+
+Também melhorado: música sem título nas tags passa a mostrar o nome do arquivo,
+em vez de uma lista cheia de "Sem título"; e duração zero não é mais gravada
+como se fosse uma duração, então a lista não mostra mais "0:00" para arquivos
+que não puderam ser medidos.
+
+---
+
 ## [0.5.0] — 2026-08-08
 
 ### Letra sincronizada

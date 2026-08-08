@@ -27,7 +27,7 @@
   "operatingSystem": "Windows 10, macOS 11, Linux",
   "url": "https://pedroa07.github.io/Sonara/",
   "downloadUrl": "https://github.com/PedroA07/Sonara/releases/latest",
-  "softwareVersion": "0.5.0",
+  "softwareVersion": "0.5.1",
   "inLanguage": "pt-BR",
   "license": "https://github.com/PedroA07/Sonara/blob/main/LICENSE",
   "description": "Player de música para computador com download integrado, letra sincronizada e modo vídeo.",
@@ -663,11 +663,27 @@
   <!-- ── Novidades ────────────────────────────────────── -->
   <section id="novidades">
     <div class="wrap">
-      <h2>O que mudou na 0.5.0</h2>
+      <h2>O que mudou</h2>
       <p class="h2sub">Resumo. A lista completa está no
         <a href="https://github.com/PedroA07/Sonara/blob/main/CHANGELOG.md" style="color:#a5b4fc">CHANGELOG</a>.</p>
+      <div class="rel-notes" style="margin-bottom:16px">
+        <h3>0.5.1 — músicas .mp3 que não apareciam</h3>
+        <ul>
+          <li><b>Arquivos MP3 com as informações internas danificadas eram descartados em silêncio.</b>
+            A importação dizia "12 músicas importadas", três nunca apareciam, e nada explicava o porquê.
+            Acontecia com coleções antigas e arquivos gerados por programas que gravam a tag fora do
+            padrão — as músicas baixadas pelo próprio Sonara não eram afetadas.</li>
+          <li>Agora <b>nenhum arquivo de áudio some</b>: no pior caso ele entra na biblioteca com o nome
+            do arquivo no lugar do título, e você corrige em Editar.</li>
+          <li>A tela de importação diz o que aconteceu — quantas entraram com informações danificadas e
+            quantas realmente não puderam ser abertas.</li>
+          <li><b>Já importou uma pasta e faltaram músicas?</b> Importe a mesma pasta de novo. Nada é
+            duplicado, e as que faltavam entram agora.</li>
+        </ul>
+      </div>
+
       <div class="rel-notes">
-        <h3>Letra sincronizada e modo vídeo</h3>
+        <h3>0.5.0 — letra sincronizada e modo vídeo</h3>
         <ul>
           <li><b>A letra acompanha a música.</b> Rola sozinha, destaca a linha atual e marca o refrão.
             Lê a letra que já vem dentro do arquivo ou de um <code>.lrc</code> ao lado dele; se não houver
@@ -729,6 +745,14 @@
           gravação — músicas menos conhecidas, versões ao vivo e remixes costumam faltar. Na tela de letra
           você pode <b>procurar manualmente</b>, escolhendo entre os resultados, ou <b>colar a letra</b> e
           marcar os tempos você mesmo.</p>
+        </details>
+        <details>
+          <summary>Importei uma pasta e algumas músicas não apareceram. E agora?</summary>
+          <p>Atualize para a <b>0.5.1</b> e importe a mesma pasta de novo — nada é duplicado, e as que
+          faltavam entram agora. Até a 0.5.0, arquivos com as informações internas danificadas eram
+          descartados sem aviso; era comum em coleções antigas e em arquivos copiados pela metade.
+          A partir da 0.5.1 nenhum arquivo de áudio some: no pior caso ele entra com o nome do arquivo
+          como título, e a tela de importação diz quantos vieram assim.</p>
         </details>
         <details>
           <summary>Quanto espaço as músicas e os vídeos ocupam?</summary>

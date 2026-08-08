@@ -20,6 +20,10 @@ export default function ImportWizard({ onImported }: { onImported: () => void })
   const [sugg, setSugg] = useState<ImportSuggestion | null>(null);
   const [msg, setMsg] = useState("");
   const [count, setCount] = useState(0);
+  /** Quantas entraram com as tags ilegíveis — a UI diz, em vez de omitir. */
+  const [degraded, setDegraded] = useState(0);
+  /** Arquivos que a pasta tinha mas que não deu para ler de jeito nenhum. */
+  const [lost, setLost] = useState(0);
 
   const pickFolder = async () => {
     try {
@@ -41,12 +45,23 @@ export default function ImportWizard({ onImported }: { onImported: () => void })
       const paths = await api.listAudioFiles(sugg.root_path);
       const parsed = await api.parseFiles(paths);
       const n = await api.importWithStrategy(parsed, strategy);
-      setCount(n);
+
+      // Antes, arquivo que o leitor de tags recusava sumia sem aviso e a conta
+      // não fechava com o que a pessoa via na pasta. Agora ele entra na
+      // biblioteca (com o nome do arquivo como título) e o que aconteceu é dito.
+      const semTags = parsed.filter((p) => p.tags_unreadable).length;
+      const perdidos = paths.length - parsed.length;
+      setCount(n); setDegraded(semTags); setLost(perdidos);
       setPhase("done");
       onImported();
+
+      const detalhe = [
+        semTags > 0 ? `${semTags} sem informações legíveis (usei o nome do arquivo)` : "",
+        perdidos > 0 ? `${perdidos} não puderam ser abertas` : "",
+      ].filter(Boolean).join(" · ");
       toast.success(
         n === 1 ? "1 música importada" : `${n} músicas importadas`,
-        "Já estão na sua biblioteca."
+        detalhe || "Já estão na sua biblioteca."
       );
     } catch (e) {
       setMsg(String(e));
@@ -54,7 +69,7 @@ export default function ImportWizard({ onImported }: { onImported: () => void })
     }
   };
 
-  const reset = () => { setPhase("idle"); setSugg(null); setMsg(""); };
+  const reset = () => { setPhase("idle"); setSugg(null); setMsg(""); setDegraded(0); setLost(0); };
 
   return (
     <>
@@ -117,6 +132,21 @@ export default function ImportWizard({ onImported }: { onImported: () => void })
                   <span className="block text-muted text-xs mt-1">
                     Faixas que já estavam na biblioteca não foram duplicadas.
                   </span>
+                  {degraded > 0 && (
+                    <span className="block text-muted text-xs mt-1.5">
+                      {degraded === 1
+                        ? "1 arquivo estava com as informações danificadas"
+                        : `${degraded} arquivos estavam com as informações danificadas`}
+                      {" "}— entraram na biblioteca com o nome do arquivo como título.
+                      Você pode corrigir em <b className="text-content/80">Editar</b>.
+                    </span>
+                  )}
+                  {lost > 0 && (
+                    <span className="block text-warn text-xs mt-1.5">
+                      {lost === 1 ? "1 arquivo não pôde ser aberto" : `${lost} arquivos não puderam ser abertos`}
+                      {" "}— verifique se ainda estão na pasta.
+                    </span>
+                  )}
                 </p>
               </div>
             )}

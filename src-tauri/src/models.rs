@@ -43,6 +43,11 @@ pub struct ParsedTrack {
     pub has_cover: bool,
     pub gain: Option<f64>,
     pub file_path: String,
+    /// As tags não puderam ser lidas por inteiro (ID3 malformado, por exemplo).
+    /// A faixa entra na biblioteca assim mesmo — some daí é pior —, e a tela de
+    /// importação diz quantas vieram nesse estado.
+    #[serde(default)]
+    pub tags_unreadable: bool,
 }
 
 /// Suggestion returned to the UI after scanning a dropped folder (RF-02).

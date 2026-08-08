@@ -50,6 +50,8 @@ export interface ParsedTrack {
   format: string | null;
   has_cover: boolean;
   file_path: string;
+  /** As tags não puderam ser lidas por inteiro; a faixa entra assim mesmo. */
+  tags_unreadable: boolean;
 }
 
 export interface ImportSuggestion {
