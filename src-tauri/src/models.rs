@@ -21,25 +21,6 @@ pub struct Track {
     pub album_title: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Album {
-    pub id: i64,
-    pub title: String,
-    pub year: Option<i64>,
-    pub cover_path: Option<String>,
-    pub artist_id: Option<i64>,
-    pub genre: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Playlist {
-    pub id: i64,
-    pub name: String,
-    pub cover_path: Option<String>,
-    pub description: Option<String>,
-    pub sort_mode: String,
-}
-
 /// Parsed tags from an audio file (before it is inserted into the library).
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ParsedTrack {

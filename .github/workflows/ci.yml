@@ -22,6 +22,8 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -69,3 +71,8 @@ jobs:
 
       - name: Cargo build (core)
         run: cargo build --manifest-path src-tauri/Cargo.toml
+
+      # Guard-rail: sem isto, avisos de dead_code e lints de estilo voltam a se
+      # acumular sem ninguém perceber até alguém rodar clippy localmente.
+      - name: Cargo clippy (core)
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
