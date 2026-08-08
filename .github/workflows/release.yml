@@ -9,8 +9,11 @@ name: Release
 #    release would otherwise sit there empty. Releases created by this workflow
 #    itself never re-trigger it: GitHub does not fire events for actions taken
 #    with GITHUB_TOKEN, so there is no loop.
-#  - workflow_dispatch: re-run a build by hand, e.g. when one platform failed
-#    or a release was published before the workflow existed.
+#  - workflow_dispatch: publicar (ou reconstruir) uma versão à mão. A tag **não
+#    precisa existir**: quando ela ainda não existe, o build sai do branch
+#    padrão e o próprio tauri-action cria a tag no commit construído. Exigir a
+#    tag antes já custou caro — a v0.2.0 foi publicada sem nenhum instalador
+#    porque a tag existia e o workflow nunca rodou nela.
 on:
   push:
     tags: ["v*"]
@@ -29,7 +32,33 @@ permissions:
   contents: write
 
 jobs:
+  # Descobre de qual commit construir. Existe porque o `actions/checkout` precisa
+  # de um ref que exista, e no disparo manual a tag pode ainda não ter sido
+  # criada — é justamente o caso de "quero publicar esta versão agora".
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.pick.outputs.tag }}
+      ref: ${{ steps.pick.outputs.ref }}
+    steps:
+      - id: pick
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag || github.event.release.tag_name || github.ref_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if gh api "repos/${{ github.repository }}/git/ref/tags/$TAG" >/dev/null 2>&1; then
+            echo "ref=$TAG" >> "$GITHUB_OUTPUT"
+            echo "::notice::Construindo a tag $TAG."
+          else
+            echo "ref=$DEFAULT_BRANCH" >> "$GITHUB_OUTPUT"
+            echo "::notice::A tag $TAG ainda não existe: construindo $DEFAULT_BRANCH, e o tauri-action criará a tag no commit construído."
+          fi
+
   release:
+    needs: resolve
     strategy:
       fail-fast: false
       matrix:
@@ -47,22 +76,28 @@ jobs:
             args: ""
     runs-on: ${{ matrix.os }}
     env:
-      # The tag lives in a different place depending on which trigger fired, so
-      # it is resolved once here instead of at every use site.
-      SONARA_TAG: ${{ inputs.tag || github.event.release.tag_name || github.ref_name }}
+      SONARA_TAG: ${{ needs.resolve.outputs.tag }}
     steps:
-      # Build the tagged commit, not whatever the default branch points at —
-      # on a workflow_dispatch these are not the same thing.
+      # O commit da tag quando ela existe; o branch padrão quando ela ainda vai
+      # ser criada. Nunca "o que estiver no default" por acidente.
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag || github.event.release.tag_name || github.ref_name }}
+          ref: ${{ needs.resolve.outputs.ref }}
 
-      - name: Confirm what is being built
+      # Publicar a 0.5.1 a partir de um commit que diz 0.5.0 geraria
+      # instaladores com a versão errada dentro. Melhor falhar aqui.
+      - name: Conferir o que está sendo construído
         shell: bash
         run: |
+          set -euo pipefail
+          PKG=$(node -p "require('./package.json').version")
           echo "Tag:    $SONARA_TAG"
           echo "Commit: $(git rev-parse HEAD)"
-          echo "Versão em package.json: $(node -p "require('./package.json').version")"
+          echo "Versão em package.json: $PKG"
+          if [ "${SONARA_TAG#v}" != "$PKG" ]; then
+            echo "::error::A tag ($SONARA_TAG) não bate com a versão do código ($PKG). Atualize package.json, Cargo.toml, tauri.conf.json e src/version.ts antes de publicar."
+            exit 1
+          fi
 
       - uses: actions/setup-node@v4
         with:
