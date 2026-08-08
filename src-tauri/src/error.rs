@@ -12,6 +12,8 @@ pub enum AppError {
     #[error("download error: {0}")]
     Download(String),
     #[error("{0}")]
+    Lyrics(String),
+    #[error("{0}")]
     Other(String),
 }
 

@@ -38,6 +38,10 @@ impl Db {
             conn.execute_batch(include_str!("../migrations/0005_download_details.sql"))?;
             conn.pragma_update(None, "user_version", 5)?;
         }
+        if version < 6 {
+            conn.execute_batch(include_str!("../migrations/0006_lyrics.sql"))?;
+            conn.pragma_update(None, "user_version", 6)?;
+        }
         Ok(())
     }
 }

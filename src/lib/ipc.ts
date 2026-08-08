@@ -2,7 +2,7 @@ import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import type {
   Track, AlbumCard, Artist, ParsedTrack, ImportSuggestion, ImportStrategy, DestKind,
   PlaylistCard, TrackEdit, DownloadJob, SearchResult, ToolStatus, ExportOptions, ExportResult,
-  CoverCandidate,
+  CoverCandidate, Lyrics, LyricsResolution,
 } from "../types";
 
 export const api = {
@@ -39,6 +39,19 @@ export const api = {
   exportTracks: (trackIds: number[], options: ExportOptions) =>
     invoke<ExportResult>("export_tracks", { trackIds, options }),
   openPath: (path: string) => invoke<void>("open_path", { path }),
+  // Letras (E1) — o core resolve origem, faz o parse e detecta refrão (ADR-03).
+  lyricsGet: (trackId: number) => invoke<Lyrics | null>("lyrics_get", { trackId }),
+  lyricsResolve: (trackId: number, allowNetwork: boolean) =>
+    invoke<LyricsResolution>("lyrics_resolve", { trackId, allowNetwork }),
+  lyricsSetManual: (trackId: number, content: string) =>
+    invoke<Lyrics>("lyrics_set_manual", { trackId, content }),
+  lyricsSetOffset: (trackId: number, offsetMs: number) =>
+    invoke<Lyrics>("lyrics_set_offset", { trackId, offsetMs }),
+  lyricsDelete: (trackId: number) => invoke<void>("lyrics_delete", { trackId }),
+  lyricsWriteSidecar: (trackId: number) => invoke<string>("lyrics_write_sidecar", { trackId }),
+  lyricsEmbedTags: (trackId: number) => invoke<void>("lyrics_embed_tags", { trackId }),
+  /** [trackId, kind] das faixas que já têm letra — para o ícone na Biblioteca. */
+  lyricsStatus: (trackIds: number[]) => invoke<[number, string][]>("lyrics_status", { trackIds }),
   // Maintenance / enrichment (F5)
   rebuildSearchIndex: () => invoke<void>("rebuild_search_index"),
   findDuplicates: () => invoke<Track[]>("find_duplicates"),
