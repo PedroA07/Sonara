@@ -26,9 +26,9 @@ const FORMATS: { value: AudioFormat; label: string; hint: string }[] = [
 export default function SettingsScreen() {
   const {
     theme, crossfade, replaygain, downloadDir, audioFormat,
-    lyricsProviderEnabled, lyricsMiniLine,
+    lyricsProviderEnabled, lyricsMiniLine, lyricsAutoFetchOnDownload,
     setTheme, setCrossfade, setReplaygain, setDownloadDir, setAudioFormat,
-    setLyricsProviderEnabled, setLyricsMiniLine,
+    setLyricsProviderEnabled, setLyricsMiniLine, setLyricsAutoFetchOnDownload,
   } = useSettingsStore();
 
   const [dupes, setDupes] = useState(false);
@@ -160,11 +160,30 @@ export default function SettingsScreen() {
           />
         </Row>
         <Row
+          label="Procurar a letra ao baixar uma música"
+          hint={
+            lyricsProviderEnabled
+              ? "Assim que um download termina, a letra é procurada em segundo plano. O download nunca espera por isso."
+              : "Precisa da busca na internet ligada acima."
+          }
+        >
+          <Toggle
+            checked={lyricsAutoFetchOnDownload}
+            onChange={setLyricsAutoFetchOnDownload}
+            disabled={!lyricsProviderEnabled}
+            label="Procurar a letra ao baixar"
+          />
+        </Row>
+        <Row
           label="Mostrar a linha atual na barra do player"
           hint="Substitui o nome do artista pela linha que está sendo cantada, enquanto a letra estiver carregada."
         >
           <Toggle checked={lyricsMiniLine} onChange={setLyricsMiniLine} label="Mostrar a linha atual na barra" />
         </Row>
+        <p className="text-[11px] text-muted/80 leading-relaxed pt-1">
+          As letras vêm do <b className="text-content/80">LRCLIB</b>, um acervo público e colaborativo, e ficam
+          guardadas só no seu computador. O Sonara se identifica no pedido e respeita os limites do serviço.
+        </p>
       </Section>
 
       {/* ── Playback ────────────────────────────────────────────── */}

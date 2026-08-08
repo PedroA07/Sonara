@@ -34,6 +34,8 @@ export default function ExportModal({
   const [convert, setConvert] = useState(false);
   const [overwrite, setOverwrite] = useState(false);
   const [makeM3u, setMakeM3u] = useState(false);
+  // Desmarcado por padrão: letra de terceiro não é nossa para redistribuir.
+  const [includeLrc, setIncludeLrc] = useState(false);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<ExportProgress | null>(null);
   const [err, setErr] = useState("");
@@ -69,6 +71,7 @@ export default function ExportModal({
         overwrite,
         playlist_file: makeM3u,
         playlist_name: defaultName ?? "Sonara",
+        include_lrc: includeLrc,
       });
 
       const parts = [`${res.copied} copiada(s)`];
@@ -159,6 +162,11 @@ export default function ExportModal({
             checked={makeM3u} onChange={setMakeM3u}
             label="Criar uma playlist .m3u8"
             hint="Um arquivo de playlist na raiz da pasta, na ordem da seleção."
+          />
+          <Opt
+            checked={includeLrc} onChange={setIncludeLrc}
+            label="Incluir o arquivo .lrc da letra"
+            hint="Copia a letra junto, para aparelhos que leem .lrc. Só faz sentido para letras que você tem o direito de levar."
           />
           <Opt
             checked={overwrite} onChange={setOverwrite}

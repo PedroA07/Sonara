@@ -2,7 +2,7 @@ import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import type {
   Track, AlbumCard, Artist, ParsedTrack, ImportSuggestion, ImportStrategy, DestKind,
   PlaylistCard, TrackEdit, DownloadJob, SearchResult, ToolStatus, ExportOptions, ExportResult,
-  CoverCandidate, Lyrics, LyricsResolution,
+  CoverCandidate, Lyrics, LyricsResolution, LyricsCandidate,
 } from "../types";
 
 export const api = {
@@ -52,6 +52,14 @@ export const api = {
   lyricsEmbedTags: (trackId: number) => invoke<void>("lyrics_embed_tags", { trackId }),
   /** [trackId, kind] das faixas que já têm letra — para o ícone na Biblioteca. */
   lyricsStatus: (trackIds: number[]) => invoke<[number, string][]>("lyrics_status", { trackIds }),
+  // Provedor online — só chamado quando a pessoa liga a opção (opt-in).
+  lyricsFetchOnline: (trackId: number) => invoke<LyricsResolution>("lyrics_fetch_online", { trackId }),
+  lyricsSearch: (query: string) => invoke<LyricsCandidate[]>("lyrics_search", { query }),
+  lyricsApplyCandidate: (trackId: number, query: string, providerId: string) =>
+    invoke<Lyrics>("lyrics_apply_candidate", { trackId, query, providerId }),
+  lyricsFetchBatch: (trackIds: number[]) => invoke<number>("lyrics_fetch_batch", { trackIds }),
+  lyricsCancelBatch: () => invoke<void>("lyrics_cancel_batch"),
+  lyricsForgetMiss: (trackId: number) => invoke<void>("lyrics_forget_miss", { trackId }),
   // Maintenance / enrichment (F5)
   rebuildSearchIndex: () => invoke<void>("rebuild_search_index"),
   findDuplicates: () => invoke<Track[]>("find_duplicates"),

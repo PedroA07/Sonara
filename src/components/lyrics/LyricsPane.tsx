@@ -11,26 +11,31 @@ const RESUME_AFTER_MS = 4_000;
 
 export default function LyricsPane({
   onEdit,
+  onSearch,
   onOpenSettings,
 }: {
   onEdit: () => void;
+  onSearch: () => void;
   onOpenSettings: () => void;
 }) {
   const { lyrics, status, error } = useLyricsStore();
+  const retry = useLyricsStore((s) => s.retry);
 
   if (status === "loading") return <LoadingSkeleton />;
   if (status === "error") return <ErrorState message={error} onRetry={onEdit} />;
   if (status === "network-off") return <NetworkOffState onOpenSettings={onOpenSettings} onEdit={onEdit} />;
-  if (status === "none" || !lyrics) return <EmptyState onEdit={onEdit} />;
+  if (status === "none" || !lyrics) return <EmptyState onEdit={onEdit} onSearch={onSearch} onRetry={retry} />;
   if (lyrics.kind === "instrumental") return <InstrumentalState />;
-  if (!isFollowable(lyrics)) return <PlainLyrics lyrics={lyrics} onEdit={onEdit} />;
+  if (!isFollowable(lyrics)) return <PlainLyrics lyrics={lyrics} onEdit={onEdit} onSearch={onSearch} />;
 
-  return <SyncedLyrics lyrics={lyrics} onEdit={onEdit} />;
+  return <SyncedLyrics lyrics={lyrics} onEdit={onEdit} onSearch={onSearch} />;
 }
 
 /* ─────────────────────────── letra sincronizada ─────────────────────────── */
 
-function SyncedLyrics({ lyrics, onEdit }: { lyrics: Lyrics; onEdit: () => void }) {
+function SyncedLyrics({ lyrics, onEdit, onSearch }: {
+  lyrics: Lyrics; onEdit: () => void; onSearch: () => void;
+}) {
   const scroller = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -171,7 +176,7 @@ function SyncedLyrics({ lyrics, onEdit }: { lyrics: Lyrics; onEdit: () => void }
         </button>
       )}
 
-      <LyricsFooter lyrics={lyrics} onEdit={onEdit} />
+      <LyricsFooter lyrics={lyrics} onEdit={onEdit} onSearch={onSearch} />
     </div>
   );
 }
@@ -197,7 +202,9 @@ function GapDots({ active }: { active: boolean }) {
 
 /* ─────────────────────────── rodapé e calibração ─────────────────────────── */
 
-function LyricsFooter({ lyrics, onEdit }: { lyrics: Lyrics; onEdit: () => void }) {
+function LyricsFooter({ lyrics, onEdit, onSearch }: {
+  lyrics: Lyrics; onEdit: () => void; onSearch: () => void;
+}) {
   const nudgeOffset = useLyricsStore((s) => s.nudgeOffset);
   const setOffset = useLyricsStore((s) => s.setOffset);
   const offset = lyrics.offsetMs;
@@ -230,8 +237,11 @@ function LyricsFooter({ lyrics, onEdit }: { lyrics: Lyrics; onEdit: () => void }
         )}
       </span>
 
-      <button onClick={onEdit} className="ml-auto inline-flex items-center gap-1.5 hover:text-content">
-        <IconEdit size={12} /> Editar letra
+      <button onClick={onSearch} className="ml-auto inline-flex items-center gap-1.5 hover:text-content">
+        <IconSearch size={12} /> Trocar letra
+      </button>
+      <button onClick={onEdit} className="inline-flex items-center gap-1.5 hover:text-content">
+        <IconEdit size={12} /> Editar
       </button>
 
       {/* Crédito à origem, exigido pelos termos do provedor. */}
@@ -274,14 +284,22 @@ function Shell({ icon, title, description, children }: {
   );
 }
 
-function EmptyState({ onEdit }: { onEdit: () => void }) {
+function EmptyState({
+  onEdit, onSearch, onRetry,
+}: {
+  onEdit: () => void;
+  onSearch: () => void;
+  onRetry: () => void;
+}) {
   return (
     <Shell
       icon={<IconSearch size={22} />}
       title="Nenhuma letra encontrada"
-      description="Não achei letra nas tags da música nem num arquivo .lrc ao lado dela."
+      description="Não achei letra no arquivo, num .lrc ao lado dele, nem no serviço online com este título e duração."
     >
+      <Button variant="primary" onClick={onSearch}><IconSearch size={15} /> Procurar manualmente</Button>
       <Button onClick={onEdit}><IconEdit size={15} /> Colar a letra</Button>
+      <Button variant="ghost" onClick={onRetry}>Tentar de novo</Button>
     </Shell>
   );
 }
@@ -322,7 +340,9 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
 }
 
 /** Letra sem tempo: rola normal, sem destaque, e oferece procurar uma com sincronia. */
-function PlainLyrics({ lyrics, onEdit }: { lyrics: Lyrics; onEdit: () => void }) {
+function PlainLyrics({ lyrics, onEdit, onSearch }: {
+  lyrics: Lyrics; onEdit: () => void; onSearch: () => void;
+}) {
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       <div className="px-6 pt-4">
@@ -339,7 +359,7 @@ function PlainLyrics({ lyrics, onEdit }: { lyrics: Lyrics; onEdit: () => void })
           )
         )}
       </div>
-      <LyricsFooter lyrics={lyrics} onEdit={onEdit} />
+      <LyricsFooter lyrics={lyrics} onEdit={onEdit} onSearch={onSearch} />
     </div>
   );
 }

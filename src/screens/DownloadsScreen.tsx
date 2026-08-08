@@ -7,6 +7,8 @@ import { useSettingsStore } from "../store/useSettingsStore";
 import { usePlayerStore } from "../store/usePlayerStore";
 import { toast } from "../store/useToastStore";
 import ExportModal from "../components/ExportModal";
+import LyricsBadge from "../components/lyrics/LyricsBadge";
+import { useLyricsStatus } from "../hooks/useLyricsStatus";
 import {
   Badge, Button, EmptyState, IconButton, Modal, PageHeader, ProgressBar, Segmented,
 } from "../components/ui";
@@ -81,6 +83,14 @@ export default function DownloadsScreen({ onGoToSearch }: { onGoToSearch: () => 
       || (filter === "error" && (r.status === "error" || r.status === "canceled"))),
     [rows, filter]
   );
+
+  // Só as faixas concluídas têm letra a mostrar; a lista de ids é a chave da
+  // consulta, então mantê-la curta evita refazê-la a cada tick de progresso.
+  const finishedIds = useMemo(
+    () => rows.filter((r) => r.status === "done" && r.track_id).map((r) => r.track_id!),
+    [rows]
+  );
+  const lyrics = useLyricsStatus(finishedIds);
 
   const counts = useMemo(() => ({
     running: rows.filter((r) => r.status === "running").length,
@@ -189,6 +199,9 @@ export default function DownloadsScreen({ onGoToSearch }: { onGoToSearch: () => 
                       <span className="text-sm text-content truncate max-w-full">{j.title}</span>
                       <Badge tone={st.tone}>{st.label}</Badge>
                       {j.type === "playlist" && <Badge>playlist</Badge>}
+                      {j.status === "done" && j.track_id && lyrics.has(j.track_id) && (
+                        <LyricsBadge kind={lyrics.get(j.track_id)} />
+                      )}
                     </div>
                     <div className="text-[11px] text-muted mt-0.5 truncate">
                       {j.created_at ? fmtDate(j.created_at) : ""}

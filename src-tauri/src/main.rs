@@ -52,6 +52,7 @@ fn main() {
             db.migrate()?;
             app.manage(db);
             app.manage(commands::download::Downloads::default());
+            app.manage(commands::lyrics::LyricsNet::default());
             fit_window_to_screen(app);
             Ok(())
         })
@@ -87,6 +88,12 @@ fn main() {
             commands::lyrics::lyrics_write_sidecar,
             commands::lyrics::lyrics_embed_tags,
             commands::lyrics::lyrics_status,
+            commands::lyrics::lyrics_fetch_online,
+            commands::lyrics::lyrics_search,
+            commands::lyrics::lyrics_apply_candidate,
+            commands::lyrics::lyrics_fetch_batch,
+            commands::lyrics::lyrics_cancel_batch,
+            commands::lyrics::lyrics_forget_miss,
             commands::export::open_path,
             commands::edit::update_track_metadata,
             commands::edit::set_track_cover,

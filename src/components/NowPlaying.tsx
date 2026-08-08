@@ -7,6 +7,7 @@ import CoverArt from "./CoverArt";
 import { Badge, IconButton, Segmented } from "./ui";
 import LyricsPane from "./lyrics/LyricsPane";
 import LyricsEditor from "./lyrics/LyricsEditor";
+import LyricsSearchModal from "./lyrics/LyricsSearchModal";
 import { useLyricsStore } from "../store/useLyricsStore";
 import {
   IconShuffle, IconPrev, IconNext, IconPlay, IconPause, IconRepeat, IconRepeatOne,
@@ -30,6 +31,7 @@ export default function NowPlaying() {
   // Aba ativa do painel. "Vídeo" entra no PR do modo vídeo.
   const [pane, setPane] = useState<"cover" | "lyrics">("cover");
   const [editing, setEditing] = useState(false);
+  const [searching, setSearching] = useState(false);
   const loadLyrics = useLyricsStore((st) => st.load);
   const clearLyrics = useLyricsStore((st) => st.clear);
   const lyricsProviderOn = useSettingsStore((st) => st.lyricsProviderEnabled);
@@ -75,7 +77,11 @@ export default function NowPlaying() {
 
       {pane === "lyrics" ? (
         <div className="relative z-10 flex-1 min-h-0 flex flex-col">
-          <LyricsPane onEdit={() => setEditing(true)} onOpenSettings={() => s.setExpanded(false)} />
+          <LyricsPane
+            onEdit={() => setEditing(true)}
+            onSearch={() => setSearching(true)}
+            onOpenSettings={() => s.setExpanded(false)}
+          />
         </div>
       ) : (
       <div className="relative z-10 flex-1 min-h-0 flex items-center justify-center gap-8 px-6">
@@ -151,6 +157,13 @@ export default function NowPlaying() {
       )}
 
       {editing && <LyricsEditor onClose={() => setEditing(false)} />}
+      {searching && current && (
+        <LyricsSearchModal
+          trackId={current.id}
+          initialQuery={[artistOf(current), current.title].filter(Boolean).join(" ")}
+          onClose={() => setSearching(false)}
+        />
+      )}
 
       {next && pane === "cover" && (
         <div className="relative z-10 px-6 py-4 text-center text-xs text-muted xl:hidden">

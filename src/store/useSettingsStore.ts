@@ -12,6 +12,7 @@ interface SettingsState extends Settings {
   setAudioFormat: (f: AudioFormat) => void;
   setLyricsProviderEnabled: (b: boolean) => void;
   setLyricsMiniLine: (b: boolean) => void;
+  setLyricsAutoFetchOnDownload: (b: boolean) => void;
 }
 
 const systemTheme = (): "dark" | "light" =>
@@ -35,6 +36,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   // terceiro, então precisa ser escolha explícita de quem usa.
   lyricsProviderEnabled: false,
   lyricsMiniLine: true,
+  lyricsAutoFetchOnDownload: false,
   loaded: false,
 
   load: async () => {
@@ -53,6 +55,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         audioFormat: (s.audio_format as AudioFormat) || "m4a",
         lyricsProviderEnabled: s.lyrics_provider_enabled === "true",
         lyricsMiniLine: s.lyrics_mini_line !== "false",
+        lyricsAutoFetchOnDownload: s.lyrics_auto_fetch_on_download === "true",
         loaded: true,
       });
     } catch {
@@ -85,10 +88,20 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setLyricsProviderEnabled: (lyricsProviderEnabled) => {
     set({ lyricsProviderEnabled });
     api.setSetting("lyrics_provider_enabled", String(lyricsProviderEnabled)).catch(() => {});
+    // Desligar a busca online desliga junto o que depende dela: deixar a busca
+    // automática ligada sem efeito nenhum é a receita de "achei que estava
+    // funcionando".
+    if (!lyricsProviderEnabled && get().lyricsAutoFetchOnDownload) {
+      get().setLyricsAutoFetchOnDownload(false);
+    }
   },
   setLyricsMiniLine: (lyricsMiniLine) => {
     set({ lyricsMiniLine });
     api.setSetting("lyrics_mini_line", String(lyricsMiniLine)).catch(() => {});
+  },
+  setLyricsAutoFetchOnDownload: (lyricsAutoFetchOnDownload) => {
+    set({ lyricsAutoFetchOnDownload });
+    api.setSetting("lyrics_auto_fetch_on_download", String(lyricsAutoFetchOnDownload)).catch(() => {});
   },
 }));
 

@@ -457,6 +457,10 @@ pub async fn start_download(
                             if crate::commands::edit::auto_tag_for_track(&app2, tid).is_ok() {
                                 emit_library_changed(&app2);
                             }
+                            // A letra vem depois das tags de propósito: a busca
+                            // usa título, artista e duração, e o auto-tag é
+                            // quem os corrige.
+                            crate::commands::lyrics::auto_fetch_after_download(&app2, tid).await;
                         }
                     } else {
                         let msg = if last_err.is_empty() && code == 0 {
