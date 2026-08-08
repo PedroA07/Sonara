@@ -333,6 +333,22 @@ pub fn open_path(app: AppHandle, path: String) -> AppResult<()> {
         .map_err(|e| AppError::Other(e.to_string()))
 }
 
+/// Abre um endereço no navegador do sistema.
+///
+/// Separado do `open_path` porque aquele checa se o caminho existe no disco —
+/// checagem correta para uma pasta, e que rejeitaria qualquer URL.
+#[tauri::command]
+pub fn open_url(app: AppHandle, url: String) -> AppResult<()> {
+    // Só http(s): um `file://` ou `javascript:` vindo daqui abriria porta para
+    // algo que a UI nunca deveria conseguir pedir.
+    if !(url.starts_with("https://") || url.starts_with("http://")) {
+        return Err(AppError::Other("Endereço inválido.".into()));
+    }
+    tauri_plugin_opener::OpenerExt::opener(&app)
+        .open_url(url, None::<&str>)
+        .map_err(|e| AppError::Other(e.to_string()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

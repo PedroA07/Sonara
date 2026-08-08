@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ajuda do Sonara — manual passo a passo</title>
+<meta name="description" content="Manual do Sonara: como baixar músicas, levar para o pendrive ou o celular, ver a letra sincronizada, assistir ao vídeo, corrigir informações e resolver problemas.">
+<link rel="canonical" href="https://pedroa07.github.io/Sonara/ajuda/">
+<meta property="og:title" content="Ajuda do Sonara — manual passo a passo">
+<meta property="og:description" content="Como baixar, exportar, ver a letra, assistir ao vídeo e resolver problemas no Sonara.">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://pedroa07.github.io/Sonara/img/og.png">
+<meta name="theme-color" content="#0b0d16">
+<link rel="icon" href="../icon.png">
+<style>
+  :root{
+    --brand:#7c5cff; --brand2:#22d3ee;
+    --ink:#0b0d16; --panel:#141724; --panel2:#1c2030; --elev:#262b3c;
+    --text:#eceef6; --muted:#949bb2; --line:255 255 255;
+    --success:#34d399; --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--ink);color:var(--text);line-height:1.6;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden
+  }
+  a{color:inherit}
+  /* Link dentro de texto corrido não pode se distinguir só pela cor (WCAG 1.4.1):
+     sublinhado resolve sem inventar uma cor nova. */
+  p a,li a,td a{text-decoration:underline;text-underline-offset:2px}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+
+  /* ── Header ─────────────────────────────────────────── */
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgb(11 13 22 / .8);border-bottom:1px solid rgb(var(--line) / .07)}
+  .nav{display:flex;align-items:center;gap:14px;height:62px}
+  .brandmark{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.02em;text-decoration:none}
+  .brandmark .grad{background:linear-gradient(120deg,var(--brand),var(--brand2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .nav-links{margin-left:auto;display:flex;gap:22px;font-size:14px;color:var(--muted)}
+  .nav-links a{text-decoration:none;transition:color .15s}
+  .nav-links a:hover{color:var(--text)}
+  @media(max-width:720px){.nav-links{display:none}}
+
+  /* ── Recursos com print ao lado ─────────────────────── */
+  .feat-row{display:grid;grid-template-columns:1fr 1.15fr;gap:44px;align-items:center;margin:0 0 64px}
+  .feat-row:nth-child(even) .feat-text{order:2}
+  .feat-row h3{font-size:24px;letter-spacing:-.02em;margin-bottom:12px}
+  .feat-row p{color:var(--muted);font-size:15.5px}
+  .feat-row ul{color:var(--muted);font-size:14.5px;margin:14px 0 0 18px;display:grid;gap:6px}
+  .feat-badge{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:#c4b5fd;background:rgb(124 92 255 / .16);border:1px solid rgb(124 92 255 / .3);
+    padding:3px 9px;border-radius:999px;margin-bottom:12px}
+  @media(max-width:860px){
+    .feat-row{grid-template-columns:1fr;gap:22px;margin-bottom:48px}
+    .feat-row:nth-child(even) .feat-text{order:0}
+  }
+
+  /* Moldura de janela em volta de cada print. */
+  .frame{border-radius:14px;overflow:hidden;border:1px solid rgb(var(--line) / .1);
+    background:var(--panel);box-shadow:0 26px 70px rgb(0 0 0 / .5)}
+  .frame img{display:block;width:100%;height:auto}
+  .frame figcaption{font-size:12.5px;color:#7c8499;padding:9px 14px;border-top:1px solid rgb(var(--line) / .07)}
+
+  /* ── Galeria ────────────────────────────────────────── */
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+  .gallery button{padding:0;border:1px solid rgb(var(--line) / .1);background:var(--panel);
+    border-radius:12px;overflow:hidden;cursor:pointer;display:block;text-align:left;
+    transition:transform .15s,border-color .15s}
+  .gallery button:hover,.gallery button:focus-visible{transform:translateY(-3px);border-color:rgb(124 92 255 / .5)}
+  .gallery img{display:block;width:100%;height:auto}
+  .gallery span{display:block;font-size:13px;color:var(--muted);padding:9px 12px}
+
+  .lightbox{position:fixed;inset:0;z-index:100;background:rgb(4 6 12 / .93);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px}
+  .lightbox[hidden]{display:none}
+  .lightbox img{max-width:min(1280px,94vw);max-height:78vh;border-radius:12px;
+    border:1px solid rgb(var(--line) / .14)}
+  .lightbox .cap{color:var(--muted);font-size:14px;max-width:760px;text-align:center}
+  .lb-btn{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;
+    background:var(--panel2);border:1px solid rgb(var(--line) / .12);color:var(--text);
+    font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .lb-btn:hover{background:var(--elev)}
+  .lb-prev{left:20px} .lb-next{right:20px}
+  .lb-close{position:absolute;top:20px;right:20px;transform:none}
+  :focus-visible{outline:2px solid #a78bfa;outline-offset:3px}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+  /* ── Tutoriais ──────────────────────────────────────── */
+  .tuts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+  .tut{background:var(--panel);border:1px solid rgb(var(--line) / .09);border-radius:var(--radius);padding:22px}
+  .tut h3{font-size:17px;margin-bottom:12px;letter-spacing:-.01em}
+  .tut ol{margin:0 0 0 18px;color:var(--muted);font-size:14.5px;display:grid;gap:8px}
+  .tut ol b{color:var(--text);font-weight:600}
+
+  /* ── Tabelas ────────────────────────────────────────── */
+  .tbl-wrap{overflow-x:auto;border:1px solid rgb(var(--line) / .09);border-radius:var(--radius);background:var(--panel)}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px}
+  th,td{text-align:left;padding:13px 16px;border-bottom:1px solid rgb(var(--line) / .07);vertical-align:top}
+  th{font-size:12.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+  tr:last-child td{border-bottom:0}
+  td.k{white-space:nowrap;font-weight:600}
+  td.dim{color:var(--muted)}
+  kbd{display:inline-block;background:var(--panel2);border:1px solid rgb(var(--line) / .14);
+    border-bottom-width:2px;border-radius:6px;padding:1px 7px;font-size:12.5px;font-family:inherit}
+
+  /* ── Requisitos e changelog ─────────────────────────── */
+  .reqs{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+  .req{background:var(--panel);border:1px solid rgb(var(--line) / .09);border-radius:var(--radius);padding:20px}
+  .req h3{font-size:15px;margin-bottom:8px}
+  .req p{color:var(--muted);font-size:14px}
+  .rel-notes{background:var(--panel);border:1px solid rgb(var(--line) / .09);border-radius:var(--radius);padding:24px 26px}
+  .rel-notes h3{font-size:16px;margin-bottom:4px}
+  .rel-notes ul{margin:14px 0 0 18px;color:var(--muted);font-size:14.5px;display:grid;gap:9px}
+  .rel-notes b{color:var(--text)}
+
+  @media(prefers-reduced-motion:reduce){
+    *{animation-duration:.001ms !important;transition-duration:.001ms !important}
+    html{scroll-behavior:auto}
+  }
+
+  /* ── Hero ───────────────────────────────────────────── */
+  .hero{position:relative;text-align:center;padding:76px 0 60px;overflow:hidden}
+  .hero::before{content:"";position:absolute;inset:-30% -20% auto -20%;height:640px;pointer-events:none;
+    background:radial-gradient(620px 300px at 30% 0%,rgb(124 92 255 / .28),transparent 70%),
+               radial-gradient(520px 260px at 72% 12%,rgb(34 211 238 / .18),transparent 70%)}
+  .hero>*{position:relative}
+  .logo{width:88px;height:88px;border-radius:24px;box-shadow:0 22px 60px rgb(124 92 255 / .38)}
+  h1{font-size:clamp(34px,5.4vw,52px);line-height:1.1;letter-spacing:-.03em;margin:22px 0 14px;font-weight:800}
+  h1 .grad{background:linear-gradient(120deg,var(--brand),var(--brand2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .tagline{color:var(--muted);font-size:clamp(16px,2.2vw,19px);max-width:640px;margin:0 auto 30px}
+  .btn{display:inline-flex;align-items:center;gap:10px;
+    background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;text-decoration:none;
+    font-weight:600;font-size:17px;padding:15px 30px;border-radius:14px;
+    box-shadow:0 14px 40px rgb(124 92 255 / .42);transition:transform .15s cubic-bezier(.2,.9,.3,1.2),box-shadow .15s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 18px 48px rgb(124 92 255 / .55)}
+  .btn.secondary{background:var(--panel2);box-shadow:none;border:1px solid rgb(var(--line) / .1);font-size:15px;padding:13px 22px}
+  .btn.secondary:hover{background:var(--elev);box-shadow:none}
+  .sub{color:var(--muted);font-size:13px;margin-top:12px}
+  .ver{color:#7d86a3;font-size:13px;margin-top:8px}
+  .loading{color:var(--muted);font-size:15px}
+  /* Shown only when a newer version exists but has no installers yet. */
+  .pending{max-width:560px;margin:0 auto 20px;padding:11px 18px;border-radius:12px;font-size:13.5px;
+    background:rgb(251 191 36 / .1);border:1px solid rgb(251 191 36 / .3);color:#fcd34d}
+  .note{color:#cbd5e1;background:var(--panel);border:1px solid rgb(var(--line) / .1);
+    padding:16px 22px;border-radius:14px;display:inline-block;max-width:520px;text-align:left}
+  .os-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:22px;
+    color:var(--muted);font-size:13px;align-items:center}
+  .os-row span{display:inline-flex;align-items:center;gap:6px}
+
+  /* ── Sections ───────────────────────────────────────── */
+  section{padding:64px 0;border-top:1px solid rgb(var(--line) / .06)}
+  h2{font-size:clamp(24px,3.4vw,32px);letter-spacing:-.02em;text-align:center;font-weight:750}
+  .h2sub{color:var(--muted);text-align:center;font-size:15px;margin:10px auto 36px;max-width:600px}
+
+  .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+  .feature{background:var(--panel);border:1px solid rgb(var(--line) / .08);border-radius:var(--radius);padding:22px;
+    transition:transform .18s cubic-bezier(.2,.9,.3,1),border-color .18s}
+  .feature:hover{transform:translateY(-3px);border-color:rgb(124 92 255 / .35)}
+  .feature .ico{width:40px;height:40px;border-radius:11px;background:rgb(124 92 255 / .14);color:var(--brand);
+    display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+  .feature h3{font-size:16px;margin-bottom:6px;font-weight:650}
+  .feature p{color:var(--muted);font-size:14px}
+
+  /* ── Steps ──────────────────────────────────────────── */
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;counter-reset:s}
+  .step{background:var(--panel);border:1px solid rgb(var(--line) / .08);border-radius:var(--radius);padding:22px;position:relative}
+  .step .n{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;margin-bottom:13px}
+  .step h3{font-size:15px;margin-bottom:5px;font-weight:650}
+  .step p{color:var(--muted);font-size:14px}
+
+  /* ── Download grid ──────────────────────────────────── */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid rgb(var(--line) / .08);border-radius:var(--radius);padding:18px}
+  .card.current{border-color:rgb(124 92 255 / .45);box-shadow:0 0 0 1px rgb(124 92 255 / .18)}
+  .card h3{display:flex;align-items:center;gap:9px;font-size:15px;margin-bottom:12px;font-weight:650}
+  .card ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+  .card li{font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card a{color:#a5b4fc;text-decoration:none;word-break:break-all}
+  .card a:hover{text-decoration:underline}
+  .sz{color:#7d86a3;font-size:11.5px}
+  .tag{background:rgb(124 92 255 / .18);color:#c4b5fd;font-size:10.5px;padding:2px 8px;border-radius:999px;font-weight:600}
+
+  /* ── FAQ ────────────────────────────────────────────── */
+  .faq{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+  details{background:var(--panel);border:1px solid rgb(var(--line) / .08);border-radius:13px;padding:15px 18px}
+  details[open]{border-color:rgb(124 92 255 / .3)}
+  summary{cursor:pointer;font-weight:600;font-size:15px;list-style:none;display:flex;align-items:center;gap:10px}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"+";color:var(--brand);font-weight:700;font-size:18px;width:14px;flex:none}
+  details[open] summary::before{content:"−"}
+  details p{color:var(--muted);font-size:14px;margin-top:10px;padding-left:24px}
+
+  .install{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+  .install .row{background:var(--panel);border:1px solid rgb(var(--line) / .08);border-radius:13px;padding:15px 18px;font-size:14px}
+  .install .row b{display:block;margin-bottom:4px;font-size:15px}
+  .install .row span{color:var(--muted)}
+  code{background:var(--panel2);border:1px solid rgb(var(--line) / .08);border-radius:6px;
+    padding:2px 7px;font-size:12.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
+
+  footer{padding:40px 0 56px;text-align:center;color:#7d86a3;font-size:13px;border-top:1px solid rgb(var(--line) / .06)}
+  /* Sublinhado sempre, não só no hover: dentro de texto corrido a cor sozinha
+     não basta para distinguir um link (WCAG 1.4.1). */
+  footer a{color:#a5b4fc;text-decoration:underline;text-underline-offset:2px}
+  footer a:hover{color:#c7d2fe}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+    html{scroll-behavior:auto}
+  }
+</style>
+<style>
+  /* Layout de manual: índice fixo à esquerda, texto à direita. */
+  .doc{display:grid;grid-template-columns:230px 1fr;gap:52px;align-items:start;padding:44px 0 80px}
+  .toc{position:sticky;top:86px;font-size:14px}
+  .toc h2{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:12px}
+  .toc a{display:block;padding:6px 0;color:var(--muted);text-decoration:none;transition:color .15s}
+  .toc a:hover{color:var(--text)}
+  .doc article h2{font-size:26px;letter-spacing:-.02em;margin:52px 0 10px;scroll-margin-top:86px}
+  .doc article h2:first-child{margin-top:0}
+  .doc article h3{font-size:17px;margin:28px 0 8px}
+  .doc article p{color:var(--muted);margin-bottom:12px}
+  .doc article ol,.doc article ul{color:var(--muted);margin:0 0 16px 20px;display:grid;gap:9px}
+  .doc article b{color:var(--text)}
+  .doc article code{background:var(--panel2);border:1px solid rgb(var(--line) / .1);
+    padding:1px 6px;border-radius:6px;font-size:13.5px}
+  .callout{background:var(--panel);border:1px solid rgb(var(--line) / .1);border-left:3px solid var(--brand);
+    border-radius:12px;padding:16px 20px;margin:18px 0;color:var(--muted);font-size:14.5px}
+  .callout b{color:var(--text)}
+  @media(max-width:860px){.doc{grid-template-columns:1fr;gap:24px}.toc{position:static}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brandmark" href="../">
+      <img src="../icon.png" alt="" width="28" height="28" style="border-radius:8px">
+      <span class="grad">Sonara</span>
+    </a>
+    <nav class="nav-links">
+      <a href="../">Início</a>
+      <a href="../#baixar">Baixar</a>
+      <a href="https://github.com/PedroA07/Sonara/issues">Relatar um problema</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap doc">
+  <nav class="toc" aria-label="Índice do manual">
+    <h2>Neste manual</h2>
+    <a href="#primeiros-passos">Primeiros passos</a>
+    <a href="#baixar">Baixar músicas</a>
+    <a href="#biblioteca">Organizar a biblioteca</a>
+    <a href="#playlists">Playlists</a>
+    <a href="#letra">Letra sincronizada</a>
+    <a href="#video">Modo vídeo</a>
+    <a href="#exportar">Levar para outro aparelho</a>
+    <a href="#configuracoes">Configurações</a>
+    <a href="#problemas">Quando algo dá errado</a>
+    <a href="#privacidade">Privacidade e direitos</a>
+  </nav>
+
+  <article>
+    <h1 style="font-size:34px;letter-spacing:-.03em;margin-bottom:8px">Ajuda do Sonara</h1>
+    <p style="font-size:16px">Tudo o que dá para fazer no app, em ordem de quem está começando.
+    Se você só quer o resumo, a <a href="../#tutoriais" style="color:#a5b4fc">página inicial</a> tem os
+    passos curtos.</p>
+
+    <h2 id="primeiros-passos">Primeiros passos</h2>
+    <p>Depois de instalar, o Sonara abre na <b>Biblioteca</b> — vazia, se for a primeira vez. Há dois
+    jeitos de enchê-la:</p>
+    <ol>
+      <li><b>Baixando</b>, em “Buscar &amp; Baixar”.</li>
+      <li><b>Importando</b> uma pasta que já está no seu computador, pelo botão <b>Importar pasta</b>.
+        O Sonara olha a estrutura das pastas, propõe como organizar e mostra o que vai acontecer antes
+        de mexer em qualquer coisa.</li>
+    </ol>
+    <div class="callout">
+      Nada é movido nem renomeado na importação: o Sonara só passa a conhecer os arquivos onde eles já
+      estão. Remover uma música da biblioteca também <b>não apaga o arquivo</b> do disco.
+    </div>
+
+    <h2 id="baixar">Baixar músicas</h2>
+    <h3>Pelo nome</h3>
+    <ol>
+      <li>Abra <b>Buscar &amp; Baixar</b>.</li>
+      <li>Digite o nome da música e do artista. Quanto mais específico, melhor o resultado.</li>
+      <li>Clique na miniatura para ouvir a prévia — é o jeito de não baixar a versão errada.</li>
+      <li>Escolha o destino: a biblioteca, uma playlist específica ou a fila que está tocando.</li>
+      <li>Clique em <b>Baixar</b>.</li>
+    </ol>
+    <h3>Por link</h3>
+    <p>Cole o link no mesmo campo. Um link de vídeo baixa aquela música; um link de playlist baixa a
+    playlist inteira, numerada e numa pasta própria. Link de vídeo que está dentro de uma playlist
+    (aquele com <code>&amp;list=</code>) baixa <b>só o vídeo</b> — não a rádio inteira.</p>
+    <h3>Onde os arquivos ficam</h3>
+    <p>Numa pasta <b>Sonara</b> dentro da sua pasta de Músicas. Dá para trocar em
+    <b>Configurações → Downloads</b>, e o botão <b>Abrir a pasta</b> leva você até lá.</p>
+
+    <h2 id="biblioteca">Organizar a biblioteca</h2>
+    <p>A Biblioteca tem quatro visões: <b>Músicas</b>, <b>Álbuns</b>, <b>Artistas</b> e <b>Gêneros</b>.
+    A busca no topo procura em título, artista e álbum ao mesmo tempo.</p>
+    <h3>Corrigir informações</h3>
+    <ol>
+      <li>Passe o mouse sobre a música e clique no ícone de lápis.</li>
+      <li>Para várias de uma vez, marque as caixinhas e clique em <b>Editar</b> na barra que aparece
+        embaixo. Campos deixados em branco não são alterados.</li>
+      <li>Marque <b>Gravar no arquivo</b> se quiser que a correção viaje junto quando você copiar a
+        música para outro aparelho.</li>
+    </ol>
+    <h3>Trocar a capa</h3>
+    <p>No editor, clique na capa. Você pode escolher uma imagem do computador, recortá-la, ou buscar a
+    capa pelo nome do álbum. Álbuns sem capa também podem ser preenchidos automaticamente pelo botão
+    <b>Capa</b> dentro do álbum.</p>
+
+    <h2 id="playlists">Playlists</h2>
+    <ol>
+      <li>Em <b>Playlists</b>, clique em <b>Nova playlist</b>.</li>
+      <li>Adicione músicas pelo ícone <b>+</b> na Biblioteca, ou mande o download direto para ela.</li>
+      <li>Dentro da playlist, arraste as faixas para reordenar — a ordem fica salva.</li>
+      <li>A playlist toda pode ser exportada de uma vez, com um arquivo <code>.m3u8</code> junto.</li>
+    </ol>
+
+    <h2 id="letra">Letra sincronizada</h2>
+    <p>Com uma música tocando, aperte <kbd>L</kbd> ou clique na capa e escolha a aba <b>Letra</b>.</p>
+    <ul>
+      <li>A linha atual fica em destaque e a letra rola sozinha.</li>
+      <li>O <b>refrão</b> é detectado sozinho e ganha uma barra colorida na lateral.</li>
+      <li><b>Clique numa linha</b> para pular para aquele trecho da música.</li>
+      <li>Se você rolar a letra com o mouse, o acompanhamento pausa e aparece um botão para voltar à
+        linha atual — ele volta sozinho depois de alguns segundos parado.</li>
+      <li>Trechos instrumentais aparecem como três pontinhos.</li>
+    </ul>
+    <h3>De onde vem a letra</h3>
+    <p>Nesta ordem, parando no primeiro que funcionar:</p>
+    <ol>
+      <li>A letra gravada <b>dentro do arquivo</b> de música.</li>
+      <li>Um arquivo <code>.lrc</code> (ou <code>.txt</code>) com o mesmo nome, na mesma pasta.</li>
+      <li>O que o Sonara já encontrou antes para essa faixa.</li>
+      <li>O <b>LRCLIB</b>, um acervo público — <b>só se você ligar</b> em Configurações → Letras.</li>
+    </ol>
+    <h3>Ajustar a sincronia</h3>
+    <p><kbd>[</kbd> adianta e <kbd>]</kbd> atrasa a letra em 100&nbsp;ms; com <kbd>Shift</kbd>, 500&nbsp;ms.
+    O ajuste é salvo por música. O botão <b>Zerar</b> desfaz.</p>
+    <h3>Colar ou trocar a letra</h3>
+    <p>O botão <b>Editar</b> abre um editor onde você cola a letra e pode marcar os tempos linha a linha
+    com a música tocando. O botão <b>Trocar letra</b> abre a busca manual, para escolher outra versão
+    quando a automática pegou a errada (ao vivo, remaster, versão estendida).</p>
+
+    <h2 id="video">Modo vídeo</h2>
+    <p>Abra <b>Tocando agora</b> e vá na aba <b>Vídeo</b>, ou aperte <kbd>V</kbd>.</p>
+    <ol>
+      <li>Da primeira vez, o app mostra <b>quanto o vídeo vai ocupar</b> e pergunta se pode baixar.</li>
+      <li>Pronto o download, o vídeo começa exatamente no ponto em que a música estava.</li>
+      <li><kbd>F</kbd> põe em tela cheia. <b>Janela flutuante</b> deixa o vídeo por cima de outros programas.</li>
+      <li>A letra pode ficar sobreposta ao vídeo — o botão <b>Letra sobre o vídeo</b> liga e desliga.</li>
+      <li>Imagem fora de sincronia com o som? <kbd>[</kbd> e <kbd>]</kbd> ajustam, e fica salvo por música.</li>
+    </ol>
+    <div class="callout">
+      O vídeo é um <b>arquivo separado</b>: a música que você baixou continua intacta e apagar os vídeos
+      não afeta nada. Em <b>Configurações → Vídeo</b> você vê quanto eles ocupam, faixa a faixa.
+    </div>
+    <h3>A aba Vídeo diz que falta codec</h3>
+    <p>Acontece no Linux, quando a distribuição não traz os decodificadores de H.264. Instale-os:</p>
+    <p><code>sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-good</code></p>
+    <p>No Fedora, os pacotes equivalentes vêm do RPM Fusion. Enquanto isso, o botão
+    <b>Abrir no player do sistema</b> toca o vídeo já baixado fora do Sonara.</p>
+
+    <h2 id="exportar">Levar para o pendrive, o celular ou o carro</h2>
+    <ol>
+      <li>Marque as músicas na Biblioteca (ou abra uma playlist).</li>
+      <li>Clique em <b>Exportar</b>.</li>
+      <li>Escolha a pasta de destino — pendrive, cartão SD, celular conectado ou qualquer pasta.</li>
+      <li>Decida <b>como organizar</b>: tudo junto, por artista, ou artista/álbum.</li>
+      <li>Decida <b>como nomear</b> os arquivos: só o título, artista - título, ou número - título.</li>
+      <li>Marque <b>Converter para MP3</b> se o aparelho for antigo ou não tocar m4a.</li>
+    </ol>
+    <p>Outras opções: criar um arquivo de playlist <code>.m3u8</code>, substituir arquivos que já existem
+    (desmarcado, arquivos repetidos são pulados) e incluir a letra num arquivo <code>.lrc</code>.</p>
+    <div class="callout">
+      A exportação é sempre uma <b>cópia</b>. Os arquivos originais continuam na sua biblioteca.
+    </div>
+
+    <h2 id="configuracoes">Configurações</h2>
+    <ul>
+      <li><b>Downloads</b> — pasta de destino e formato do arquivo (M4A, MP3, OPUS ou FLAC).</li>
+      <li><b>Diagnóstico</b> — se as ferramentas de download estão no lugar e se o vídeo funciona.</li>
+      <li><b>Letras</b> — ligar ou desligar a busca online, a busca automática ao baixar e a linha da
+        letra na barra do player.</li>
+      <li><b>Vídeo</b> — qualidade dos vídeos baixados e quanto eles estão ocupando.</li>
+      <li><b>Reprodução</b> — transição entre músicas (crossfade) e equalização de volume.</li>
+      <li><b>Aparência</b> — tema claro, escuro ou o do sistema.</li>
+      <li><b>Manutenção</b> — reconstruir o índice de busca e encontrar músicas duplicadas.</li>
+    </ul>
+
+    <h2 id="problemas">Quando algo dá errado</h2>
+    <h3>Um download falhou</h3>
+    <p>Abra <b>Downloads</b>: a mensagem embaixo do item diz o motivo, não só que falhou. As causas mais
+    comuns são vídeo indisponível na sua região, vídeo com restrição de idade e falha de conexão.
+    O botão de recarregar tenta de novo.</p>
+    <h3>Nada baixa, sempre</h3>
+    <p>Vá em <b>Configurações → Diagnóstico</b>. Ele mostra, item por item, se o yt-dlp e o ffmpeg estão
+    onde deveriam e se a pasta de downloads pode ser gravada. Se alguma ferramenta estiver faltando,
+    reinstalar o Sonara resolve — elas vêm dentro do instalador.</p>
+    <h3>A música não toca</h3>
+    <p>Provavelmente o arquivo foi movido ou apagado por fora. Remova a faixa da biblioteca e importe
+    de novo, ou baixe outra vez.</p>
+    <h3>O app não abre depois de atualizar</h3>
+    <p>Em versões anteriores à 0.3.1 a instalação era feita para todos os usuários, o que atrapalhava a
+    atualização automática. Desinstale a versão antiga e instale a atual — suas músicas e playlists
+    não são afetadas.</p>
+    <h3>Continuou com problema</h3>
+    <p><a href="https://github.com/PedroA07/Sonara/issues">Abra um problema no GitHub</a> com a mensagem
+    de erro que apareceu e o seu sistema operacional.</p>
+
+    <h2 id="privacidade">Privacidade e direitos</h2>
+    <p>O Sonara não cria conta, não pede login e não envia sua biblioteca para lugar nenhum. As
+    conexões que ele faz, e por quê:</p>
+    <ul>
+      <li><b>YouTube</b> — quando você pesquisa ou baixa.</li>
+      <li><b>MusicBrainz e Cover Art Archive</b> — para preencher álbum, ano e capa depois de um download.</li>
+      <li><b>LRCLIB</b> — só se você ligar a busca de letras. Envia o nome da música, o artista e a duração.</li>
+      <li><b>GitHub</b> — para verificar se existe uma versão nova.</li>
+    </ul>
+    <p>Sobre o conteúdo: use o app para material que você tem o direito de baixar — suas próprias
+    gravações, obras em domínio público, conteúdo com licença livre ou material autorizado pelo titular.
+    Respeite os direitos autorais e os termos de uso dos serviços de onde o conteúdo vem.</p>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Sonara — player de música de código aberto.</p>
+    <p style="margin-top:6px">
+      <a href="../">Página inicial</a> ·
+      <a href="https://github.com/PedroA07/Sonara">Código no GitHub</a> ·
+      <a href="https://github.com/PedroA07/Sonara/issues">Relatar um problema</a>
+    </p>
+    <p style="margin-top:10px;font-size:12.5px;color:#7d86a3">
+      Letras fornecidas pelo <a href="https://lrclib.net">LRCLIB</a>, quando a busca online está ativada.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

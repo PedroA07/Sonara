@@ -31,6 +31,9 @@ const VIDEO_QUALITIES: { value: string; label: string; hint: string }[] = [
   { value: "max", label: "Máxima", hint: "A melhor que o YouTube tiver em H.264. Pode passar de 500 MB por música." },
 ];
 
+/** Manual publicado junto com a landing page (GitHub Pages). */
+const HELP_URL = "https://pedroa07.github.io/Sonara/ajuda/";
+
 export default function SettingsScreen() {
   const {
     theme, crossfade, replaygain, downloadDir, audioFormat,
@@ -382,6 +385,22 @@ export default function SettingsScreen() {
         <Row label="Versão instalada" hint="As atualizações são avisadas automaticamente ao abrir o app.">
           <Badge tone="brand">Sonara {APP_VERSION}</Badge>
         </Row>
+        <Row
+          label="Ajuda online"
+          hint="Manual com o passo a passo de tudo: baixar, exportar, letra, vídeo e o que fazer quando algo dá errado."
+        >
+          <Button
+            size="sm"
+            onClick={() => api.openUrl(HELP_URL).catch((e) => toast.error("Não foi possível abrir o manual", String(e)))}
+          >
+            Abrir o manual
+          </Button>
+        </Row>
+        <p className="text-[11px] text-muted/80 leading-relaxed pt-1">
+          Sonara é software livre. As letras, quando a busca online está ligada, vêm do{" "}
+          <b className="text-content/80">LRCLIB</b>. Use o app para conteúdo que você tem o direito de
+          baixar e respeite os direitos autorais e os termos dos serviços de origem.
+        </p>
       </Section>
 
       {dupes && <DuplicatesModal onClose={() => setDupes(false)} />}

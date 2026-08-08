@@ -1,7 +1,7 @@
 {
   "name": "sonara",
-  "version": "0.4.0",
-  "description": "Sonara \u2014 desktop music player (Tauri + React + TypeScript + SQLite)",
+  "version": "0.5.0",
+  "description": "Sonara — desktop music player (Tauri + React + TypeScript + SQLite)",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,8 @@
     "app:dev": "tauri dev",
     "app:build": "tauri build",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",

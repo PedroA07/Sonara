@@ -6,6 +6,64 @@ e a publica como descrição da release — mantenha o formato dos títulos
 
 ---
 
+## [0.5.0] — 2026-08-08
+
+### Letra sincronizada
+
+A letra agora acompanha a música: rola sozinha, destaca a linha que está sendo
+cantada e **marca o refrão** com uma barra na lateral, para dar para ver de longe
+quando ele volta. Clique numa linha para pular direto para aquele trecho.
+
+De onde a letra vem, nesta ordem: do próprio arquivo de música, de um `.lrc` ao
+lado dele, do que o Sonara já achou antes e — **só se você ligar** — do LRCLIB,
+um acervo público. A busca online **nasce desligada**; ligada, ela envia apenas
+o nome da música, o artista e a duração.
+
+Também dá para **colar a letra** e marcar os tempos à mão, **trocar** por outra
+versão quando a automática pegou a errada, e **acertar o atraso** com `[` e `]`
+(com Shift, 500 ms) — o ajuste fica salvo por música.
+
+Na Biblioteca, "Buscar letras" procura para várias músicas de uma vez, com
+progresso e cancelar. Um ícone discreto mostra quais faixas já têm letra.
+
+### Modo vídeo
+
+Baixe o vídeo de uma música e **alterne entre ouvir e assistir sem perder o
+ponto** — a troca acontece no instante exato em que a música estava. Tela cheia
+(`F`), janela flutuante e letra sobreposta ao vídeo.
+
+O vídeo é um **arquivo separado**: a música que você já tinha continua intacta, e
+apagar os vídeos não afeta nada. Antes de baixar, o app diz **quanto vai ocupar**.
+Em Configurações → Vídeo você vê o espaço usado faixa a faixa e pode apagar tudo
+mantendo os áudios.
+
+Imagem fora de sincronia com o som? `[` e `]` também ajustam aqui, por música.
+
+### Exportar pode incluir a letra
+
+O ExportModal ganhou "Incluir o arquivo .lrc da letra", **desmarcado por padrão**:
+letra vinda de um acervo de terceiro não é nossa para redistribuir.
+
+### Site e ajuda
+
+A landing page foi refeita com **prints reais do app**, gerados por script a
+partir de uma biblioteca de demonstração fictícia — nada de captura feita à mão
+que envelhece. Novas seções: galeria com ampliação, passo a passo das sete
+tarefas mais comuns, comparação entre os formatos, atalhos de teclado, requisitos
+e uma seção de dúvidas maior. E um **manual completo** em `/ajuda`, acessível
+também pelo botão "Ajuda online" em Configurações.
+
+### Por baixo
+
+- O relógio da reprodução passou a viver no store, em milissegundos, alimentado
+  quadro a quadro. É o que permite a letra acompanhar sem tremer e a troca
+  áudio↔vídeo cair no ponto certo.
+- O player virou uma abstração de backend: um de áudio (com o crossfade por
+  dentro) e um de vídeo, e só um existe por vez.
+- `cargo clippy -- -D warnings` passou a rodar no CI.
+
+---
+
 ## [0.4.0] — 2026-08-07
 
 ### Prévias ao lado na tela cheia

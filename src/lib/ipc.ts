@@ -39,6 +39,8 @@ export const api = {
   exportTracks: (trackIds: number[], options: ExportOptions) =>
     invoke<ExportResult>("export_tracks", { trackIds, options }),
   openPath: (path: string) => invoke<void>("open_path", { path }),
+  /** Abre um endereço no navegador do sistema. */
+  openUrl: (url: string) => invoke<void>("open_url", { url }),
   // Letras (E1) — o core resolve origem, faz o parse e detecta refrão (ADR-03).
   lyricsGet: (trackId: number) => invoke<Lyrics | null>("lyrics_get", { trackId }),
   lyricsResolve: (trackId: number, allowNetwork: boolean) =>
