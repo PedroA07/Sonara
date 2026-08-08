@@ -152,6 +152,11 @@ pub struct ExportOptions {
     /// Also write an .m3u8 playlist next to the exported files.
     pub playlist_file: bool,
     pub playlist_name: Option<String>,
+    /// Write the track's lyrics as a `.lrc` next to each exported file.
+    /// Off by default: lyrics fetched from a provider are not ours to
+    /// redistribute, so copying them onto another device is a deliberate act.
+    #[serde(default)]
+    pub include_lrc: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -243,4 +248,28 @@ pub struct LyricsResolution {
     pub resolved_from: String,
     /// Verdadeiro quando a busca online existiria, mas está desligada.
     pub network_skipped: bool,
+}
+
+/// Um resultado do provedor, exposto à UI para a pessoa escolher.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LyricsCandidateDto {
+    pub provider_id: String,
+    pub track_name: String,
+    pub artist_name: String,
+    pub album_name: Option<String>,
+    pub duration_sec: f64,
+    pub has_synced: bool,
+    pub instrumental: bool,
+}
+
+/// Andamento da busca de letras em lote.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LyricsBatchProgress {
+    pub done: usize,
+    pub total: usize,
+    pub found: usize,
+    pub title: String,
+    pub finished: bool,
 }

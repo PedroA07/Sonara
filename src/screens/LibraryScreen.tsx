@@ -10,11 +10,14 @@ import TrackEditor from "../components/TrackEditor";
 import AddToPlaylist from "../components/AddToPlaylist";
 import ExportModal from "../components/ExportModal";
 import CoverArt from "../components/CoverArt";
+import LyricsBatchModal from "../components/lyrics/LyricsBatchModal";
+import LyricsBadge from "../components/lyrics/LyricsBadge";
+import { useLyricsStatus } from "../hooks/useLyricsStatus";
 import {
   Badge, Button, Checkbox, EmptyState, Equalizer, IconButton, Modal, PageHeader, Segmented, Spinner, TextField,
 } from "../components/ui";
 import {
-  IconEdit, IconPlus, IconPlay, IconTrash, IconSearch, IconExport, IconMusic, IconSparkle, IconFolder,
+  IconEdit, IconPlus, IconPlay, IconTrash, IconSearch, IconExport, IconMusic, IconSparkle, IconFolder, IconText,
 } from "../components/icons";
 
 type View = "tracks" | "albums" | "artists" | "genres";
@@ -42,6 +45,7 @@ export default function LibraryScreen() {
   const [editing, setEditing] = useState<Track[] | null>(null);
   const [addingTo, setAddingTo] = useState<Track | null>(null);
   const [exporting, setExporting] = useState<Track[] | null>(null);
+  const [fetchingLyrics, setFetchingLyrics] = useState<Track[] | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Track[] | null>(null);
 
   const setQueue = usePlayerStore((s) => s.setQueue);
@@ -329,6 +333,9 @@ export default function LibraryScreen() {
               <IconExport size={14} /> Exportar
             </Button>
             <Button size="sm" onClick={() => setEditing(selectedTracks)}><IconEdit size={14} /> Editar</Button>
+            <Button size="sm" onClick={() => setFetchingLyrics(selectedTracks)}>
+              <IconText size={14} /> Buscar letras
+            </Button>
             <Button size="sm" variant="danger" onClick={() => setConfirmDelete(selectedTracks)}>
               <IconTrash size={14} /> Remover
             </Button>
@@ -341,6 +348,9 @@ export default function LibraryScreen() {
       {editing && <TrackEditor tracks={editing} onClose={() => setEditing(null)} onSaved={() => { setSelected(new Set()); load(); }} />}
       {addingTo && <AddToPlaylist trackId={addingTo.id} onClose={() => setAddingTo(null)} />}
       {exporting && <ExportModal tracks={exporting} onClose={() => setExporting(null)} />}
+      {fetchingLyrics && (
+        <LyricsBatchModal tracks={fetchingLyrics} onClose={() => setFetchingLyrics(null)} />
+      )}
       {confirmDelete && (
         <Modal
           title={confirmDelete.length === 1 ? "Remover da biblioteca?" : `Remover ${confirmDelete.length} músicas?`}
@@ -391,7 +401,8 @@ function TrackTable({
   // never leave an empty reserved gap that misaligns the row or crushes the
   // title. Fewer fixed pixels means the title keeps room even with the queue open.
   const cols =
-    "grid-cols-[32px_1fr_56px_128px] lg:grid-cols-[32px_1fr_110px_56px_128px] xl:grid-cols-[32px_1fr_150px_110px_56px_128px]";
+    "grid-cols-[32px_1fr_15px_56px_128px] lg:grid-cols-[32px_1fr_110px_15px_56px_128px] xl:grid-cols-[32px_1fr_150px_110px_15px_56px_128px]";
+  const lyrics = useLyricsStatus(tracks.map((t) => t.id));
   return (
     <div className="bg-panel border border-line/[.09] rounded-2xl overflow-hidden">
       <div className={`grid ${cols} items-center gap-3 px-4 py-2.5 text-[11px] uppercase tracking-wide text-muted border-b divider`}>
@@ -406,6 +417,9 @@ function TrackTable({
         <div>Título</div>
         <div className="hidden xl:block">Álbum</div>
         <div className="hidden lg:block">Gênero</div>
+        {/* Coluna da letra: o cabeçalho fica vazio porque o rótulo não cabe em
+            15px, e cada ícone já se explica ao passar o mouse. */}
+        <div title="Letra"><IconText size={12} className="text-muted/60" /></div>
         <div className="text-right">Duração</div>
         <div />
       </div>
@@ -448,6 +462,7 @@ function TrackTable({
 
             <div className="hidden xl:block text-xs text-muted truncate">{t.album_title ?? "—"}</div>
             <div className="hidden lg:block text-xs text-muted truncate">{t.genre ?? "—"}</div>
+            <div className="flex justify-center"><LyricsBadge kind={lyrics.get(t.id)} /></div>
             <div className="text-xs text-muted text-right tabular-nums">{fmtDuration(t.duration)}</div>
 
             <div className="flex justify-end gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">

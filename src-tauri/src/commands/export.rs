@@ -30,6 +30,9 @@ struct Row {
     album: String,
     track_no: Option<i64>,
     duration: Option<f64>,
+    /// LRC bruto guardado para esta faixa, quando existe. Só é gravado no
+    /// destino se a pessoa marcar a opção.
+    lyrics: Option<String>,
 }
 
 /// Strip everything Windows, FAT32 and exFAT refuse, so the copy does not fail
@@ -86,6 +89,17 @@ pub fn file_stem(naming: &str, artist: &str, title: &str, track_no: Option<i64>)
     sanitize(&stem)
 }
 
+/// Where the `.lrc` goes for an exported audio file: same folder, same name.
+///
+/// Safe here because the caller always built the name as `{stem}.{ext}`, so the
+/// last dot really is the extension — a title like "Song vol. 2" keeps its tail.
+/// The tests below pin that down; a future change to the naming rules that
+/// dropped the extension would break them instead of silently truncating names
+/// on someone's USB stick.
+pub fn lrc_sidecar_path(audio: &Path) -> PathBuf {
+    audio.with_extension("lrc")
+}
+
 /// Append " (2)", " (3)"… when the name is taken and overwrite is off.
 fn unique_path(dir: &Path, stem: &str, ext: &str, overwrite: bool) -> (PathBuf, bool) {
     let first = dir.join(format!("{stem}.{ext}"));
@@ -112,7 +126,8 @@ fn load_rows(app: &AppHandle, ids: &[i64]) -> AppResult<Vec<Row>> {
                     WHERE ta.track_id = t.id ORDER BY ar.name LIMIT 1),
                   (SELECT ar2.name FROM album al2 JOIN artist ar2 ON ar2.id = al2.artist_id
                     WHERE al2.id = t.album_id), '') AS artist,
-                COALESCE((SELECT al.title FROM album al WHERE al.id = t.album_id), '') AS album
+                COALESCE((SELECT al.title FROM album al WHERE al.id = t.album_id), '') AS album,
+                (SELECT l.content FROM lyrics l WHERE l.track_id = t.id) AS lyrics
            FROM track t WHERE t.id = ?1",
     )?;
     for id in ids {
@@ -124,6 +139,7 @@ fn load_rows(app: &AppHandle, ids: &[i64]) -> AppResult<Vec<Row>> {
                 duration: r.get(3)?,
                 artist: r.get(4)?,
                 album: r.get(5)?,
+                lyrics: r.get(6)?,
             })
         }) {
             out.push(r);
@@ -263,6 +279,16 @@ pub async fn export_tracks(
         match outcome {
             Ok(()) => {
                 result.copied += 1;
+                if options.include_lrc {
+                    if let Some(lrc) = row.lyrics.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+                        let side = lrc_sidecar_path(&dst);
+                        if let Err(e) = std::fs::write(&side, lrc) {
+                            // A música já foi copiada; a letra é um extra, e
+                            // perdê-la não torna a exportação um fracasso.
+                            result.errors.push(format!("{name}: letra não copiada ({e})"));
+                        }
+                    }
+                }
                 if options.playlist_file {
                     let rel = dst.strip_prefix(&dest_root).unwrap_or(&dst);
                     let secs = row.duration.unwrap_or(0.0).round() as i64;
@@ -339,5 +365,24 @@ mod tests {
         // No track number recorded → don't emit a bogus "00 -" prefix.
         assert_eq!(file_stem("track_title", "A", "Song", None), "Song");
         assert_eq!(file_stem("artist_title", "", "Song", None), "Song");
+    }
+
+    #[test]
+    fn puts_the_lrc_next_to_the_audio() {
+        let dir = Path::new("/pen/Artista/Album");
+        assert_eq!(
+            lrc_sidecar_path(&dir.join("Artista - Song.mp3")),
+            dir.join("Artista - Song.lrc")
+        );
+        // Título com ponto no meio: só a extensão é trocada.
+        assert_eq!(
+            lrc_sidecar_path(&dir.join("Song vol. 2.m4a")),
+            dir.join("Song vol. 2.lrc")
+        );
+        // O sufixo de desambiguação de `unique_path` sobrevive.
+        assert_eq!(
+            lrc_sidecar_path(&dir.join("Song (2).opus")),
+            dir.join("Song (2).lrc")
+        );
     }
 }

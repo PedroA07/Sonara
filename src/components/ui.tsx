@@ -261,19 +261,23 @@ export function Segmented<T extends string>({
 }
 
 export function Toggle({
-  checked, onChange, label,
+  checked, onChange, label, disabled = false,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   label: string;
+  /** Para opções que dependem de outra — o motivo vai na dica ao lado. */
+  disabled?: boolean;
 }) {
   return (
     <button
       role="switch"
       aria-checked={checked}
       aria-label={label}
+      disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative w-11 h-6 rounded-full transition-colors duration-200 shrink-0
+        ${disabled ? "opacity-40 cursor-not-allowed" : ""}
         ${checked ? "brand-gradient" : "bg-line/20"}`}
     >
       <span

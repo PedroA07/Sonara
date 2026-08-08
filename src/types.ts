@@ -97,6 +97,8 @@ export interface Settings {
   lyricsProviderEnabled: boolean;
   /** Mostrar a linha atual da letra na barra do player. */
   lyricsMiniLine: boolean;
+  /** Procurar a letra sozinho ao terminar um download. Depende da busca online. */
+  lyricsAutoFetchOnDownload: boolean;
 }
 
 /** Health of the bundled yt-dlp/ffmpeg, shown in Configurações. */
@@ -119,6 +121,8 @@ export interface ExportOptions {
   overwrite: boolean;
   playlist_file: boolean;
   playlist_name: string | null;
+  /** Gravar a letra como `.lrc` junto de cada arquivo. Desmarcado por padrão. */
+  include_lrc: boolean;
 }
 
 export interface ExportResult {
@@ -224,4 +228,23 @@ export interface LyricsResolution {
   resolvedFrom: "embedded" | "sidecar" | "cache" | "provider" | "none";
   /** Verdadeiro quando a busca online existiria, mas está desligada. */
   networkSkipped: boolean;
+}
+
+/** Um resultado do provedor, para a pessoa escolher à mão. */
+export interface LyricsCandidate {
+  providerId: string;
+  trackName: string;
+  artistName: string;
+  albumName: string | null;
+  durationSec: number;
+  hasSynced: boolean;
+  instrumental: boolean;
+}
+
+export interface LyricsBatchProgress {
+  done: number;
+  total: number;
+  found: number;
+  title: string;
+  finished: boolean;
 }

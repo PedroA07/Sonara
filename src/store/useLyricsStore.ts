@@ -26,6 +26,8 @@ interface LyricsState {
   nudgeOffset: (deltaMs: number) => Promise<void>;
   setManual: (content: string) => Promise<void>;
   remove: () => Promise<void>;
+  /** "Procurar de novo": esquece o cache negativo e refaz a cadeia. */
+  retry: () => Promise<void>;
 }
 
 export const useLyricsStore = create<LyricsState>((set, get) => ({
@@ -44,8 +46,15 @@ export const useLyricsStore = create<LyricsState>((set, get) => ({
       // A faixa pode ter mudado enquanto a busca corria.
       if (get().trackId !== trackId) return;
 
-      if (res.lyrics) set({ lyrics: res.lyrics, status: "ready" });
-      else set({ lyrics: null, status: res.networkSkipped ? "network-off" : "none" });
+      if (res.lyrics) { set({ lyrics: res.lyrics, status: "ready" }); return; }
+      if (res.networkSkipped) { set({ lyrics: null, status: "network-off" }); return; }
+
+      // Nada local e a busca online está ligada: só agora a rede é tocada.
+      const online = await api.lyricsFetchOnline(trackId);
+      if (get().trackId !== trackId) return;
+      set(online.lyrics
+        ? { lyrics: online.lyrics, status: "ready" }
+        : { lyrics: null, status: "none" });
     } catch (e) {
       if (get().trackId !== trackId) return;
       set({ status: "error", error: String(e) });
@@ -83,6 +92,22 @@ export const useLyricsStore = create<LyricsState>((set, get) => ({
     } catch (e) {
       toast.error("Não foi possível salvar a letra", String(e));
       throw e;
+    }
+  },
+
+  retry: async () => {
+    const { trackId } = get();
+    if (trackId == null) return;
+    try {
+      await api.lyricsForgetMiss(trackId);
+      set({ status: "loading" });
+      const online = await api.lyricsFetchOnline(trackId);
+      if (get().trackId !== trackId) return;
+      set(online.lyrics
+        ? { lyrics: online.lyrics, status: "ready" }
+        : { lyrics: null, status: "none" });
+    } catch (e) {
+      set({ status: "error", error: String(e) });
     }
   },
 
