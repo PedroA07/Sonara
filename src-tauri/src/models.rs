@@ -19,6 +19,11 @@ pub struct Track {
     /// the title instead of the file format.
     pub artist_name: Option<String>,
     pub album_title: Option<String>,
+    /// Vídeo baixado para esta faixa (ADR-05). `None` = só áudio, que é o caso
+    /// normal; o modo vídeo só aparece para quem baixou.
+    pub video_path: Option<String>,
+    /// Calibração de lipsync desta faixa, em ms.
+    pub video_offset_ms: i64,
 }
 
 /// Parsed tags from an audio file (before it is inserted into the library).
@@ -261,6 +266,44 @@ pub struct LyricsCandidateDto {
     pub duration_sec: f64,
     pub has_synced: bool,
     pub instrumental: bool,
+}
+
+// ─────────────────────────── Vídeo (0007) ───────────────────────────
+
+/// O que o yt-dlp responde sobre o vídeo *antes* de baixar, para o CTA poder
+/// dizer "Baixar vídeo (~78 MB)" em vez de pedir um cheque em branco.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VideoProbe {
+    pub track_id: i64,
+    /// URL do vídeo ou a consulta `ytsearch1:` que será usada.
+    pub source_url: String,
+    /// Ausente quando o YouTube não informa o tamanho do formato escolhido.
+    pub size_bytes: Option<i64>,
+    pub height: Option<i64>,
+    pub title: String,
+    /// Qualidade que será usada ("720p" | "1080p" | "max"), para o CTA poder
+    /// dizer o que vai baixar em vez de só quanto ocupa.
+    pub quality: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VideoStorageItem {
+    pub track_id: i64,
+    pub title: String,
+    pub path: String,
+    pub bytes: i64,
+    pub height: Option<i64>,
+    /// O registro existe mas o arquivo não está mais no disco.
+    pub missing: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VideoStorage {
+    pub total_bytes: i64,
+    pub items: Vec<VideoStorageItem>,
 }
 
 /// Andamento da busca de letras em lote.

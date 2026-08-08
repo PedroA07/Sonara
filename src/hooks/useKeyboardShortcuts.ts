@@ -17,6 +17,11 @@ export function useKeyboardShortcuts(navigate?: (s: Screen) => void) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
       const p = usePlayerStore.getState();
+      // A aba Vídeo assume F (tela cheia do vídeo) e [ / ] (lipsync) enquanto
+      // está aberta — ela registra o próprio ouvinte. Duas telas cheias
+      // diferentes na mesma tecla seria adivinhação para quem usa.
+      if (p.expanded && p.pane === "video" && ["f", "F", "[", "]"].includes(e.key)) return;
+
       switch (e.key) {
         case " ": e.preventDefault(); p.toggle(); break;
         case "ArrowRight":
@@ -35,7 +40,9 @@ export function useKeyboardShortcuts(navigate?: (s: Screen) => void) {
         case "q": case "Q": p.toggleQueue(); break;
         case "f": case "F": p.setExpanded(!p.expanded); break;
         // A letra vive dentro da tela cheia: L abre as duas de uma vez.
-        case "l": case "L": p.setExpanded(true); break;
+        case "l": case "L": p.setPane("lyrics"); p.setExpanded(true); break;
+        // V só faz sentido quando existe vídeo baixado; `setPane` protege.
+        case "v": case "V": p.setPane("video"); p.setExpanded(true); break;
         case "[": useLyricsStore.getState().nudgeOffset(e.shiftKey ? -500 : -100); break;
         case "]": useLyricsStore.getState().nudgeOffset(e.shiftKey ? 500 : 100); break;
         case "Escape": if (p.expanded) p.setExpanded(false); break;
@@ -69,7 +76,8 @@ export const SHORTCUTS: { keys: string; action: string }[] = [
   { keys: "Q", action: "Mostrar/ocultar a fila" },
   { keys: "F", action: "Tela cheia (tocando agora)" },
   { keys: "L", action: "Abrir a letra" },
-  { keys: "[ / ]", action: "Adiantar / atrasar a letra (Shift = 500 ms)" },
+  { keys: "V", action: "Abrir o vídeo (quando a música tem um)" },
+  { keys: "[ / ]", action: "Adiantar / atrasar a letra — ou o vídeo, na aba Vídeo (Shift = 500 ms)" },
   { keys: "T", action: "Alternar tema claro/escuro" },
   { keys: "1 – 5", action: "Ir para cada seção do menu" },
 ];

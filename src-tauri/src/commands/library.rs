@@ -10,6 +10,7 @@ pub(crate) fn map_track(r: &rusqlite::Row) -> rusqlite::Result<Track> {
         track_no: r.get(4)?, disc_no: r.get(5)?, year: r.get(6)?, genre: r.get(7)?,
         album_id: r.get(8)?, bitrate: r.get(9)?, format: r.get(10)?, gain: r.get(11)?,
         cover_path: r.get(12)?, artist_name: r.get(13)?, album_title: r.get(14)?,
+        video_path: r.get(15)?, video_offset_ms: r.get(16)?,
     })
 }
 
@@ -30,7 +31,8 @@ pub(crate) fn track_cols(t: &str) -> String {
            (SELECT ar2.name FROM album al2 JOIN artist ar2 ON ar2.id = al2.artist_id \
              WHERE al2.id = {t}.album_id) \
          ) AS artist_name, \
-         (SELECT title FROM album WHERE album.id = {t}.album_id) AS album_title"
+         (SELECT title FROM album WHERE album.id = {t}.album_id) AS album_title, \
+         {t}.video_path, {t}.video_offset_ms"
     )
 }
 

@@ -27,7 +27,9 @@ export const useToastStore = create<ToastState>((set, get) => ({
   push: (t, ttlMs = t.tone === "error" ? 9000 : 5000) => {
     const id = seq++;
     set((s) => ({ toasts: [...s.toasts, { ...t, id }] }));
-    if (ttlMs > 0) window.setTimeout(() => get().dismiss(id), ttlMs);
+    // `setTimeout` puro, e não `window.setTimeout`: o store é usado por testes
+    // que rodam fora do navegador, e ali `window` não existe.
+    if (ttlMs > 0) setTimeout(() => get().dismiss(id), ttlMs);
     return id;
   },
 

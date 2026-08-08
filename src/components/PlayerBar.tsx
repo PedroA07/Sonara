@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { usePlayerStore, selectDurationSec, selectPositionSec } from "../store/usePlayerStore";
+import { usePlayerStore, selectDurationSec, selectPositionSec, hasVideo } from "../store/usePlayerStore";
 import { useSettingsStore } from "../store/useSettingsStore";
 import { fileUrl } from "../lib/ipc";
+import { media } from "../lib/media";
 import { useMiniLyricLine } from "../hooks/useMiniLyricLine";
 import { artistOf, fmtClock } from "../lib/format";
+import { toast } from "../store/useToastStore";
 import CoverArt from "./CoverArt";
 import { IconButton } from "./ui";
 import {
   IconShuffle, IconPrev, IconNext, IconPlay, IconPause, IconRepeat, IconRepeatOne,
-  IconVolume, IconQueue, IconChevronUp, IconGrid, IconList,
+  IconVolume, IconQueue, IconChevronUp, IconGrid, IconList, IconText, IconVideo,
 } from "./icons";
 import type { Track } from "../types";
 
@@ -20,17 +22,6 @@ function effVolume(base: number, track: Track | undefined, replaygain: boolean, 
 }
 
 export default function PlayerBar() {
-  const slot0 = useRef<HTMLAudioElement | null>(null);
-  const slot1 = useRef<HTMLAudioElement | null>(null);
-  const active = useRef(0);            // which slot maps to the current track
-  const fading = useRef(false);        // crossfade in progress
-  const advancing = useRef(false);     // suppress duplicate onEnded during crossfade
-  // O laço de animação é montado por estado de reprodução, não por faixa. Estes
-  // refs deixam a faixa seguinte e o crossfade visíveis lá dentro sem que uma
-  // troca de música derrube e recrie o laço.
-  const nextRef = useRef<Track | undefined>(undefined);
-  const startCrossfadeRef = useRef<((a: HTMLAudioElement) => void) | null>(null);
-
   const s = usePlayerStore();
   const { crossfade, replaygain } = useSettingsStore();
   // Relógio: o texto muda 1×/s, então selecionar o segundo evita 60 renders por
@@ -41,7 +32,14 @@ export default function PlayerBar() {
   const miniLine = useMiniLyricLine();
   const current = s.queue[s.currentIndex];
   const next = s.queue[s.currentIndex + 1];
+
+  // O laço de animação é montado por estado de reprodução, não por faixa. Estes
+  // refs deixam a faixa seguinte e o crossfade visíveis lá dentro sem que uma
+  // troca de música derrube e recrie o laço.
+  const nextRef = useRef<Track | undefined>(undefined);
   nextRef.current = next;
+  const volumeRef = useRef(1);
+  volumeRef.current = effVolume(s.volume, next, replaygain, s.muted);
 
   // `setPosition` é lido do store fora do render: chamá-lo ~60×/s através de
   // uma prop desestruturada faria o laço remontar a cada quadro.
@@ -57,88 +55,108 @@ export default function PlayerBar() {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
-  const getActive = () => (active.current === 0 ? slot0 : slot1).current;
-  const getInactive = () => (active.current === 0 ? slot1 : slot0).current;
-
-  // Load current into the active slot (or seamlessly swap if it was preloaded).
+  // Um backend existe desde o começo, mesmo sem faixa: assim o primeiro play
+  // não precisa esperar a criação do elemento.
   useEffect(() => {
-    const a = getActive();
-    if (!a || !current) return;
-    const desired = fileUrl(current.file_path);
-    const inactive = getInactive();
+    media.ensure("audio");
+    return () => media.destroy();
+  }, []);
 
-    if (a.src !== desired) {
-      if (inactive && inactive.src === desired) {
-        active.current = 1 - active.current; // preloaded → just swap
-      } else {
-        a.src = desired;
-        a.load();
-      }
-    }
-    const cur = getActive();
-    if (cur) {
-      cur.volume = effVolume(s.volume, current, replaygain, s.muted);
-      if (s.isPlaying) cur.play().catch(() => {});
-    }
-    // preload the next track into the (now) inactive slot for gapless/crossfade
-    const inact = getInactive();
-    if (inact) {
-      const nsrc = next ? fileUrl(next.file_path) : "";
-      if (inact.src !== nsrc) { inact.src = nsrc; inact.volume = 0; }
-    }
-    advancing.current = false;
-    fading.current = false;
+  // ── troca de faixa ────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!current) return;
+    const backend = media.current;
+    if (!backend) return;
+    // Faixa e modo mudaram juntos (o caso "a próxima não tem vídeo"): quem
+    // carrega é o efeito de troca, com o arquivo certo. Carregar aqui poria o
+    // áudio dentro do backend de vídeo.
+    if (backend.mode !== s.mediaMode) return;
+    const src = fileUrl(s.mediaMode === "video" && current.video_path
+      ? current.video_path
+      : current.file_path);
+
+    void backend.load(src, 0).then(() => {
+      backend.setVolume(effVolume(s.volume, current, replaygain, s.muted));
+      if (s.isPlaying) void backend.play();
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current?.id]);
 
-  // Play / pause the active slot.
+  // Pré-carrega a próxima faixa no slot ocioso (gapless / crossfade). Só faz
+  // sentido no áudio: em vídeo não há sobreposição (ADR-02).
+  const preloadNext = () => {
+    media.audio?.preloadNext(nextRef.current ? fileUrl(nextRef.current.file_path) : null);
+  };
   useEffect(() => {
-    const a = getActive();
-    if (!a) return;
-    if (s.isPlaying) a.play().catch(() => {});
-    else a.pause();
+    preloadNext();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [next?.id, s.mediaMode]);
+
+  // ── troca de backend (áudio ↔ vídeo) ──────────────────────────────────────
+  useEffect(() => {
+    const backend = media.current;
+    if (!backend || !current) return;
+    if (backend.mode === s.mediaMode) return;
+
+    const wantVideo = s.mediaMode === "video";
+    const src = wantVideo ? current.video_path : current.file_path;
+    if (wantVideo && !src) {
+      usePlayerStore.getState().setMediaMode("audio");
+      return;
+    }
+
+    let alive = true;
+    usePlayerStore.getState().setMediaSwitching(true);
+    void media
+      .switchTo(s.mediaMode, {
+        src: fileUrl(src!),
+        positionMs: usePlayerStore.getState().positionMs,
+        wasPlaying: usePlayerStore.getState().isPlaying,
+        offsetMs: wantVideo ? current.video_offset_ms : 0,
+        volume: effVolume(s.volume, current, replaygain, s.muted),
+      })
+      .then((res) => {
+        if (!alive) return;
+        if (res.ok) {
+          usePlayerStore.setState({ positionMs: res.positionMs });
+          // O backend é novo em folha: a pré-carga da próxima faixa foi embora
+          // junto com o antigo, e sem isto o primeiro crossfade após voltar do
+          // vídeo não teria de onde puxar o som.
+          preloadNext();
+        } else {
+          // O áudio nunca foi interrompido de verdade — só o vídeo falhou.
+          usePlayerStore.setState({ mediaMode: "audio", pane: "cover" });
+          toast.error("Não consegui abrir o vídeo", res.error);
+        }
+      })
+      .finally(() => {
+        if (alive) usePlayerStore.getState().setMediaSwitching(false);
+      });
+
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.mediaMode, current?.id]);
+
+  // Play / pause.
+  useEffect(() => {
+    if (s.isPlaying) void media.current?.play();
+    else media.current?.pause();
   }, [s.isPlaying]);
 
-  // Volume / mute / ReplayGain changes.
+  // Volume / mute / ReplayGain.
   useEffect(() => {
-    const a = getActive();
-    if (a && !fading.current) a.volume = effVolume(s.volume, current, replaygain, s.muted);
+    media.current?.setVolume(effVolume(s.volume, current, replaygain, s.muted));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [s.volume, s.muted, replaygain]);
+  }, [s.volume, s.muted, replaygain, current?.id]);
 
   // Honour seek requests.
   useEffect(() => {
-    const a = getActive();
-    if (a && s.seekReqMs !== null) {
-      a.currentTime = s.seekReqMs / 1000;
-      if (s.isPlaying) a.play().catch(() => {});
-      s.clearSeek();
-    }
+    if (s.seekReqMs === null) return;
+    media.current?.seek(s.seekReqMs);
+    if (s.isPlaying) void media.current?.play();
+    s.clearSeek();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.seekReqMs]);
-
-  const startCrossfade = (a: HTMLAudioElement) => {
-    const b = getInactive();
-    if (!b || !next) return;
-    fading.current = true;
-    advancing.current = true;
-    const targetB = effVolume(s.volume, next, replaygain, s.muted);
-    const dur = Math.max(0.1, crossfade);
-    b.currentTime = 0;
-    b.volume = 0;
-    b.play().catch(() => {});
-    const startVolA = a.volume;
-    const t0 = performance.now();
-    const step = () => {
-      const k = Math.min(1, (performance.now() - t0) / (dur * 1000));
-      a.volume = startVolA * (1 - k);
-      b.volume = targetB * k;
-      if (k < 1) requestAnimationFrame(step);
-      else { a.pause(); s.next(); } // swap handled by the [current] effect
-    };
-    requestAnimationFrame(step);
-  };
 
   // ADR-01: o relógio é lido do backend ativo a cada quadro e publicado no
   // store. `onTimeUpdate` dispara ~4×/s em cadência irregular — suficiente para
@@ -146,12 +164,15 @@ export default function PlayerBar() {
   useEffect(() => {
     let raf = 0;
     const tick = () => {
-      const a = getActive();
-      if (a) {
-        setPosition(a.currentTime * 1000);
-        if (crossfade > 0 && nextRef.current && !fading.current
-            && a.duration - a.currentTime <= crossfade) {
-          startCrossfadeRef.current?.(a);
+      const backend = media.current;
+      if (backend) {
+        setPosition(backend.currentMs());
+        const audio = media.audio;
+        if (crossfade > 0 && nextRef.current && audio && !audio.isCrossfading()
+            && audio.remainingSec() <= crossfade) {
+          audio.startCrossfade(crossfade, volumeRef.current, () =>
+            usePlayerStore.getState().next()
+          );
         }
       }
       raf = requestAnimationFrame(tick);
@@ -163,23 +184,12 @@ export default function PlayerBar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.isPlaying, hidden, crossfade]);
 
-  startCrossfadeRef.current = startCrossfade;
-
-  const onEnded = (slot: number) => {
-    if (slot !== active.current) return;
-    if (advancing.current) return; // crossfade already advanced
-    s.handleEnded();
-  };
-
   const pct = s.durationMs > 0 ? (s.positionMs / s.durationMs) * 100 : 0;
   const volPct = (s.muted ? 0 : s.volume) * 100;
   const hasTrack = !!current;
 
   return (
     <footer className="h-[84px] shrink-0 bg-panel border-t divider flex items-center px-5 gap-5 relative z-20">
-      <audio ref={slot0} onLoadedMetadata={(e) => active.current === 0 && s.setDurationMs(e.currentTarget.duration * 1000)} onEnded={() => onEnded(0)} />
-      <audio ref={slot1} onLoadedMetadata={(e) => active.current === 1 && s.setDurationMs(e.currentTarget.duration * 1000)} onEnded={() => onEnded(1)} />
-
       {/* ── Now playing ───────────────────────────────────────────── */}
       <div className="w-[260px] min-w-0 flex items-center gap-3">
         <button
@@ -256,6 +266,23 @@ export default function PlayerBar() {
 
       {/* ── Right-hand controls ───────────────────────────────────── */}
       <div className="w-[260px] flex items-center justify-end gap-1">
+        <IconButton
+          label="Ver a letra (L)"
+          active={s.expanded && s.pane === "lyrics"}
+          disabled={!hasTrack}
+          onClick={() => { s.setPane("lyrics"); s.setExpanded(true); }}
+        >
+          <IconText size={17} />
+        </IconButton>
+        {hasVideo(current) && (
+          <IconButton
+            label="Ver o vídeo"
+            active={s.expanded && s.pane === "video"}
+            onClick={() => { s.setPane("video"); s.setExpanded(true); }}
+          >
+            <IconVideo size={17} />
+          </IconButton>
+        )}
         <IconButton
           label={s.layout === "album" ? "Ver a fila como lista" : "Ver a fila com capas"}
           onClick={s.toggleLayout}
